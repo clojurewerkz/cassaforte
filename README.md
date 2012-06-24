@@ -14,7 +14,6 @@ Its API and code style closely follow other ClojureWerkz projects, namely [Monge
  * Target Clojure 1.3.0 and later from the ground up.
  * Integrate with libraries like clojure.data.json and Joda Time.
  * Support URI connections to be friendly to Heroku and other PaaS providers.
- * Learn from other clients like the Java and Ruby ones.
 
 
 ## Project Maturity
