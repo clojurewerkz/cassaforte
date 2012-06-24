@@ -1,0 +1,1 @@
+CREATE KEYSPACE CassaforteTest1;
