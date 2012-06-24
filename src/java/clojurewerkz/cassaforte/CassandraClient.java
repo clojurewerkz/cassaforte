@@ -8,6 +8,7 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ public class CassandraClient {
   private String keyspace;
   private int port;
   private String hostname;
+  private static final String DEFAULT_CQL_VERSION = "3.0.0";
 
 
   //
@@ -45,6 +47,7 @@ public class CassandraClient {
     client = new Cassandra.Client(new TBinaryProtocol(tr));
     tr.open();
     client.set_keyspace(keyspace);
+    client.set_cql_version(DEFAULT_CQL_VERSION);
   }
 
   //
@@ -56,6 +59,23 @@ public class CassandraClient {
   public int getPort()        { return this.port; }
   public String getKeyspace() { return this.keyspace; }
 
+  /**
+   * Executes a CQL query, uses no compression
+   * @param query Query to execute
+   * @return CQL query result
+   */
+  public CqlResult executeCqlQuery(String query) throws TException, TimedOutException, SchemaDisagreementException, InvalidRequestException, UnavailableException, UnsupportedEncodingException {
+    return executeCqlQuery(query, Compression.NONE);
+  }
+
+  /**
+   * Executes a CQL query, uses specified compression strategy
+   * @param query Query to execute
+   * @return CQL query result
+   */
+  public CqlResult executeCqlQuery(String query, Compression compression) throws UnsupportedEncodingException, TException, TimedOutException, SchemaDisagreementException, InvalidRequestException, UnavailableException {
+    return client.execute_cql_query(ByteBuffer.wrap(query.getBytes("UTF-8")), compression);
+  }
 
   //
   // Thrift Client delegates

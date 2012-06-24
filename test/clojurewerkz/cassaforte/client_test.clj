@@ -1,5 +1,5 @@
-(ns clojurewerkz.cassaforte.core-test
-  (require [clojurewerkz.cassaforte.core :as cc])
+(ns clojurewerkz.cassaforte.client-test
+  (require [clojurewerkz.cassaforte.client :as cc])
   (:use clojure.test)
   (:import clojurewerkz.cassaforte.CassandraClient))
 

@@ -1,5 +1,5 @@
-(ns clojurewerkz.cassaforte.system
-  (:require [clojurewerkz.cassaforte.core :as cc])
+(ns clojurewerkz.cassaforte.schema
+  (:require [clojurewerkz.cassaforte.client :as cc])
   (:use [clojurewerkz.cassaforte.conversion :only [to-keyspace-definition]])
   (:import java.util.List
            clojurewerkz.cassaforte.CassandraClient

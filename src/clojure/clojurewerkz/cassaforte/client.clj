@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.core
+(ns clojurewerkz.cassaforte.client
   (import clojurewerkz.cassaforte.CassandraClient))
 
 ;;

@@ -14,6 +14,7 @@
                    :1.5 {:dependencies [[org.clojure/clojure "1.5.0-master-SNAPSHOT"]]}}
   :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.5"]}
   :test-selectors {:focus   :focus
+                   :cql     :cql
                    :default (constantly true)}
   :repositories   {"sonatype" {:url "http://oss.sonatype.org/content/repositories/releases"
                                :snapshots false
