@@ -1,4 +1,3 @@
-DROP KEYSPACE CassaforteTest1;
 CREATE KEYSPACE CassaforteTest1;
 USE CassaforteTest1;
 
