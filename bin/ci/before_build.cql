@@ -1,1 +1,6 @@
+DROP KEYSPACE CassaforteTest1;
 CREATE KEYSPACE CassaforteTest1;
+USE CassaforteTest1;
+
+CREATE COLUMN FAMILY movies;
+CREATE COLUMN FAMILY web_pages;
