@@ -19,12 +19,20 @@ Its API and code style closely follow other ClojureWerkz projects, namely [Monge
 
 ## Supported Features
 
-Nothing so far.
+ * Connection to a single node
+ * CQL queries
+ * Keyspace operations: create, drop, describe
 
 
 ## Supported Clojure versions
 
 Cassaforte is built from the ground up for Clojure 1.3 and up.
+
+
+## Supported Apache Cassandra versions
+
+Cassaforte is built from the ground up for Cassandra 1.1 and up and is built around CQL.
+
 
 
 ## Documentation & Examples
