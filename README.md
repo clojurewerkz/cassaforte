@@ -17,6 +17,13 @@ Its API and code style closely follow other ClojureWerkz projects, namely [Monge
  * Learn from other clients like the Java and Ruby ones.
 
 
+## Project Maturity
+
+Cassaforte is *very young*. We put it out there mostly to gather feedback from our friends who use Cassandra and to have CI on travis-ci.org.
+It almost certainly is not useable enough for anyone but the author. When Cassaforte matures, we will update this section.
+
+
+
 ## Supported Features
 
  * Connection to a single node
@@ -41,7 +48,7 @@ Cassaforte is a young project and until 1.0 is released and documentation guides
 it may be challenging to use for anyone except the author. For code examples, see our test
 suite.
 
-Once documentation site is up, we will update this document.
+Once the documentation site is up, we will update this section.
 
 
 ## Community
@@ -67,12 +74,6 @@ With Maven:
       <artifactId>cassaforte</artifactId>
       <version>1.0.0-SNAPSHOT</version>
     </dependency>
-
-
-
-## This is a Work In Progress
-
-Cassaforte is very much a work in progress and right now, please keep this in mind.
 
 
 ## Cassaforte Is a ClojureWerkz Project
