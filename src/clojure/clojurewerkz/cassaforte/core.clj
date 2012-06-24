@@ -19,7 +19,7 @@
      (.set_keyspace client keyspace)
      client))
 
-(defn connect
+(defn ^clojurewerkz.cassaforte.CassandraClient connect
   "Connect to a Cassandra node"
   ([^String hostname ^String keyspace]
      (connect hostname default-port keyspace))

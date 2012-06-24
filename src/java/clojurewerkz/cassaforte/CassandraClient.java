@@ -17,6 +17,9 @@ public class CassandraClient {
   private TTransport transport;
 
   private static final int DEFAULT_PORT = 9160;
+  private String keyspace;
+  private int port;
+  private String hostname;
 
 
   //
@@ -33,6 +36,9 @@ public class CassandraClient {
   }
 
   public CassandraClient(String hostname, int port, String keyspace) throws TException, InvalidRequestException {
+    this.hostname = hostname;
+    this.port = port;
+    this.keyspace = keyspace;
     TTransport tr = new TFramedTransport(new TSocket(hostname, port));
 
     transport = tr;
@@ -40,6 +46,16 @@ public class CassandraClient {
     tr.open();
     client.set_keyspace(keyspace);
   }
+
+  //
+  // API
+  //
+
+  public String getHostname() { return this.hostname; }
+  public String getHost()     { return this.hostname; }
+  public int getPort()        { return this.port; }
+  public String getKeyspace() { return this.keyspace; }
+
 
   //
   // Thrift Client delegates
