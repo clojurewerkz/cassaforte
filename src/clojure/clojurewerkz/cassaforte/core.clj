@@ -12,17 +12,19 @@
   *cassandra-client*)
 
 
-(defn set-keyspace
-  ([^String keyspace]
-     (set-keyspace *cassandra-client* keyspace))
-  ([^CassandraClient client ^String keyspace]
-     (.set_keyspace client keyspace)
-     client))
-
 (defn ^clojurewerkz.cassaforte.CassandraClient connect
   "Connect to a Cassandra node"
   ([^String hostname ^String keyspace]
      (connect hostname default-port keyspace))
   ([^String hostname ^long port ^String keyspace]
      (let [client (CassandraClient. hostname port keyspace)]
+       client)))
+
+
+(defn ^clojurewerkz.cassaforte.CassandraClient connect!
+  ([^String hostname ^String keyspace]
+     (connect! hostname default-port keyspace))
+  ([^String hostname ^long port ^String keyspace]
+     (let [client (CassandraClient. hostname port keyspace)]
+       (alter-var-root (var *cassandra-client*) (constantly client))
        client)))
