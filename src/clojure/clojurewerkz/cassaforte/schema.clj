@@ -1,5 +1,6 @@
 (ns clojurewerkz.cassaforte.schema
-  (:require [clojurewerkz.cassaforte.client :as cc])
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql])
   (:use [clojurewerkz.cassaforte.conversion :only [to-keyspace-definition]])
   (:import java.util.List
            clojurewerkz.cassaforte.CassandraClient
@@ -7,7 +8,7 @@
 
 
 (defn ^org.apache.cassandra.thrift.KsDef
-  describe-keyspace
+  describe-keyspace-raw
   [^String name]
   (.describe_keyspace ^CassandraClient cc/*cassandra-client* name))
 
@@ -25,3 +26,25 @@
 (defn drop-keyspace
   [^String name]
   (.system_drop_keyspace ^CassandraClient cc/*cassandra-client* name))
+
+
+(defn create-index
+  "Creates an index.
+
+   2-arity form takes a column family name and a column the index is on.
+   3-arity form in addition takes an index name to use."
+  ([^String column-family ^String column]
+     (cql/execute-raw (str "CREATE INDEX ON " column-family " (" column ")" )))
+  ([^String column-family ^String column ^String index-name]
+     (cql/execute-raw (str "CREATE INDEX " index-name " ON " column-family " (" column ")" ))))
+
+
+(defn drop-index
+  "Drops an index.
+
+   1-arity form takes an index name as the only argument.
+   2-arity form takes a column family name and a column the index is on."
+  ([^String index-name]
+     (cql/execute-raw (str "DROP INDEX " (cql/escape index-name))))
+  ([^String column-family ^String column]
+     (cql/execute-raw (str "DROP INDEX " (cql/escape (str column-family "_" column "_idx"))))))

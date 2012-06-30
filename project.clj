@@ -6,7 +6,8 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure                   "1.3.0"]
                  [org.apache.cassandra/cassandra-all    "1.1.0"]
-                 [org.apache.cassandra/cassandra-thrift "1.1.0"]]
+                 [org.apache.cassandra/cassandra-thrift "1.1.0"]
+                 [clojurewerkz/support                  "0.6.0"]]
   :source-paths      ["src/clojure"]
   :java-source-paths ["src/java"]
   :javac-options     ["-target" "1.6" "-source" "1.6"]
@@ -15,6 +16,8 @@
   :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.5"]}
   :test-selectors {:focus   :focus
                    :cql     :cql
+                   :schema  :schema
+                   :indexes :indexes
                    :default (constantly true)}
   :repositories   {"sonatype" {:url "http://oss.sonatype.org/content/repositories/releases"
                                :snapshots false

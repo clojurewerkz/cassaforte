@@ -125,6 +125,10 @@ public class CassandraClient {
     return client.get_indexed_slices(column_parent, index_clause, column_predicate, consistency_level);
   }
 
+  public CqlPreparedResult prepare_cql_query(ByteBuffer query, Compression compression) throws InvalidRequestException, TException {
+    return client.prepare_cql_query(query, compression);
+  }
+
   public CqlResult execute_prepared_cql_query(int itemId, List<ByteBuffer> values) throws InvalidRequestException, UnavailableException, TimedOutException, SchemaDisagreementException, TException {
     return client.execute_prepared_cql_query(itemId, values);
   }
@@ -175,10 +179,6 @@ public class CassandraClient {
 
   public void batch_mutate(Map<ByteBuffer, Map<String, List<Mutation>>> mutation_map, ConsistencyLevel consistency_level) throws InvalidRequestException, UnavailableException, TimedOutException, TException {
     client.batch_mutate(mutation_map, consistency_level);
-  }
-
-  public CqlPreparedResult prepare_cql_query(ByteBuffer query, Compression compression) throws InvalidRequestException, TException {
-    return client.prepare_cql_query(query, compression);
   }
 
   public void remove(ByteBuffer key, ColumnPath column_path, long timestamp, ConsistencyLevel consistency_level) throws InvalidRequestException, UnavailableException, TimedOutException, TException {

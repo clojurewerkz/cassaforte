@@ -1,7 +1,9 @@
 (ns clojurewerkz.cassaforte.conversion
-  (:use [clojure.walk :only [stringify-keys]])
-  (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef]
-           java.util.List))
+  (:use [clojure.walk :only [stringify-keys]]
+        [clojurewerkz.support.string :only [to-byte-buffer]])
+  (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef CqlPreparedResult]
+           java.util.List
+           java.nio.ByteBuffer))
 
 
 
@@ -46,3 +48,13 @@
      (let [cf-def (CfDef. keyspace name)]
        ;; TODO
        cf-def)))
+
+
+(defn from-cql-prepared-result
+  [^CqlPreparedResult result]
+  (let [id (.getItemId result)]
+    {:id id
+     :item-id id
+     :count (.getCount result)
+     :variable-names (.getVariable_names result)
+     :variable-types (.getVariable_types result)}))
