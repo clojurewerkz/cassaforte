@@ -34,9 +34,9 @@
    2-arity form takes a column family name and a column the index is on.
    3-arity form in addition takes an index name to use."
   ([^String column-family ^String column]
-     (cql/execute-raw (str "CREATE INDEX ON " column-family " (" column ")" )))
+     (cql/execute "CREATE INDEX ON ? (?)" [column-family column]))
   ([^String column-family ^String column ^String index-name]
-     (cql/execute-raw (str "CREATE INDEX " index-name " ON " column-family " (" column ")" ))))
+     (cql/execute "CREATE INDEX ? ON ? (?)" [index-name column-family column])))
 
 
 (defn drop-index
@@ -45,6 +45,6 @@
    1-arity form takes an index name as the only argument.
    2-arity form takes a column family name and a column the index is on."
   ([^String index-name]
-     (cql/execute-raw (str "DROP INDEX " (cql/escape index-name))))
+     (cql/execute "DROP INDEX ?" [(cql/escape index-name)]))
   ([^String column-family ^String column]
-     (cql/execute-raw (str "DROP INDEX " (cql/escape (str column-family "_" column "_idx"))))))
+     (cql/execute "DROP INDEX ?" [(cql/escape (str column-family "_" column "_idx"))])))

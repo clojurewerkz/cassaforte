@@ -25,11 +25,11 @@
 
 (deftest ^{:schema true :indexes true} test-create-and-drop-an-index-using-a-convenience-function
   (with-thrift-exception-handling
-    (cql/execute-raw "DROP COLUMNFAMILY libraries")
     (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
                                                    language varchar,
                                                    PRIMARY KEY (name))")
     (is (cql/void-result? (sch/create-index "libraries" "language")))
     (is (cql/void-result? (sch/drop-index "libraries" "language")))
     (is (cql/void-result? (sch/create-index "libraries" "language" "by_language")))
-    (is (cql/void-result? (sch/drop-index "by_language")))))
+    (is (cql/void-result? (sch/drop-index "by_language")))
+    (cql/execute "DROP COLUMNFAMILY ?" ["libraries"])))

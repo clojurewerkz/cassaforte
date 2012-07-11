@@ -29,7 +29,7 @@
         result (cql/execute-raw query)]
     (is (cql/void-result? result))
     (is (nil? (.getRows result)))
-    (cql/execute-raw "DROP COLUMNFAMILY libraries;")))
+    (cql/execute "DROP COLUMNFAMILY ?" ["libraries"])))
 
 
 ;;

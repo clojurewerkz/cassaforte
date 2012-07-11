@@ -1,7 +1,7 @@
 (ns clojurewerkz.cassaforte.cql
   (:require [clojurewerkz.cassaforte.client :as cc])
   (:use [clojure.string :only [split join]]
-        [clojurewerkz.support.string :only [maybe-append to-byte-buffer]]
+        [clojurewerkz.support.string :only [maybe-append to-byte-buffer interpolate-vals interpolate-kv]]
         [clojurewerkz.support.fn :only [fpartial]]
         [clojurewerkz.cassaforte.conversion :only [from-cql-prepared-result]])
   (:import clojurewerkz.cassaforte.CassandraClient
@@ -56,16 +56,6 @@
   [identifier]
   (str "'" (name identifier) "'"))
 
-
-(def ^{:private true
-       :const true}
-  placeholder-pattern #"\?")
-
-(defn interpolate-vals
-  [^String query & vals]
-  (let [segments (split query placeholder-pattern)]
-    ))
-
 (def ^{:private true}
   maybe-append-semicolon (fpartial maybe-append ";"))
 
@@ -108,12 +98,11 @@
      (.executeCqlQuery ^CassandraClient cc/*cassandra-client* (-> query clean-up) compression)))
 
 (defn execute
+  "Executes a CQL query given as a string. Performs positional argument (?) replacement (a la JDBC)."
   ([^String query]
-     (comment TODO))
-  ([^String query & args]
-     (let [{:keys [id] :as stmt} (prepare-cql-query query)
-           result                (execute-prepared-query id args)]
-       result)))
+     (execute-raw query))
+  ([^String query args]
+     (execute-raw (interpolate-vals query args))))
 
 
 
