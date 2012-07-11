@@ -1,7 +1,7 @@
 (ns clojurewerkz.cassaforte.conversion
   (:use [clojure.walk :only [stringify-keys]]
         [clojurewerkz.support.string :only [to-byte-buffer]])
-  (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef CqlPreparedResult]
+  (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef CqlPreparedResult CqlResult CqlRow Column]
            java.util.List
            java.nio.ByteBuffer))
 
@@ -58,3 +58,22 @@
      :count (.getCount result)
      :variable-names (.getVariable_names result)
      :variable-types (.getVariable_types result)}))
+
+(defn from-cql-column
+  [^Column column]
+  {:name      (String. ^bytes (.getName column) "UTF-8")
+   :value     (.getValue column)
+   :ttl       (.getTtl column)
+   :timestamp (.getTimestamp column)})
+
+(defn from-cql-row
+  [^CqlRow row]
+  {:key (String. ^bytes (.getKey row) "UTF-8")
+   :columns (map from-cql-column (.getColumns row))})
+
+(defn from-cql-result
+  [^CqlResult result]
+  {:num    (.getNum result)
+   :schema (.getSchema result)
+   :type   (.getType result)
+   :rows   (map from-cql-row (.getRows result))})

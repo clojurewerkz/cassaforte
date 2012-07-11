@@ -13,23 +13,35 @@
 ;;
 
 (deftest ^{:cql true} test-create-and-drop-keyspace-using-raw-cql
-  (let [query "CREATE KEYSPACE amazeballs WITH strategy_class = 'SimpleStrategy' AND strategy_options:replication_factor = 1"]
+  (with-thrift-exception-handling
+    (let [query "CREATE KEYSPACE amazeballs WITH strategy_class = 'SimpleStrategy' AND strategy_options:replication_factor = 1"]
     (is (cql/void-result? (cql/execute-raw query)))
-    (cql/execute-raw "DROP KEYSPACE \"amazeballs\";")))
+    (cql/execute-raw "DROP KEYSPACE \"amazeballs\";"))))
 
 
 ;;
 ;; CREATE CF, DROP CF
 ;;
 
-(deftest ^{:cql true} test-create-and-drop-column-family-using-raw-cql
-  (let [query  "CREATE COLUMNFAMILY libraries (name     varchar,
+(deftest ^{:cql true} test-create-and-drop-column-family-using-cql
+  (with-thrift-exception-handling
+    (let [query  "CREATE COLUMNFAMILY libraries (name     varchar,
                                                language varchar,
                                                PRIMARY KEY (name));"
         result (cql/execute-raw query)]
     (is (cql/void-result? result))
-    (is (nil? (.getRows result)))
-    (cql/execute "DROP COLUMNFAMILY ?" ["libraries"])))
+    (is (empty? (:rows result)))
+    (cql/execute "DROP COLUMNFAMILY ?" ["libraries"]))))
+
+(deftest ^{:cql true} test-create-truncate-and-drop-column-family-using-cql
+  (with-thrift-exception-handling
+    (let [query  "CREATE COLUMNFAMILY libraries (name     varchar,
+                                               language varchar,
+                                               PRIMARY KEY (name));"
+        result (cql/execute-raw query)]
+    (is (cql/void-result? result))
+    (is (cql/void-result? (cql/truncate "libraries")))
+    (cql/execute "DROP COLUMNFAMILY ?" ["libraries"]))))
 
 
 ;;
@@ -51,7 +63,37 @@
 ;; INSERT
 ;;
 
-;; TBD
+(deftest ^{:cql true} test-insert-and-select-count-using-raw-cql
+  (with-thrift-exception-handling
+    (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
+                                               language varchar,
+                                               PRIMARY KEY (name))")
+    (is (cql/void-result? (cql/execute-raw "INSERT INTO libraries (name, language) VALUES ('Cassaforte', 'Clojure') USING CONSISTENCY LOCAL_QUORUM AND TTL 86400")))
+    (cql/execute-raw "TRUNCATE libraries;")
+    (cql/execute-raw "DROP COLUMNFAMILY libraries;")))
+
+
+(deftest ^{:cql true} test-insert-and-select-count-using-prepared-cql-statement
+  (with-thrift-exception-handling
+    (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
+                                               language varchar,
+                                               PRIMARY KEY (name))")
+    (is (cql/void-result? (cql/execute "INSERT INTO libraries (name, language) VALUES ('?', '?') USING CONSISTENCY LOCAL_QUORUM AND TTL 86400" ["Cassaforte", "Clojure"])))
+    (let [res (cql/execute "SELECT COUNT(*) FROM libraries")]
+      (is (cql/rows-result? res)))
+    (cql/execute-raw "TRUNCATE libraries;")
+    (cql/execute-raw "DROP COLUMNFAMILY libraries;")))
+
+(deftest ^{:cql true} test-insert-and-select-count-using-convenience-function
+  (with-thrift-exception-handling
+    (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
+                                               language varchar,
+                                               PRIMARY KEY (name))")
+    (is (cql/void-result? (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} {:consistency "LOCAL_QUORUM" :ttl 86400})))
+    (let [res (cql/execute "SELECT COUNT(*) FROM libraries")]
+      (is (= 1 (count (:rows res)))))
+    (cql/execute-raw "TRUNCATE libraries;")
+    (cql/execute-raw "DROP COLUMNFAMILY libraries;")))
 
 
 ;;
@@ -133,13 +175,3 @@
 (deftest ^{:cql true} test-keyspace-name-quoting
   (are [unquoted quoted] (is (= quoted (cql/quote-identifier unquoted)))
        "accounts" "\"accounts\""))
-
-
-;;
-;; Interpolation
-;;
-
-#_ (deftest ^{:cql true} test-interpolating-cql-strings-with-long-parameters
-  (let [query    "SELECT * FROM people WHERE age = ?;"
-        expected "SELECT * FROM people WHERE age = 27;"]
-    (is (= expected (cql/interpolate-vals query 27)))))

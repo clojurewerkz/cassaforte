@@ -3,7 +3,7 @@
   (:use [clojure.string :only [split join]]
         [clojurewerkz.support.string :only [maybe-append to-byte-buffer interpolate-vals interpolate-kv]]
         [clojurewerkz.support.fn :only [fpartial]]
-        [clojurewerkz.cassaforte.conversion :only [from-cql-prepared-result]])
+        [clojurewerkz.cassaforte.conversion :only [from-cql-prepared-result from-cql-result]])
   (:import clojurewerkz.cassaforte.CassandraClient
            java.util.List
            [org.apache.cassandra.thrift Compression CqlResult CqlRow CqlResultType]))
@@ -89,13 +89,13 @@
   ;; TODO
   value)
 
-(defn ^org.apache.cassandra.thrift.CqlResult
+(defn ^clojure.lang.IPersistentMap
   execute-raw
   "Executes a CQL query given as a string. No argument replacement (a la JDBC) is performed."
   ([^String query]
-     (.executeCqlQuery ^CassandraClient cc/*cassandra-client* (-> query clean-up)))
+     (from-cql-result (.executeCqlQuery ^CassandraClient cc/*cassandra-client* (-> query clean-up))))
   ([^String query ^Compression compression]
-     (.executeCqlQuery ^CassandraClient cc/*cassandra-client* (-> query clean-up) compression)))
+     (from-cql-result (.executeCqlQuery ^CassandraClient cc/*cassandra-client* (-> query clean-up) compression))))
 
 (defn execute
   "Executes a CQL query given as a string. Performs positional argument (?) replacement (a la JDBC)."
@@ -107,17 +107,72 @@
 
 
 
-(defn void-result?
-  "Returns true if the provided CQL query result is of type void (carries no result set)"
-  [^CqlResult result]
-  (= (.getType result) CqlResultType/VOID))
+(defprotocol CqlStatementResult
+  (void-result? [result] "Returns true if the provided CQL query result is of type void (carries no result set)")
+  (int-result? [result] "Returns true if the provided CQL query result is of type int (carries a single value)")
+  (rows-result? [result] "Returns true if the provided CQL query result is of type rows (carries result set)"))
 
-(defn int-result?
-  "Returns true if the provided CQL query result is of type int (carries a single numerical value)"
-  [^CqlResult result]
-  (= (.getType result) CqlResultType/INT))
+(extend-protocol CqlStatementResult
+  CqlResult
+  (void-result?
+    [^CqlResult result]
+    (= (.getType result) CqlResultType/VOID))
+  (int-result?
+    [^CqlResult result]
+    (= (.getType result) CqlResultType/INT))
+  (rows-result?
+    [^CqlResult result]
+    (= (.getType result) CqlResultType/ROWS))
 
-(defn rows-result?
-  "Returns true if the provided CQL query result carries a result set"
-  [^CqlResult result]
-  (= (.getType result) CqlResultType/ROWS))
+  clojure.lang.IPersistentMap
+  (void-result?
+    [m]
+    (= (:type m) CqlResultType/VOID))
+  (int-result?
+    [m]
+    (= (:type m) CqlResultType/INT))
+  (rows-result?
+    [m]
+    (= (:type m) CqlResultType/ROWS)))
+
+
+
+
+
+
+
+;;
+;; CQL commands (not related to schema)
+;;
+
+(defn- using-clause
+  [opts]
+  (if (or (empty? opts)
+          (nil? opts))
+    ""
+    (str "USING "
+         (join " AND " (map (fn [[k v]]
+                              (str (.toUpperCase (name k)) " " (str v)))
+                            opts)))))
+
+(defn insert
+  "Inserts (or updates) a new row into the given column family"
+  ([^String column-family m {:keys [consistency timestamp ttl] :or {consistency "LOCAL_QUORUM"} :as opts}]
+     (let [xs    (seq m)
+           cols  (join "," (map (comp name first) xs))
+           vals  (join "," (map (comp quote str second) xs))
+           using (using-clause opts)]
+       (execute "INSERT INTO ? (?) VALUES (?) ?"
+                [column-family cols vals using])))
+  ([^String keyspace ^String column-family m opts]
+     (execute (format "%s.%s" (quote-identifier keyspace) (quote-identifier column-family)) m opts)))
+
+(defn truncate
+  "Truncates a column family.
+
+   1-arity form takes a column family name as the only argument.
+   2-arity form takes keyspace and column family names."  
+  ([^String column-family]
+     (execute "TRUNCATE ?" [column-family]))
+  ([^String keyspace ^String column-family]
+     (execute "TRUNCATE ?.?" [keyspace column-family])))
