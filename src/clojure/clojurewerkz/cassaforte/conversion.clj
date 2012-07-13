@@ -88,7 +88,10 @@
 
 (defn from-cql-result
   [^CqlResult result]
-  {:num    (.getNum result)
-   :schema (from-cql-metadata (.getSchema result))
-   :type   (.getType result)
-   :rows   (map from-cql-row (.getRows result))})
+  (let [base   {:num    (.getNum result)
+                :type   (.getType result)
+                :rows   (map from-cql-row (.getRows result))}
+        schema (.getSchema result)]
+    (if schema
+      (assoc base :schema (from-cql-metadata schema))
+      base)))
