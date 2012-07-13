@@ -136,7 +136,7 @@
 
 
 ;;
-;; DELETE row
+;; DELETE with convenience function
 ;;
 
 ;; TBD
@@ -146,7 +146,22 @@
 ;; Raw SELECT
 ;;
 
-;; TBD
+(deftest ^{:cql true} test-delete-with-prepared-cql-statement
+  (with-thrift-exception-handling
+    (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
+  (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
+                                                    language  varchar,
+                                                    PRIMARY KEY (name))")
+  (cql/execute "INSERT INTO libraries (name, language) VALUES ('?', '?') USING CONSISTENCY ONE" ["Cassaforte", "Clojure"])
+  (cql/execute "INSERT INTO libraries (name, language) VALUES ('?', '?') USING CONSISTENCY ONE" ["Welle", "Clojure"])
+  (let [res (cql/execute-raw "SELECT COUNT(*) FROM libraries")
+        n   (cql/count-value res)]
+    (is (= 2 n)))
+  (cql/execute "DELETE FROM libraries WHERE name = '?'" ["Cassaforte"])
+  (let [res (cql/execute-raw "SELECT COUNT(*) FROM libraries")
+        n   (cql/count-value res)]
+    (is (= 1 n)))
+  (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
 
 
 ;;
