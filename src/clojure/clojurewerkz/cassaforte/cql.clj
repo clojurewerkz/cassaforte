@@ -110,7 +110,8 @@
 (defprotocol CqlStatementResult
   (void-result? [result] "Returns true if the provided CQL query result is of type void (carries no result set)")
   (int-result? [result] "Returns true if the provided CQL query result is of type int (carries a single value)")
-  (rows-result? [result] "Returns true if the provided CQL query result is of type rows (carries result set)"))
+  (rows-result? [result] "Returns true if the provided CQL query result is of type rows (carries result set)")
+  (count-value [result] "Extracts numerical value of a COUNT query"))
 
 (extend-protocol CqlStatementResult
   CqlResult
@@ -133,7 +134,11 @@
     (= (:type m) CqlResultType/INT))
   (rows-result?
     [m]
-    (= (:type m) CqlResultType/ROWS)))
+    (= (:type m) CqlResultType/ROWS))
+  (count-value
+    [m]
+    (when-let [bytes (-> m :rows first :columns first :value)]
+      (Long/valueOf (String. ^bytes bytes)))))
 
 
 

@@ -14,9 +14,10 @@
 
 (deftest ^{:cql true} test-create-and-drop-keyspace-using-raw-cql
   (with-thrift-exception-handling
-    (let [query "CREATE KEYSPACE amazeballs WITH strategy_class = 'SimpleStrategy' AND strategy_options:replication_factor = 1"]
+    (cql/execute-raw "DROP KEYSPACE \"amazeballs\";"))
+  (let [query "CREATE KEYSPACE amazeballs WITH strategy_class = 'SimpleStrategy' AND strategy_options:replication_factor = 1"]
     (is (cql/void-result? (cql/execute-raw query)))
-    (cql/execute-raw "DROP KEYSPACE \"amazeballs\";"))))
+    (cql/execute-raw "DROP KEYSPACE \"amazeballs\";")))
 
 
 ;;
@@ -25,13 +26,14 @@
 
 (deftest ^{:cql true} test-create-and-drop-column-family-using-cql
   (with-thrift-exception-handling
-    (let [query  "CREATE COLUMNFAMILY libraries (name     varchar,
+    (cql/execute "DROP COLUMNFAMILY ?" ["libraries"]))
+  (let [query  "CREATE COLUMNFAMILY libraries (name     varchar,
                                                language varchar,
                                                PRIMARY KEY (name));"
         result (cql/execute-raw query)]
     (is (cql/void-result? result))
     (is (empty? (:rows result)))
-    (cql/execute "DROP COLUMNFAMILY ?" ["libraries"]))))
+    (cql/execute "DROP COLUMNFAMILY ?" ["libraries"])))
 
 (deftest ^{:cql true} test-create-truncate-and-drop-column-family-using-cql
   (with-thrift-exception-handling
@@ -50,50 +52,13 @@
 
 (deftest ^{:cql true} test-create-and-drop-an-index-using-raw-cql
   (with-thrift-exception-handling
-    (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
+    (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
+  (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
                                                language varchar,
                                                PRIMARY KEY (name))")
-    (let [query  "CREATE INDEX ON libraries (language)"
-          result (cql/execute-raw query)]
-      (is (cql/void-result? result))
-      (cql/execute-raw "DROP COLUMNFAMILY libraries;"))))
-
-
-;;
-;; INSERT
-;;
-
-(deftest ^{:cql true} test-insert-and-select-count-using-raw-cql
-  (with-thrift-exception-handling
-    (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
-                                               language varchar,
-                                               PRIMARY KEY (name))")
-    (is (cql/void-result? (cql/execute-raw "INSERT INTO libraries (name, language) VALUES ('Cassaforte', 'Clojure') USING CONSISTENCY LOCAL_QUORUM AND TTL 86400")))
-    (cql/execute-raw "TRUNCATE libraries;")
-    (cql/execute-raw "DROP COLUMNFAMILY libraries;")))
-
-
-(deftest ^{:cql true} test-insert-and-select-count-using-prepared-cql-statement
-  (with-thrift-exception-handling
-    (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
-                                               language varchar,
-                                               PRIMARY KEY (name))")
-    (is (cql/void-result? (cql/execute "INSERT INTO libraries (name, language) VALUES ('?', '?') USING CONSISTENCY LOCAL_QUORUM AND TTL 86400" ["Cassaforte", "Clojure"])))
-    (let [res (cql/execute "SELECT COUNT(*) FROM libraries")]
-      (is (cql/rows-result? res)))
-    (cql/execute-raw "TRUNCATE libraries;")
-    (cql/execute-raw "DROP COLUMNFAMILY libraries;")))
-
-(deftest ^{:cql true} test-insert-and-select-count-using-convenience-function
-  (with-thrift-exception-handling
-    (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
-                                               language varchar,
-                                               PRIMARY KEY (name))")
-    (is (cql/void-result? (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} {:consistency "LOCAL_QUORUM" :ttl 86400})))
-    (let [res (cql/execute "SELECT COUNT(*) FROM libraries")]
-      (is (= 1 (count (:rows res)))))
-    (cql/execute-raw "TRUNCATE libraries;")
-    (cql/execute-raw "DROP COLUMNFAMILY libraries;")))
+  (let [query  "CREATE INDEX ON libraries (language)"
+        result (cql/execute-raw query)]
+    (is (cql/void-result? result))))
 
 
 ;;
@@ -107,14 +72,45 @@
 ;; INSERT with placeholders
 ;;
 
-;; TBD
+(deftest ^{:cql true} test-insert-and-select-count-using-raw-cql
+  (with-thrift-exception-handling
+    (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
+  (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
+                                               language varchar,
+                                               PRIMARY KEY (name))")
+  (is (cql/void-result? (cql/execute-raw "INSERT INTO libraries (name, language) VALUES ('Cassaforte', 'Clojure') USING CONSISTENCY LOCAL_QUORUM AND TTL 86400")))
+    (cql/execute-raw "TRUNCATE libraries;")
+    (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
+
+
+(deftest ^{:cql true} test-insert-and-select-count-using-prepared-cql-statement
+  (with-thrift-exception-handling
+    (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
+  (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
+                                               language varchar,
+                                               PRIMARY KEY (name))")
+    (is (cql/void-result? (cql/execute "INSERT INTO libraries (name, language) VALUES ('?', '?') USING CONSISTENCY LOCAL_QUORUM AND TTL 86400" ["Cassaforte", "Clojure"])))
+    (let [res (cql/execute "SELECT COUNT(*) FROM libraries")]
+      (is (cql/rows-result? res)))
+    (cql/execute-raw "TRUNCATE libraries;")
+    (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
 
 
 ;;
 ;; INSERT with a map
 ;;
 
-;; TBD
+(deftest ^{:cql true} test-insert-and-select-count-using-convenience-function
+  (with-thrift-exception-handling
+    (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
+  (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
+                                               language varchar,
+                                               PRIMARY KEY (name))")
+  (is (cql/void-result? (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} {:consistency "LOCAL_QUORUM" :ttl 86400})))
+  (let [res (cql/execute "SELECT COUNT(*) FROM libraries")]
+    (is (= 1 (count (:rows res)))))
+  (cql/execute-raw "TRUNCATE libraries;")
+  (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
 
 
 ;;
@@ -128,7 +124,15 @@
 ;; DELETE with placeholders
 ;;
 
-;; TBD
+(deftest ^{:cql true} test-delete-with-prepared-cql-statement
+  (with-thrift-exception-handling
+    (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
+  (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
+                                                    language  varchar,
+                                                    PRIMARY KEY (name))")
+    (is (cql/void-result? (cql/execute "INSERT INTO libraries (name, language) VALUES ('?', '?') USING CONSISTENCY LOCAL_QUORUM AND TTL 86400" ["Cassaforte", "Clojure"])))
+    (is (cql/void-result? (cql/execute "DELETE FROM libraries WHERE name = '?'" ["Cassaforte"])))
+    (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
 
 
 ;;
