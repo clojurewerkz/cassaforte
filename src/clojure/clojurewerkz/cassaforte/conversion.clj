@@ -1,9 +1,36 @@
 (ns clojurewerkz.cassaforte.conversion
   (:use [clojure.walk :only [stringify-keys]]
-        [clojurewerkz.support.string :only [to-byte-buffer]])
-  (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef CqlPreparedResult CqlResult CqlRow Column]
+        [clojurewerkz.support.string :only [to-byte-buffer from-byte-buffer]])
+  (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef CqlPreparedResult CqlResult CqlRow Column CqlMetadata]
            java.util.List
            java.nio.ByteBuffer))
+
+;;
+;; Implementation
+;;
+
+(defn from-cql-column
+  [^Column column]
+  {:name      (String. ^bytes (.getName column) "UTF-8")
+   :value     (.getValue column)
+   :ttl       (.getTtl column)
+   :timestamp (.getTimestamp column)})
+
+(defn from-cql-row
+  [^CqlRow row]
+  {:key (String. ^bytes (.getKey row) "UTF-8")
+   :columns (map from-cql-column (.getColumns row))})
+
+(defn from-cql-type-map
+  [^java.util.Map$Entry m]
+  {:name (from-byte-buffer (.getKey m)) :value (.getValue m)})
+
+(defn from-cql-metadata
+  [^CqlMetadata md]
+  {:value-types (map from-cql-type-map (.getValue_types md))
+   :name-types  (map from-cql-type-map  (.getName_types md))
+   :default-value-type (.getDefault_value_type md)
+   :default-name-type  (.getDefault_name_type md)})
 
 
 
@@ -59,21 +86,9 @@
      :variable-names (.getVariable_names result)
      :variable-types (.getVariable_types result)}))
 
-(defn from-cql-column
-  [^Column column]
-  {:name      (String. ^bytes (.getName column) "UTF-8")
-   :value     (.getValue column)
-   :ttl       (.getTtl column)
-   :timestamp (.getTimestamp column)})
-
-(defn from-cql-row
-  [^CqlRow row]
-  {:key (String. ^bytes (.getKey row) "UTF-8")
-   :columns (map from-cql-column (.getColumns row))})
-
 (defn from-cql-result
   [^CqlResult result]
   {:num    (.getNum result)
-   :schema (.getSchema result)
+   :schema (from-cql-metadata (.getSchema result))
    :type   (.getType result)
    :rows   (map from-cql-row (.getRows result))})
