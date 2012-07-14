@@ -1,5 +1,6 @@
 (ns clojurewerkz.cassaforte.cql
-  (:require [clojurewerkz.cassaforte.client :as cc])
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.bytes  :as cb])
   (:use [clojure.string :only [split join]]
         [clojurewerkz.support.string :only [maybe-append to-byte-buffer interpolate-vals interpolate-kv]]
         [clojurewerkz.support.fn :only [fpartial]]
@@ -137,8 +138,7 @@
     (= (:type m) CqlResultType/ROWS))
   (count-value
     [m]
-    (when-let [^bytes bytes (-> m :rows first :columns first :value)]
-      (.getLong (java.nio.ByteBuffer/wrap bytes)))))
+    (-> m :rows first :columns first :value)))
 
 
 

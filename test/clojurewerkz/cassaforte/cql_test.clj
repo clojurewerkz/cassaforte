@@ -3,7 +3,8 @@
            [clojurewerkz.cassaforte.cql    :as cql])
   (:use clojure.test
         clojurewerkz.cassaforte.conversion
-        clojurewerkz.cassaforte.test.helper))
+        clojurewerkz.cassaforte.test.helper)
+  (:import java.util.UUID))
 
 (cc/connect! "127.0.0.1" "CassaforteTest1")
 
@@ -143,10 +144,10 @@
 
 
 ;;
-;; Raw SELECT
+;; Raw SELECT COUNT(*)
 ;;
 
-(deftest ^{:cql true} test-delete-with-prepared-cql-statement
+(deftest ^{:cql true} test-select-count-with-raw-cql
   (with-thrift-exception-handling
     (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
   (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
@@ -161,6 +162,36 @@
   (let [res (cql/execute-raw "SELECT COUNT(*) FROM libraries")
         n   (cql/count-value res)]
     (is (= 1 n)))
+  (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
+
+
+;;
+;; Raw SELECT
+;;
+
+(deftest ^{:cql true} test-select-with-raw-cql-and-utf8-named-columns
+  (with-thrift-exception-handling
+    (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
+  (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
+                                                    language  varchar,
+                                                    rating      double,
+                                                    votes       int,
+                                                    year        bigint,
+                                                    released    boolean,
+                                                    PRIMARY KEY (name))")
+  (cql/execute "INSERT INTO libraries (name, language, rating, year) VALUES ('?', '?', ?, ?) USING CONSISTENCY ONE" ["Cassaforte", "Clojure", 4.0, 2012])
+  (cql/execute "INSERT INTO libraries (name, language, rating, year) VALUES ('?', '?', ?, ?) USING CONSISTENCY ONE" ["Welle", "Clojure", 5.0, 2011])
+  (let [res (cql/execute-raw "SELECT * FROM libraries")
+        row (-> res :rows first)
+        col (second (:columns row))]
+    (is (= (String. ^bytes (:key row) "UTF-8") "Cassaforte"))
+    (is (= (:value col) "Clojure"))
+    (doseq [col (:columns row)]
+      (is (:name col))
+      (is (contains? col :value))
+      (is (:ttl col))
+      (is (:timestamp col))))
+  (cql/execute-raw "TRUNCATE libraries")
   (cql/execute-raw "DROP COLUMNFAMILY libraries;"))
 
 
