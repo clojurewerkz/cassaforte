@@ -28,8 +28,6 @@
 
 (defmethod deserialize "UUIDType"
   [_ ^bytes bytes]
-  (println (vec bytes))
-  (println (String. bytes))
   (java.util.UUID/fromString (String. bytes)))
 
 (defmethod deserialize "BooleanType"
