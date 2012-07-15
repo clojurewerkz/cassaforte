@@ -60,7 +60,7 @@ To subscribe for announcements of releases, important changes and so on, please 
 
 ## Maven Artifacts
 
-Monger artifacts are [released to Clojars](https://clojars.org/clojurewerkz/cassaforte). If you are using Maven, add the following repository
+Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/cassaforte). If you are using Maven, add the following repository
 definition to your `pom.xml`:
 
 ``` xml
