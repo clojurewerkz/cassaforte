@@ -59,11 +59,21 @@ To subscribe for announcements of releases, important changes and so on, please 
 
 ## Maven Artifacts
 
-### Snapshots
+Monger artifacts are [released to Clojars](https://clojars.org/clojurewerkz/cassaforte). If you are using Maven, add the following repository
+definition to your `pom.xml`:
+
+``` xml
+<repository>
+  <id>clojars.org</id>
+  <url>http://clojars.org/repo</url>
+</repository>
+```
+
+### Most recent pre-release version
 
 With Leiningen:
 
-    [clojurewerkz/cassaforte "1.0.0-SNAPSHOT"]
+    [clojurewerkz/cassaforte "1.0.0-beta1"]
 
 
 With Maven:
@@ -71,7 +81,7 @@ With Maven:
     <dependency>
       <groupId>clojurewerkz</groupId>
       <artifactId>cassaforte</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>1.0.0-beta1</version>
     </dependency>
 
 
