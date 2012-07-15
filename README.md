@@ -26,8 +26,9 @@ It almost certainly is not useable enough for anyone but the author. When Cassaf
 ## Supported Features
 
  * Connection to a single node
- * CQL queries
- * Keyspace operations: create, drop, describe
+ * Create, destroy keyspace
+ * CQL 3.0 queries, including queries with placeholders (?, a la JDBC)
+ * Deserialization of column names and values according to response schema (not all types are supported yet)
 
 
 ## Supported Clojure versions
