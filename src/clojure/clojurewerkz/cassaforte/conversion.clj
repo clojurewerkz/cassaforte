@@ -2,7 +2,7 @@
   (:require [clojurewerkz.cassaforte.bytes :as cb])
   (:use [clojure.walk :only [stringify-keys]]
         [clojurewerkz.support.string :only [to-byte-buffer from-byte-buffer]])
-  (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef CqlPreparedResult CqlResult CqlRow Column CqlMetadata]
+  (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef ColumnDef CqlPreparedResult CqlResult CqlRow Column CqlMetadata]
            java.util.List
            java.nio.ByteBuffer))
 
@@ -108,24 +108,36 @@
   (to-consistency-level [^clojure.lang.Keyword input]
     (ConsistencyLevel/valueOf (.toUpperCase (name input)))))
 
-
-
-(defn ^org.apache.cassandra.thrift.KsDef to-keyspace-definition
+(defn ^org.apache.cassandra.thrift.KsDef build-keyspace-definition
   ([^String name ^String strategy-class ^List column-family-defs]
      (KsDef. name strategy-class column-family-defs))
   ([^String name ^String strategy-class ^List column-family-defs & {:keys [strategy-opts]}]
      (let [ks-def (KsDef. name strategy-class column-family-defs)]
        (when strategy-opts
          (.setStrategy_options ks-def (stringify-keys strategy-opts)))
+       (when (not (empty? column-family-defs))
+         (.setCf_defs ks-def column-family-defs))
        ks-def)))
 
+(def build-kd build-keyspace-definition)
 
-(defn ^org.apache.cassandra.thrift.CfDef to-column-family-definition
+(defn ^ColumnDef build-column-definition
+  [^String name ^String validation-class]
+  (ColumnDef. (to-byte-buffer name) validation-class))
+
+(def build-cd build-column-definition)
+
+(defn ^org.apache.cassandra.thrift.CfDef build-column-family-definition
   ([^String keyspace ^String name]
      (CfDef. keyspace name))
-  ([^String keyspace ^String name & {:keys [column-type comparator-type]
-                                     :or {column-type "Standard"
-                                          comparator-type "org.apache.cassandra.db.marshal.BytesType"}}]
-     (let [cf-def (CfDef. keyspace name)]
-       ;; TODO
-       cf-def)))
+  ([^String keyspace ^String name ^List cdefs & {:keys [column-type comparator-type]
+                                                 :or {column-type "Standard"
+                                                      comparator-type "org.apache.cassandra.db.marshal.BytesType"}}]
+     (let [cfdef (CfDef. keyspace name)]
+       (.setColumn_type cfdef column-type)
+       (.setComparator_type cfdef comparator-type)
+       (doseq [cd cdefs]
+         (.addToColumn_metadata cfdef cd))
+       cfdef)))
+
+(def build-cfd build-column-family-definition)

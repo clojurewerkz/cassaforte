@@ -1,7 +1,7 @@
 (ns clojurewerkz.cassaforte.schema
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql])
-  (:use [clojurewerkz.cassaforte.conversion :only [to-keyspace-definition]])
+  (:use [clojurewerkz.cassaforte.conversion :only [build-keyspace-definition]])
   (:import java.util.List
            clojurewerkz.cassaforte.CassandraClient
            org.apache.cassandra.thrift.KsDef))
@@ -17,10 +17,10 @@
   ([^KsDef keyspace-definition]
      (.system_add_keyspace ^CassandraClient cc/*cassandra-client* keyspace-definition))
   ([^String name ^String strategy-class ^List cf-defs]
-     (.system_add_keyspace ^CassandraClient cc/*cassandra-client* (to-keyspace-definition name strategy-class cf-defs)))
+     (.system_add_keyspace ^CassandraClient cc/*cassandra-client* (build-keyspace-definition name strategy-class cf-defs)))
   ([^String name ^String strategy-class ^List cf-defs & options]
      (let [args (concat [name strategy-class cf-defs] options)]
-       (.system_add_keyspace ^CassandraClient cc/*cassandra-client* (apply to-keyspace-definition args)))))
+       (.system_add_keyspace ^CassandraClient cc/*cassandra-client* (apply build-keyspace-definition args)))))
 
 
 (defn drop-keyspace

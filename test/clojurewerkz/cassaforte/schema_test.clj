@@ -18,7 +18,7 @@
   (let [keyspace       "CassaforteTest2"
         strategy-class "org.apache.cassandra.locator.SimpleStrategy"
         strategy-opts  {:replication_factor "1"}
-        cf-defs        [(to-column-family-definition keyspace "movies")]]
+        cf-defs        [(build-column-family-definition keyspace "movies")]]
     (is (sch/add-keyspace keyspace strategy-class cf-defs :strategy-opts strategy-opts))
     (is (sch/drop-keyspace keyspace))))
 
