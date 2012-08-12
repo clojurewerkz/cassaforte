@@ -39,12 +39,11 @@
          ConsistencyLevel/EACH_QUORUM "each_quorum"
          ConsistencyLevel/ALL "all")))
 
-
 (deftest test-build-keyspace-definition
   (let [name           "CassaforteTest2"
         strategy-class "org.apache.cassandra.locator.SimpleStrategy"
         strategy-opts  {"replication_factor" "1"}
-        cf-defs        [(build-cfd "keyspace-name" "column-family-name" [(build-cd "name" "UTF8Type")])]
+        cf-defs        [(build-cfd "CassaforteTest2" "column-family-name" [(build-cd "name" "UTF8Type")])]
         ks-def         (build-keyspace-definition name strategy-class cf-defs :strategy-opts strategy-opts)]
     (is (= name (keyspace-def/get-name ks-def)))
     (is (= strategy-class (keyspace-def/get-strategy-class ks-def)))
@@ -75,3 +74,29 @@
     ;; Order is guaranteed by Comparator, so that test does have a predictable order
     (is (= "birth_date" (column-def/get-name (first (column-family-def/get-column-metadata cfdef)))))
     (is (= "full_name" (column-def/get-name (second (column-family-def/get-column-metadata cfdef)))))))
+
+(deftest t-build-column
+  (let [name      :name
+        value     "John Doe"
+        timestamp (System/currentTimeMillis)
+        column    (build-column clojurewerkz.support.string/to-byte-buffer name value timestamp)
+        c-map     (to-map column)]
+    (are [expected actual] (is (= expected actual))
+         name (:name c-map)
+         value (:value c-map)
+         timestamp (:timestamp c-map))))
+
+(deftest t-build-super-column
+  (let [key          "a0b1c2"
+        column-map   {:age "26" :last_name "P" :first_name "Alex"}
+        timestamp    (System/currentTimeMillis)
+        super-column (build-super-column clojurewerkz.support.string/to-byte-buffer key column-map timestamp)
+        sc-map       (to-map super-column)
+        columns      (:columns sc-map)]
+    (is (= key (:name sc-map)))
+    (is (= :age (:name (first columns))))
+    (is (= "26" (:value (first columns))))
+    (is (= :last_name (:name (second columns))))
+    (is (= "P" (:value (second columns))))
+    (is (= :first_name (:name (nth columns 2))))
+    (is (= "Alex" (:value (nth columns 2))))))
