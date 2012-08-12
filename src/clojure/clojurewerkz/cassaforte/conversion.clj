@@ -1,8 +1,15 @@
 (ns clojurewerkz.cassaforte.conversion
-  (:require [clojurewerkz.cassaforte.bytes :as cb])
-  (:use [clojure.walk :only [stringify-keys]]
+  (:require [clojurewerkz.cassaforte.bytes :as cb]
+            [clojurewerkz.cassaforte.thrift.keyspace-definition :as kd]
+            [clojurewerkz.cassaforte.thrift.column-family-definition :as cfd]
+            [clojurewerkz.cassaforte.thrift.column-definition :as cd]
+            [clojurewerkz.cassaforte.thrift.column :as col]
+            [clojurewerkz.cassaforte.thrift.super-column :as scol])
+  (:use [clojure.walk :only [stringify-keys keywordize-keys]]
         [clojurewerkz.support.string :only [to-byte-buffer from-byte-buffer]])
-  (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef ColumnDef CqlPreparedResult CqlResult CqlRow Column CqlMetadata]
+  (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef ColumnDef CqlPreparedResult
+                                        CqlResult CqlRow Column SuperColumn ColumnOrSuperColumn
+                                        CqlMetadata Mutation]
            java.util.List
            java.nio.ByteBuffer))
 
@@ -133,7 +140,7 @@
   ([^String keyspace ^String name ^List cdefs & {:keys [column-type comparator-type]
                                                  :or {column-type "Standard"
                                                       comparator-type "org.apache.cassandra.db.marshal.BytesType"}}]
-     (let [cfdef (CfDef. keyspace name)]
+     (let [cfdef (build-column-family-definition keyspace name)]
        (.setColumn_type cfdef column-type)
        (.setComparator_type cfdef comparator-type)
        (doseq [cd cdefs]
@@ -141,3 +148,83 @@
        cfdef)))
 
 (def build-cfd build-column-family-definition)
+
+(defprotocol DefinitionToMap
+  (to-map [input] "Converts any definition to map"))
+
+(extend-protocol DefinitionToMap
+  nil
+  (to-map [_]
+    nil)
+
+  java.util.HashMap
+  (to-map [^clojure.lang.IPersistentMap input]
+    (into {} (keywordize-keys input)))
+
+  KsDef
+  (to-map [^KsDef ks-def]
+    {:name (kd/get-name ks-def)
+     :strategy-class (kd/get-strategy-class ks-def)
+     :strategy-opts (to-map (kd/get-strategy-options ks-def))
+     :cf-defs (map to-map (kd/get-cf-defs ks-def))})
+
+  CfDef
+  (to-map [^CfDef cf-def]
+    {:keyspace (cfd/get-keyspace cf-def)
+     :name     (cfd/get-name cf-def)
+     :column-type (cfd/get-column-type cf-def)
+     :comparator-type (cfd/get-comparator-type cf-def)
+     :column-metadata (map to-map (cfd/get-column-metadata cf-def))})
+
+  ColumnDef
+  (to-map [^ColumnDef cdef]
+    {:name (cd/get-name cdef)
+     :validation-class (cd/get-validation-class cdef)})
+
+  Column
+  (to-map [^Column column]
+    {:name (col/get-name column)
+     :value (col/get-value column)
+     :timestamp (col/get-timestamp column)})
+
+  SuperColumn
+  (to-map [^SuperColumn scolumn]
+    {:name (scol/get-name scolumn)
+     :columns (map to-map (scol/get-columns scolumn))})
+  )
+
+(defprotocol
+    CoscConversion
+  (^ColumnOrSuperColumn build-cosc [input] "Converts given instance to ColumnOrSupercolumn"))
+
+(extend-protocol CoscConversion
+  Column
+  (build-cosc [^Column input]
+    (.setColumn (ColumnOrSuperColumn.) input))
+  SuperColumn
+  (build-cosc [^SuperColumn input]
+    (.setSuper_column (ColumnOrSuperColumn.) input)))
+
+(defn ^Column build-column
+  "Converts clojure map to column"
+  ([^String key ^String value]
+     (build-column to-byte-buffer key value (System/currentTimeMillis)))
+  ([^clojure.lang.IFn encoder ^String key ^String value ^Long timestamp]
+      (-> (Column.)
+          (.setName (encoder (name key)))
+          (.setValue (encoder value))
+          (.setTimestamp timestamp))))
+
+(defn build-super-column
+  "Convert a clojure map to supercolumn"
+  ([^String key ^clojure.lang.IPersistentMap column-map]
+     (build-super-column to-byte-buffer key column-map (System/currentTimeMillis)))
+  ([^clojure.lang.IFn encoder ^String key ^clojure.lang.IPersistentMap column-map ^Long timestamp]
+     (let [columns (map (fn [[key value]] (build-column encoder key value timestamp)) column-map)]
+       (-> (SuperColumn.)
+           (.setName (encoder key))
+           (.setColumns (java.util.ArrayList. columns))))))
+
+(defn build-mutation
+  [cosc]
+  (.setColumn_or_supercolumn (Mutation.) (build-cosc cosc)))
