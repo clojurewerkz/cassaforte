@@ -47,10 +47,23 @@
   (k/set-keyspace "keyspace_name")
 
   (batch-mutate
-   {"key1" {"ColumnFamily1" {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"}} }
-    "key2" {"ColumnFamily1" {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"}} }}
+   {"key1" {"ColumnFamily1" {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"} :name3 {:first "e" :second "f"}}}
+    "key2" {"ColumnFamily1" {:name1 {:first "g" :second "h"} :name2 {:first "i" :second "j"} :name3 {:first "k" :second "l"}} }}
    *consistency-level*
    :type :super)
 
-  (is (= {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"}}
-         (to-plain-hash (get-slice "ColumnFamily1" "key1" *consistency-level*)))))
+  (are [expected actual] (= expected actual)
+       {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"} :name3 {:first "e" :second "f"}}
+       (to-plain-hash (get-slice "ColumnFamily1" "key1" *consistency-level*))
+
+       {:name1 {:first "g" :second "h"} :name2 {:first "i" :second "j"} :name3 {:first "k" :second "l"}}
+       (to-plain-hash (get-slice "ColumnFamily1" "key2" *consistency-level*))
+
+       {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"}}
+       (to-plain-hash (get-slice "ColumnFamily1" "key1" "name1" "name2" *consistency-level*))
+
+       {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"}}
+       (to-plain-hash (get-slice "ColumnFamily1" "key1" "" "name2" *consistency-level*))
+
+       {:name2 {:first "i" :second "j"} :name3 {:first "k" :second "l"}}
+       (to-plain-hash (get-slice "ColumnFamily1" "key2" "name2" "" *consistency-level*))))
