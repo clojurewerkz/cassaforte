@@ -4,7 +4,8 @@
             [clojurewerkz.cassaforte.thrift.column-family-definition :as cfd]
             [clojurewerkz.cassaforte.thrift.column-definition :as cd]
             [clojurewerkz.cassaforte.thrift.column :as col]
-            [clojurewerkz.cassaforte.thrift.super-column :as scol])
+            [clojurewerkz.cassaforte.thrift.super-column :as scol]
+            [clojurewerkz.cassaforte.thrift.column-or-super-column :as cosc])
   (:use [clojure.walk :only [stringify-keys keywordize-keys]]
         [clojurewerkz.support.string :only [to-byte-buffer from-byte-buffer]])
   (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef ColumnDef CqlPreparedResult
@@ -153,10 +154,6 @@
   (to-map [input] "Converts any definition to map"))
 
 (extend-protocol DefinitionToMap
-  nil
-  (to-map [_]
-    nil)
-
   java.util.HashMap
   (to-map [^clojure.lang.IPersistentMap input]
     (into {} (keywordize-keys input)))
@@ -191,7 +188,25 @@
   (to-map [^SuperColumn scolumn]
     {:name (scol/get-name scolumn)
      :columns (map to-map (scol/get-columns scolumn))})
-  )
+
+  ColumnOrSuperColumn
+  (to-map [^ColumnOrSuperColumn column-or-scolumn]
+    (to-map
+     (if (cosc/is-super-column? column-or-scolumn)
+       (cosc/get-super-column column-or-scolumn)
+       (cosc/get-column column-or-scolumn))))
+
+  List
+  (to-map [list]
+    (map to-map list))
+
+  nil
+  (to-map [_]
+    nil)
+
+  Object
+  (to-map [obj]
+    obj))
 
 (defprotocol
     CoscConversion
@@ -228,3 +243,22 @@
 (defn build-mutation
   [cosc]
   (.setColumn_or_supercolumn (Mutation.) (build-cosc cosc)))
+
+(defprotocol ToPlainHash
+  (to-plain-hash [input] ""))
+
+(extend-protocol ToPlainHash
+  java.util.List
+  (to-plain-hash [cosc-map]
+    (let [list  (map to-map cosc-map)
+          names (reverse (map #(keyword (:name %)) list))
+          values (reverse (map #(to-plain-hash (or (:columns %) (:value %))) list))]
+      (zipmap names values)))
+
+  Object
+  (to-plain-hash [obj]
+    (to-map obj))
+
+  nil
+  (to-plain-hash [_]
+    nil))

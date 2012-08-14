@@ -100,3 +100,17 @@
     (is (= "P" (:value (second columns))))
     (is (= :first_name (:name (nth columns 2))))
     (is (= "Alex" (:value (nth columns 2))))))
+
+(deftest t-to-plain-hash
+  (is (= {:first "first" :second "second" :third "third"}
+         (to-plain-hash '({:name :first, :value "first" :timestamp 1344930050150}
+                          {:name :second, :value "second" :timestamp 1344930050150}
+                          {:name :third, :value "third" :timestamp 1344930050150}))))
+
+  (is (= {:name1 {:first "a" :second "b"}
+          :name2 {:first "c" :second "d"}}
+         (to-plain-hash
+          [{:name "name1" :columns '({:name :first :value "a" :timestamp 1344929814489}
+                                     {:name :second :value "b" :timestamp 1344929814489})}
+           {:name "name2" :columns '({:name :first :value "c" :timestamp 1344929814491}
+                                     {:name :second :value "d" :timestamp 1344929814491})}]))))
