@@ -2,10 +2,7 @@
   (:refer-clojure :exclude [get])
   (:use [clojurewerkz.support.string :only [to-byte-buffer]])
   (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.conversion :as c])
-  (:import [org.apache.cassandra.thrift ColumnPath ColumnParent SlicePredicate SliceRange
-            ColumnOrSuperColumn SuperColumn Mutation
-            ]))
+            [clojurewerkz.cassaforte.conversion :as c]))
 
 (defn- batch-mutate-transform
   [m type]
@@ -31,8 +28,7 @@
 
 (defn get
   [^String column-family ^String key ^String field consistency-level]
-  (let [column-path (ColumnPath. column-family)]
-    (.setColumn column-path (to-byte-buffer field))
+  (let [column-path (c/build-column-path column-family field)]
     (.get cc/*cassandra-client*
           (to-byte-buffer key)
           column-path
@@ -42,17 +38,15 @@
   ([column-family key consistency-level]
      (get-slice column-family key "" "" consistency-level))
   ([column-family key slice-start slice-finish consistency-level]
-      (let [column-parent (ColumnParent. column-family)
-            range         (-> (SliceRange.)
-                              (.setStart (to-byte-buffer slice-start))
-                              (.setFinish (to-byte-buffer slice-finish)))
-            predicate     (-> (SlicePredicate.)
-                              (.setSlice_range range))]
+      (let [column-parent (c/build-column-parent column-family)
+            range         (c/build-slice-range slice-start slice-finish)
+            predicate     (c/build-slice-predicate range)]
         (.get_slice cc/*cassandra-client*
                     (to-byte-buffer key)
                     column-parent
                     predicate
                     consistency-level))))
+
 
 ;; get-count
 ;; insert

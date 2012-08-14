@@ -10,7 +10,7 @@
         [clojurewerkz.support.string :only [to-byte-buffer from-byte-buffer]])
   (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef ColumnDef CqlPreparedResult
                                         CqlResult CqlRow Column SuperColumn ColumnOrSuperColumn
-                                        CqlMetadata Mutation]
+                                        CqlMetadata Mutation SliceRange ColumnParent SlicePredicate ColumnPath]
            java.util.List
            java.nio.ByteBuffer))
 
@@ -190,6 +190,26 @@
 (defn build-mutation
   [cosc]
   (.setColumn_or_supercolumn (Mutation.) (build-cosc cosc)))
+
+(defn build-slice-range
+  [^String slice-start ^String slice-finish]
+  (-> (SliceRange.)
+      (.setStart (to-byte-buffer slice-start))
+      (.setFinish (to-byte-buffer slice-finish))))
+
+(defn build-slice-predicate
+  [range]
+  (-> (SlicePredicate.)
+      (.setSlice_range range)))
+
+(defn build-column-parent
+  [^String column-family]
+  (ColumnParent. column-family))
+
+(defn build-column-path
+  [^String column-family ^String field]
+  (-> (ColumnPath. column-family)
+      (.setColumn (to-byte-buffer field))))
 
 ;;
 ;; Map conversions
