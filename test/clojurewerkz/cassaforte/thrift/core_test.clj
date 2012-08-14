@@ -52,18 +52,21 @@
    *consistency-level*
    :type :super)
 
-  (are [expected actual] (= expected actual)
+  (are [expected actual] (= expected (to-plain-hash actual))
+       {:name1 {:first "a" :second "b"}}
+       (get "ColumnFamily1" "key1" "name1" *consistency-level* :type :super)
+
        {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"} :name3 {:first "e" :second "f"}}
-       (to-plain-hash (get-slice "ColumnFamily1" "key1" *consistency-level*))
+       (get-slice "ColumnFamily1" "key1" *consistency-level*)
 
        {:name1 {:first "g" :second "h"} :name2 {:first "i" :second "j"} :name3 {:first "k" :second "l"}}
-       (to-plain-hash (get-slice "ColumnFamily1" "key2" *consistency-level*))
+       (get-slice "ColumnFamily1" "key2" *consistency-level*)
 
        {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"}}
-       (to-plain-hash (get-slice "ColumnFamily1" "key1" "name1" "name2" *consistency-level*))
+       (get-slice "ColumnFamily1" "key1" "name1" "name2" *consistency-level*)
 
        {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"}}
-       (to-plain-hash (get-slice "ColumnFamily1" "key1" "" "name2" *consistency-level*))
+       (get-slice "ColumnFamily1" "key1" "" "name2" *consistency-level*)
 
        {:name2 {:first "i" :second "j"} :name3 {:first "k" :second "l"}}
-       (to-plain-hash (get-slice "ColumnFamily1" "key2" "name2" "" *consistency-level*))))
+       (get-slice "ColumnFamily1" "key2" "name2" "" *consistency-level*)))

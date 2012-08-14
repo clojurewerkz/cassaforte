@@ -27,8 +27,8 @@
                    consistency-level)))
 
 (defn get
-  [^String column-family ^String key ^String field consistency-level]
-  (let [column-path (c/build-column-path column-family field)]
+  [^String column-family ^String key ^String field consistency-level & {:keys [type] :or {type :column}}]
+  (let [column-path (c/build-column-path column-family field type)]
     (.get cc/*cassandra-client*
           (to-byte-buffer key)
           column-path

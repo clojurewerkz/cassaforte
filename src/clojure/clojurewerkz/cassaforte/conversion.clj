@@ -207,9 +207,12 @@
   (ColumnParent. column-family))
 
 (defn build-column-path
-  [^String column-family ^String field]
-  (-> (ColumnPath. column-family)
-      (.setColumn (to-byte-buffer field))))
+  [^String column-family ^String field type]
+  (let [column-path (ColumnPath. column-family)]
+    (if (= type :super)
+      (.setSuper_column column-path (to-byte-buffer field))
+      (.setColumn column-path (to-byte-buffer field)))
+    column-path))
 
 ;;
 ;; Map conversions
@@ -284,9 +287,14 @@
           values (reverse (map #(to-plain-hash (or (:columns %) (:value %))) list))]
       (zipmap names values)))
 
+  ColumnOrSuperColumn
+  (to-plain-hash [cosc]
+    (to-plain-hash (list cosc)))
+
   Object
   (to-plain-hash [obj]
-    (to-map obj))
+    obj)
+
 
   nil
   (to-plain-hash [_]
