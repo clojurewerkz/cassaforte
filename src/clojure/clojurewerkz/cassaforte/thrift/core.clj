@@ -7,13 +7,14 @@
             ColumnOrSuperColumn SuperColumn Mutation
             ]))
 
-(defn to-column-vector
-  [m]
-  (map (fn [[key value]] (c/build-column key value)) m))
-
-(defn to-mutation
-  [m]
-  (map (fn [[key value]] (c/build-mutation (c/build-column key value))) m))
+(defn- batch-mutate-transform
+  [m & {:keys [type] :or {type :column}}]
+  (map (fn [[key value]] (c/build-mutation
+                          (cond
+                            (= type :column) (c/build-column key value)
+                            (= type :super-column) (c/build-super-column (name key) value)
+                            :else (throw (Exception. (str "Don't know type " type ", can build only from :column and :super-column"))))))
+       m))
 
 (defn- apply-to-values [m f]
   "Applies function f to all values in map m"
@@ -23,24 +24,20 @@
 (defn batch-mutate
   [mutation-map consistency-level]
   (let [keys             (map to-byte-buffer (keys mutation-map))
-        mutations        (map #(apply-to-values % to-mutation) (vals mutation-map))
+        mutations        (map #(apply-to-values % batch-mutate-transform) (vals mutation-map))
         batch-mutate-map (zipmap keys mutations)]
     (.batch_mutate cc/*cassandra-client*
                    (java.util.HashMap. batch-mutate-map)
                    consistency-level)))
 
-(defn batch-mutate-supercolumn
-  [^String column-family ^String key ^String scolumn-name column-hash consistency-level]
-  (let [super-column  (-> (SuperColumn.)
-                          (.setName (to-byte-buffer scolumn-name))
-                          (.setColumns (to-column-vector column-hash)))
-        mutation      (-> (Mutation.)
-                          (.setColumn_or_supercolumn (-> (ColumnOrSuperColumn.) (.setSuper_column super-column))))]
+(defn batch-mutate-supercolumns
+  [mutation-map consistency-level]
+  (let [keys             (map to-byte-buffer (keys mutation-map))
+        mutations        (map #(apply-to-values % (fn [x] (batch-mutate-transform x :type :super-column))) (vals mutation-map))
+        batch-mutate-map (zipmap keys mutations)]
     (.batch_mutate cc/*cassandra-client*
-                   (java.util.HashMap. {(to-byte-buffer key) {column-family [mutation]}})
-                   consistency-level))
-
-  )
+                   (java.util.HashMap. batch-mutate-map)
+                   consistency-level)))
 
 (defn get
   [^String column-family ^String key ^String field consistency-level]

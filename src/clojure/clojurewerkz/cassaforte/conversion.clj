@@ -97,8 +97,9 @@
      :variable-names (.getVariable_names result)
      :variable-types (.getVariable_types result)}))
 
-
-
+;;
+;; Consistency Conversions
+;;
 
 (defprotocol ConsistencyLevelConversion
   (^org.apache.cassandra.thrift.ConsistencyLevel to-consistency-level [input] "Converts the input to one of the ConsistencyLevel enum values"))
@@ -115,6 +116,10 @@
   clojure.lang.Keyword
   (to-consistency-level [^clojure.lang.Keyword input]
     (ConsistencyLevel/valueOf (.toUpperCase (name input)))))
+
+;;
+;; Builders
+;;
 
 (defn ^org.apache.cassandra.thrift.KsDef build-keyspace-definition
   ([^String name ^String strategy-class ^List column-family-defs]
@@ -149,6 +154,46 @@
        cfdef)))
 
 (def build-cfd build-column-family-definition)
+
+(defprotocol
+    CoscConversion
+  (^ColumnOrSuperColumn build-cosc [input] "Converts given instance to ColumnOrSupercolumn"))
+
+(extend-protocol CoscConversion
+  Column
+  (build-cosc [^Column input]
+    (.setColumn (ColumnOrSuperColumn.) input))
+  SuperColumn
+  (build-cosc [^SuperColumn input]
+    (.setSuper_column (ColumnOrSuperColumn.) input)))
+
+(defn ^Column build-column
+  "Converts clojure map to column"
+  ([^String key ^String value]
+     (build-column to-byte-buffer key value (System/currentTimeMillis)))
+  ([^clojure.lang.IFn encoder ^String key ^String value ^Long timestamp]
+      (-> (Column.)
+          (.setName (encoder (name key)))
+          (.setValue (encoder value))
+          (.setTimestamp timestamp))))
+
+(defn build-super-column
+  "Convert a clojure map to supercolumn"
+  ([^String key ^clojure.lang.IPersistentMap column-map]
+     (build-super-column to-byte-buffer key column-map (System/currentTimeMillis)))
+  ([^clojure.lang.IFn encoder ^String key ^clojure.lang.IPersistentMap column-map ^Long timestamp]
+     (let [columns (map (fn [[key value]] (build-column encoder key value timestamp)) column-map)]
+       (-> (SuperColumn.)
+           (.setName (encoder key))
+           (.setColumns (java.util.ArrayList. columns))))))
+
+(defn build-mutation
+  [cosc]
+  (.setColumn_or_supercolumn (Mutation.) (build-cosc cosc)))
+
+;;
+;; Map conversions
+;;
 
 (defprotocol DefinitionToMap
   (to-map [input] "Converts any definition to map"))
@@ -207,42 +252,6 @@
   Object
   (to-map [obj]
     obj))
-
-(defprotocol
-    CoscConversion
-  (^ColumnOrSuperColumn build-cosc [input] "Converts given instance to ColumnOrSupercolumn"))
-
-(extend-protocol CoscConversion
-  Column
-  (build-cosc [^Column input]
-    (.setColumn (ColumnOrSuperColumn.) input))
-  SuperColumn
-  (build-cosc [^SuperColumn input]
-    (.setSuper_column (ColumnOrSuperColumn.) input)))
-
-(defn ^Column build-column
-  "Converts clojure map to column"
-  ([^String key ^String value]
-     (build-column to-byte-buffer key value (System/currentTimeMillis)))
-  ([^clojure.lang.IFn encoder ^String key ^String value ^Long timestamp]
-      (-> (Column.)
-          (.setName (encoder (name key)))
-          (.setValue (encoder value))
-          (.setTimestamp timestamp))))
-
-(defn build-super-column
-  "Convert a clojure map to supercolumn"
-  ([^String key ^clojure.lang.IPersistentMap column-map]
-     (build-super-column to-byte-buffer key column-map (System/currentTimeMillis)))
-  ([^clojure.lang.IFn encoder ^String key ^clojure.lang.IPersistentMap column-map ^Long timestamp]
-     (let [columns (map (fn [[key value]] (build-column encoder key value timestamp)) column-map)]
-       (-> (SuperColumn.)
-           (.setName (encoder key))
-           (.setColumns (java.util.ArrayList. columns))))))
-
-(defn build-mutation
-  [cosc]
-  (.setColumn_or_supercolumn (Mutation.) (build-cosc cosc)))
 
 (defprotocol ToPlainHash
   (to-plain-hash [input] ""))
