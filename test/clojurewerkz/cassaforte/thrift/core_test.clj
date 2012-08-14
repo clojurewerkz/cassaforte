@@ -46,10 +46,11 @@
                               :strategy-opts {"replication_factor" "1"}))
   (k/set-keyspace "keyspace_name")
 
-  (batch-mutate-supercolumns
+  (batch-mutate
    {"key1" {"ColumnFamily1" {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"}} }
     "key2" {"ColumnFamily1" {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"}} }}
-   *consistency-level*)
+   *consistency-level*
+   :type :super)
 
   (is (= {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"}}
          (to-plain-hash (get-slice "ColumnFamily1" "key1" *consistency-level*)))))

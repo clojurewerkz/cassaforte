@@ -8,12 +8,11 @@
             ]))
 
 (defn- batch-mutate-transform
-  [m & {:keys [type] :or {type :column}}]
+  [m type]
   (map (fn [[key value]] (c/build-mutation
-                          (cond
-                            (= type :column) (c/build-column key value)
-                            (= type :super-column) (c/build-super-column (name key) value)
-                            :else (throw (Exception. (str "Don't know type " type ", can build only from :column and :super-column"))))))
+                          (if (= type :super)
+                            (c/build-super-column (name key) value)
+                            (c/build-column key value))))
        m))
 
 (defn- apply-to-values [m f]
@@ -22,18 +21,9 @@
              [k (f v)])))
 
 (defn batch-mutate
-  [mutation-map consistency-level]
+  [mutation-map consistency-level & {:keys [type] :or {type :column}}]
   (let [keys             (map to-byte-buffer (keys mutation-map))
-        mutations        (map #(apply-to-values % batch-mutate-transform) (vals mutation-map))
-        batch-mutate-map (zipmap keys mutations)]
-    (.batch_mutate cc/*cassandra-client*
-                   (java.util.HashMap. batch-mutate-map)
-                   consistency-level)))
-
-(defn batch-mutate-supercolumns
-  [mutation-map consistency-level]
-  (let [keys             (map to-byte-buffer (keys mutation-map))
-        mutations        (map #(apply-to-values % (fn [x] (batch-mutate-transform x :type :super-column))) (vals mutation-map))
+        mutations        (map #(apply-to-values % (fn [x] (batch-mutate-transform x type))) (vals mutation-map))
         batch-mutate-map (zipmap keys mutations)]
     (.batch_mutate cc/*cassandra-client*
                    (java.util.HashMap. batch-mutate-map)
