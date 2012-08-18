@@ -19,34 +19,6 @@
 (def ^{:cons true :doc "Default compression level that is used for CQL queries"}
   default-compression (Compression/NONE))
 
-(defprotocol CQLValue
-  (to-cql-value [value] "Converts the given value to a CQL string representation"))
-
-(extend-protocol CQLValue
-  nil
-  (to-cql-value [value]
-    "null")
-
-  Integer
-  (to-cql-value [^Integer value]
-    (str value))
-
-  Long
-  (to-cql-value [^Long value]
-    (str value))
-
-  clojure.lang.BigInt
-  (to-cql-value [^clojure.lang.BigInt value]
-    (str value))
-
-  clojure.lang.Named
-  (to-cql-value [^clojure.lang.Named value]
-    (name value))
-
-  String
-  (to-cql-value [^String value]
-    (escape value)))
-
 (defn quote-identifier
   "Quotes the provided identifier"
   [identifier]
