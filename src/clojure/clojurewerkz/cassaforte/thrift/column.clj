@@ -2,13 +2,17 @@
   (:import [org.apache.cassandra.thrift Column]))
 
 (defn get-name
-  [^Column cdef]
-  (keyword (String. (.getName cdef))))
+  [^Column c]
+  (.getName c))
 
 (defn get-value
-  [^Column cdef]
-  (String. (.getValue cdef)))
+  [^Column c]
+  (.getValue c))
 
 (defn get-timestamp
-  [^Column cdef]
-  (.getTimestamp cdef))
+  [^Column c]
+  (.getTimestamp c))
+
+(defn get-ttl
+  [^Column c]
+  (.getTtl c))

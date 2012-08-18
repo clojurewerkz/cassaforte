@@ -1,10 +1,11 @@
 (ns clojurewerkz.cassaforte.cql
   (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.bytes  :as cb])
+            [clojurewerkz.cassaforte.bytes  :as cb]
+            [clojurewerkz.cassaforte.query  :as q])
   (:use [clojure.string :only [split join]]
         [clojurewerkz.support.string :only [maybe-append to-byte-buffer interpolate-vals interpolate-kv]]
         [clojurewerkz.support.fn :only [fpartial]]
-        [clojurewerkz.cassaforte.conversion :only [from-cql-prepared-result from-cql-result]])
+        [clojurewerkz.cassaforte.conversion :only [from-cql-prepared-result to-map]])
   (:import clojurewerkz.cassaforte.CassandraClient
            java.util.List
            [org.apache.cassandra.thrift Compression CqlResult CqlRow CqlResultType]))
@@ -13,8 +14,6 @@
 ;;
 ;; Implementation
 ;;
-
-(declare escape)
 
 (def ^{:cons true :doc "Default compression level that is used for CQL queries"}
   default-compression (Compression/NONE))
@@ -37,7 +36,6 @@
   [^String query]
   (-> query .trim maybe-append-semicolon))
 
-
 (defn prepare-cql-query
   "Prepares a CQL query for execution. Cassandra 1.1+ only."
   ([^String query]
@@ -57,18 +55,13 @@
 ;; API
 ;;
 
-(defn escape
-  [^String value]
-  ;; TODO
-  value)
-
 (defn ^clojure.lang.IPersistentMap
   execute-raw
   "Executes a CQL query given as a string. No argument replacement (a la JDBC) is performed."
   ([^String query]
-     (from-cql-result (.executeCqlQuery ^CassandraClient cc/*cassandra-client* (-> query clean-up))))
+     (to-map (.executeCqlQuery ^CassandraClient cc/*cassandra-client* (-> query clean-up))))
   ([^String query ^Compression compression]
-     (from-cql-result (.executeCqlQuery ^CassandraClient cc/*cassandra-client* (-> query clean-up) compression))))
+     (to-map (.executeCqlQuery ^CassandraClient cc/*cassandra-client* (-> query clean-up) compression))))
 
 (defn execute
   "Executes a CQL query given as a string. Performs positional argument (?) replacement (a la JDBC)."
@@ -132,23 +125,33 @@
                               (str (.toUpperCase (name k)) " " (str v)))
                             opts)))))
 
+(defn select
+  [column-family]
+  (let [res (execute "SELECT * FROM ?" [column-family])]
+    res))
+
+(defn create-column-family
+  [name fields & {:keys [primary-key]}]
+  (let [query (q/prepare-create-column-family-query name fields :primary-key primary-key)]
+    (execute-raw query)))
+
 (defn insert
-  "Inserts (or updates) a new row into the given column family"
-  ([^String column-family m {:keys [consistency timestamp ttl] :or {consistency "LOCAL_QUORUM"} :as opts}]
-     (let [xs    (seq m)
-           cols  (join "," (map (comp name first) xs))
-           vals  (join "," (map (comp quote str second) xs))
-           using (using-clause opts)]
-       (execute "INSERT INTO ? (?) VALUES (?) ?"
-                [column-family cols vals using])))
-  ([^String keyspace ^String column-family m opts]
-     (execute (format "%s.%s" (quote-identifier keyspace) (quote-identifier column-family)) m opts)))
+  [column-family vals & opts]
+  (let [query (apply q/prepare-insert-query column-family vals opts)]
+    (execute-raw query)))
+
+(defn drop-column-family
+  [name]
+  (let [query (q/prepare-drop-column-family-query name)]
+    (execute-raw query)))
+
+
 
 (defn truncate
   "Truncates a column family.
 
    1-arity form takes a column family name as the only argument.
-   2-arity form takes keyspace and column family names."  
+   2-arity form takes keyspace and column family names."
   ([^String column-family]
      (execute "TRUNCATE ?" [column-family]))
   ([^String keyspace ^String column-family]

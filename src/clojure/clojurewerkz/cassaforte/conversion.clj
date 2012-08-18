@@ -4,6 +4,7 @@
             [clojurewerkz.cassaforte.thrift.column-family-definition :as cfd]
             [clojurewerkz.cassaforte.thrift.column-definition :as cd]
             [clojurewerkz.cassaforte.thrift.column :as col]
+            [clojurewerkz.cassaforte.thrift.cql-row :as cql-row]
             [clojurewerkz.cassaforte.thrift.super-column :as scol]
             [clojurewerkz.cassaforte.thrift.column-or-super-column :as cosc])
   (:use [clojure.walk :only [stringify-keys keywordize-keys]]
@@ -11,6 +12,7 @@
   (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef ColumnDef CqlPreparedResult
                                         CqlResult CqlRow Column SuperColumn ColumnOrSuperColumn
                                         CqlMetadata Mutation SliceRange ColumnParent SlicePredicate ColumnPath]
+           [org.apache.cassandra.utils ByteBufferUtil]
            java.util.List
            java.nio.ByteBuffer))
 
@@ -18,75 +20,42 @@
 ;; Implementation
 ;;
 
-(defn from-cql-column
-  [^Column column]
-  {:name      (.getName column)
-   :value     (.getValue column)
-   :ttl       (.getTtl column)
-   :timestamp (.getTimestamp column)})
-
-(defn from-cql-row
-  [^CqlRow row]
-  {:key     (.getKey row)
-   :columns (doall (map from-cql-column (.getColumns row)))})
-
 (defn from-cql-types
   "Transforms a map of CQL column names/types with byte buffer keys into
    an immutable Clojure map with string keys"
   [^java.util.Map m]
   (reduce (fn [acc ^java.util.Map$Entry entry]
-            (assoc acc (.getKey entry) (.getValue entry)))
+            (assoc acc (keyword (ByteBufferUtil/string (.getKey entry))) (.getValue entry)))
           {}
           m))
 
-(defn- deserialize-row
+(defn deserialize-row
   "Returns a row with all column values deserialized from byte arrays to strings, numerics, et cetera
    according to the schema information"
   [{:keys [columns] :as row} {:keys [value-types default-value-type name-types default-name-type] :as schema}]
   (let [cols (for [col columns
                    :let [^bytes k  (:name col)
-                         k-buf     (ByteBuffer/wrap k)
+                         k-buf     (keyword (String. k "UTF-8"))
                          name-type (get name-types k-buf default-name-type)
                          val-type  (get value-types k-buf default-value-type)
                          val       (:value col)]]
-               (assoc col :name  (when k
-                                   (cb/deserialize name-type k))
-                      :value (when val
-                               (cb/deserialize val-type val))))]
+               (assoc col
+                 :name  (when k
+                          (cb/deserialize name-type k))
+                 :value (when val
+                          (cb/deserialize val-type val))))]
     (assoc row :columns cols)))
 
-(defn- deserialize-rows
+(defn deserialize-rows
   [rows schema]
   (if schema
     (map (fn [row]
            (deserialize-row row schema)) rows)
     rows))
 
-(defn from-cql-metadata
-  [^CqlMetadata md]
-  {:value-types        (from-cql-types (.getValue_types md))
-   :name-types         (from-cql-types  (.getName_types md))
-   :default-value-type (.getDefault_value_type md)
-   :default-name-type  (.getDefault_name_type md)})
-
-
 ;;
 ;; API
 ;;
-
-(defn from-cql-result
-  [^CqlResult result]
-  (let [raw-schema (.getSchema result)
-        schema     (when raw-schema
-                     (from-cql-metadata raw-schema))
-        base   {:num    (.getNum result)
-                :type   (.getType result)
-                :rows   (deserialize-rows
-                         (map from-cql-row (.getRows result))
-                         schema)}]
-    (if raw-schema
-      (assoc base :schema schema)
-      base)))
 
 (defn from-cql-prepared-result
   [^CqlPreparedResult result]
@@ -116,6 +85,28 @@
   clojure.lang.Keyword
   (to-consistency-level [^clojure.lang.Keyword input]
     (ConsistencyLevel/valueOf (.toUpperCase (name input)))))
+
+;;
+;; Value encoders
+;;
+
+(defprotocol ValueEncoder
+  (encode [value] "Encodes the value"))
+
+(extend-protocol ValueEncoder
+  java.lang.Long
+  (encode [v]
+    (ByteBufferUtil/bytes #^long v))
+
+  java.lang.Integer
+  (encode [v]
+    (ByteBufferUtil/bytes ^int v))
+
+  java.lang.String
+  (encode [v]
+    (ByteBuffer/wrap (.getBytes v "UTF-8")))
+
+  )
 
 ;;
 ;; Builders
@@ -174,7 +165,7 @@
   ([^clojure.lang.IFn encoder ^String key ^String value ^Long timestamp]
       (-> (Column.)
           (.setName (encoder (name key)))
-          (.setValue (encoder value))
+          (.setValue (encode value))
           (.setTimestamp timestamp))))
 
 (defn build-super-column
@@ -192,10 +183,38 @@
   (.setColumn_or_supercolumn (Mutation.) (build-cosc cosc)))
 
 (defn build-slice-range
-  [^String slice-start ^String slice-finish]
-  (-> (SliceRange.)
-      (.setStart (to-byte-buffer slice-start))
-      (.setFinish (to-byte-buffer slice-finish))))
+  "A SliceRange is a structure that stores basic range, ordering and limit information for a query
+   that will return multiple columns. It could be thought of as Cassandra's version of LIMIT and ORDER BY.
+
+   Params:
+     :start (binary) - The column name to start the slice with. This attribute is not required, though
+                       there is no default value, and can be safely set to '', i.e., an empty byte array, to
+                       start with the first column name. Otherwise, it must be a valid value under the rules
+                       of the Comparator defined for the given ColumnFamily.
+
+    :finish (binary) - The column name to stop the slice at. This attribute is not required,
+                       though there is no default value, and can be safely set to an empty byte array to not
+                       stop until count results are seen. Otherwise, it must also be a valid value to the
+                       ColumnFamily Comparator.
+
+    :reversed (bool) - Whether the results should be ordered in reversed order. Similar to
+                      ORDER BY blah DESC in SQL. When reversed is true, start will determine the right end
+                      of the range while finish will determine the left, meaning start must be >= finish.
+
+    :count (integer), default is 100 - How many columns to return. Similar to LIMIT 100 in SQL.
+                      May be arbitrarily large, but Thrift will materialize the whole result into memory before
+                      returning it to the client, so be aware that you may be better served by iterating through
+                      slices by passing the last value of one call in as the start of the next instead of increasing
+                      count arbitrarily large."
+  [^String start ^String finish & {:keys [count reversed]}]
+  (let [slice-range (-> (SliceRange.)
+                        (.setStart (to-byte-buffer start))
+                        (.setFinish (to-byte-buffer finish)))]
+    (when count
+      (.setCount count))
+    (when reversed
+      (.setReversed count))
+    slice-range))
 
 (defn build-slice-predicate
   [range]
@@ -223,7 +242,7 @@
 
 (extend-protocol DefinitionToMap
   java.util.HashMap
-  (to-map [^clojure.lang.IPersistentMap input]
+  (to-map [^clojure.lang.IPersistentMap input & opts]
     (into {} (keywordize-keys input)))
 
   KsDef
@@ -249,8 +268,14 @@
   Column
   (to-map [^Column column]
     {:name (col/get-name column)
-     :value (col/get-value column)
+     :value  (col/get-value column)
+     :ttl (col/get-ttl column)
      :timestamp (col/get-timestamp column)})
+
+  CqlRow
+  (to-map [^CqlRow row]
+    {:key     (String. ^bytes (cql-row/get-key row) "UTF-8")
+     :columns (doall (map to-map (cql-row/get-columns row)))})
 
   SuperColumn
   (to-map [^SuperColumn scolumn]
@@ -263,6 +288,27 @@
      (if (cosc/is-super-column? column-or-scolumn)
        (cosc/get-super-column column-or-scolumn)
        (cosc/get-column column-or-scolumn))))
+
+  CqlMetadata
+  (to-map [^CqlMetadata md]
+    {:value-types        (from-cql-types (.getValue_types md))
+     :name-types         (from-cql-types  (.getName_types md))
+     :default-value-type (.getDefault_value_type md)
+     :default-name-type  (.getDefault_name_type md)})
+
+  CqlResult
+  (to-map [^CqlResult result]
+    (let [raw-schema (.getSchema result)
+          schema     (when raw-schema
+                       (to-map raw-schema))
+          base   {:num    (.getNum result)
+                  :type   (.getType result)
+                  :rows   (deserialize-rows
+                           (map to-map (.getRows result))
+                           schema)}]
+      (if raw-schema
+        (assoc base :schema schema)
+        base)))
 
   List
   (to-map [list]
@@ -283,7 +329,7 @@
   java.util.List
   (to-plain-hash [cosc-map]
     (let [list  (map to-map cosc-map)
-          names (reverse (map #(keyword (:name %)) list))
+          names (reverse (map #(or (keyword (:name %)) (:key %)) list))
           values (reverse (map #(to-plain-hash (or (:columns %) (:value %))) list))]
       (zipmap names values)))
 
@@ -294,7 +340,6 @@
   Object
   (to-plain-hash [obj]
     obj)
-
 
   nil
   (to-plain-hash [_]

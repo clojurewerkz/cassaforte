@@ -1,6 +1,7 @@
 (ns clojurewerkz.cassaforte.conversion-test
   (:use clojure.test
-        clojurewerkz.cassaforte.conversion)
+        clojurewerkz.cassaforte.conversion
+        clojurewerkz.cassaforte.bytes)
   (:require [clojurewerkz.cassaforte.thrift.column-definition :as column-def]
             [clojurewerkz.cassaforte.thrift.column-family-definition :as column-family-def]
             [clojurewerkz.cassaforte.thrift.keyspace-definition :as keyspace-def])
@@ -76,14 +77,14 @@
     (is (= "full_name" (column-def/get-name (second (column-family-def/get-column-metadata cfdef)))))))
 
 (deftest t-build-column
-  (let [name      :name
+  (let [name      "name"
         value     "John Doe"
         timestamp (System/currentTimeMillis)
         column    (build-column clojurewerkz.support.string/to-byte-buffer name value timestamp)
         c-map     (to-map column)]
     (are [expected actual] (is (= expected actual))
-         name (:name c-map)
-         value (:value c-map)
+         name (deserialize "UTF8Type" (:name c-map))
+         value (deserialize "UTF8Type" (:value c-map))
          timestamp (:timestamp c-map))))
 
 (deftest t-build-super-column
@@ -94,12 +95,13 @@
         sc-map       (to-map super-column)
         columns      (:columns sc-map)]
     (is (= key (:name sc-map)))
-    (is (= :age (:name (first columns))))
-    (is (= "26" (:value (first columns))))
-    (is (= :last_name (:name (second columns))))
-    (is (= "P" (:value (second columns))))
-    (is (= :first_name (:name (nth columns 2))))
-    (is (= "Alex" (:value (nth columns 2))))))
+    (are [expected actual] (is (= expected (deserialize "UTF8Type" actual)))
+         "age" (:name (first columns))
+         "26" (:value (first columns))
+         "last_name" (:name (second columns))
+         "P" (:value (second columns))
+         "first_name" (:name (nth columns 2))
+         "Alex" (:value (nth columns 2)))))
 
 (deftest t-to-plain-hash
   (is (= {:first "first" :second "second" :third "third"}

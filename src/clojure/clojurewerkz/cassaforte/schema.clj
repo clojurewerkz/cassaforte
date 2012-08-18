@@ -1,6 +1,7 @@
 (ns clojurewerkz.cassaforte.schema
   (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql])
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query  :as q])
   (:use [clojurewerkz.cassaforte.conversion :only [build-keyspace-definition]])
   (:import java.util.List
            clojurewerkz.cassaforte.CassandraClient
@@ -33,11 +34,11 @@
 
    2-arity form takes a column family name and a column the index is on.
    3-arity form in addition takes an index name to use."
-  ([^String column-family ^String column]
-     (cql/execute "CREATE INDEX ON ? (?)" [column-family column]))
-  ([^String column-family ^String column ^String index-name]
-     (cql/execute "CREATE INDEX ? ON ? (?)" [index-name column-family column])))
-
+  ([column-family column-name]
+     (create-index column-family column-name nil))
+  ([column-family column-name index-name]
+     (let [query (q/prepare-create-index-query column-family column-name index-name)]
+       (cql/execute query))))
 
 (defn drop-index
   "Drops an index.
@@ -45,6 +46,6 @@
    1-arity form takes an index name as the only argument.
    2-arity form takes a column family name and a column the index is on."
   ([^String index-name]
-     (cql/execute "DROP INDEX ?" [(cql/escape index-name)]))
+     (cql/execute "DROP INDEX ?" [index-name]))
   ([^String column-family ^String column]
-     (cql/execute "DROP INDEX ?" [(cql/escape (str column-family "_" column "_idx"))])))
+     (cql/execute "DROP INDEX ?" [(str column-family "_" column "_idx")])))
