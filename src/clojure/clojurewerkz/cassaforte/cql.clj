@@ -126,9 +126,9 @@
                             opts)))))
 
 (defn select
-  [column-family]
-  (let [res (execute "SELECT * FROM ?" [column-family])]
-    res))
+  [column-family & opts]
+  (let [query (apply q/prepare-select-query column-family opts)]
+    (execute query)))
 
 (defn create-column-family
   [name fields & {:keys [primary-key]}]

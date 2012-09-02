@@ -274,7 +274,7 @@
 
   CqlRow
   (to-map [^CqlRow row]
-    {:key     (String. ^bytes (cql-row/get-key row) "UTF-8")
+    {:key     (cql-row/get-key row)
      :columns (doall (map to-map (cql-row/get-columns row)))})
 
   SuperColumn
@@ -323,24 +323,43 @@
     obj))
 
 (defprotocol ToPlainHash
-  (to-plain-hash [input] ""))
+  (to-plain-hash
+    [input]
+    [input key-format]
+    ""))
 
 (extend-protocol ToPlainHash
   java.util.List
-  (to-plain-hash [cosc-map]
-    (let [list  (map to-map cosc-map)
-          names (reverse (map #(or (keyword (:name %)) (:key %)) list))
-          values (reverse (map #(to-plain-hash (or (:columns %) (:value %))) list))]
-      (zipmap names values)))
+  (to-plain-hash
+    ([cosc-map]
+       (to-plain-hash cosc-map "UTF8Type"))
+    ([cosc-map key-format]
+       (let [list  (map to-map cosc-map)
+             names (reverse (map #(or
+                                   (keyword (:name %))
+                                   (cb/deserialize key-format (:key %)))
+                                 list))
+             values (reverse (map #(to-plain-hash (or (:columns %) (:value %))) list))]
+         (zipmap names values))))
 
   ColumnOrSuperColumn
-  (to-plain-hash [cosc]
-    (to-plain-hash (list cosc)))
+  (to-plain-hash
+    ([cosc]
+       (to-plain-hash cosc "UTF8Type"))
+    ([cosc key-format]
+       (to-plain-hash (list cosc) key-format)))
 
   Object
-  (to-plain-hash [obj]
-    obj)
+  (to-plain-hash
+    ([obj]
+       obj)
+    ([obj key-format]
+       obj))
 
   nil
-  (to-plain-hash [_]
-    nil))
+  (to-plain-hash
+    ([_]
+       nil)
+    ([_ key-format]
+       nil))
+  )

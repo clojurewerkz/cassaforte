@@ -154,9 +154,9 @@
   (cql/drop-column-family "libraries"))
 
 
-;; ;;
-;; ;; Raw SELECT
-;; ;;
+;;
+;; Raw SELECT
+;;
 
 (deftest ^{:cql true} test-select-with-raw-cql-and-utf8-named-columns
   (with-thrift-exception-handling
@@ -192,6 +192,36 @@
 ;;
 ;; SELECT with placeholders
 ;;
+
+(deftest ^{:cql true} test-select-with-raw-cql-and-utf8-named-columns
+  (with-thrift-exception-handling
+    (cql/drop-column-family "time_series"))
+
+  (cql/create-column-family "time_series"
+                            {:tstamp "timestamp"
+                             :description "varchar"}
+                            :primary-key :tstamp)
+
+  (cql/insert "time_series" {:tstamp "2011-02-03" :description "Description 1"})
+  (cql/insert "time_series" {:tstamp "2011-02-04" :description "Description 2"})
+  (cql/insert "time_series" {:tstamp "2011-02-05" :description "Description 3"})
+  (cql/insert "time_series" {:tstamp "2011-02-06" :description "Description 4"})
+  (cql/insert "time_series" {:tstamp "2011-02-07" :description "Description 5"})
+  (cql/insert "time_series" {:tstamp "2011-02-08" :description "Description 6"})
+
+  (let [res (to-plain-hash (:rows (cql/select "time_series" :where { :tstamp "2011-02-03" })) "DateType")]
+    (is (= 1 (count res))))
+
+  (let [res (to-plain-hash (:rows (cql/select "time_series" :where { :tstamp [> "2011-02-03"] })) "DateType")]
+    (is (= 5 (count res))))
+
+  (let [res (to-plain-hash (:rows (cql/select "time_series" :where { :tstamp [<= "2011-02-05"] })) "DateType")]
+    (is (= 3 (count res))))
+
+  (let [res (to-plain-hash (:rows (cql/select "time_series" :where { :tstamp [> "2011-02-03"] } :limit 2)) "DateType")]
+    (is (= 2 (count res))))
+
+  (cql/drop-column-family "time_series"))
 
 ;; TBD
 

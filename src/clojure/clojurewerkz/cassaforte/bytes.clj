@@ -1,5 +1,5 @@
 (ns clojurewerkz.cassaforte.bytes
-  (:import java.nio.ByteBuffer))
+  (:import java.nio.ByteBuffer java.util.Date))
 
 
 ;;
@@ -29,6 +29,10 @@
 (defmethod deserialize "UUIDType"
   [_ ^bytes bytes]
   (java.util.UUID/fromString (String. bytes)))
+
+(defmethod deserialize "DateType"
+  [_ ^bytes bytes]
+  (Date. (deserialize "LongType" bytes)))
 
 (defmethod deserialize "BooleanType"
   [_ ^bytes bytes]

@@ -84,3 +84,48 @@
                                     (interpolate-kv index-name-clause {:index-name index-name}))
                       :column-family-name column-family
                       :column-name (name column-name)})))
+
+(def select-query
+  "SELECT :columns-clause FROM :column-family-name :where-clause :limit-clause")
+
+(defn match-operation
+  [[operation orig-value]]
+  (let [value (to-cql-value orig-value)]
+    (cond
+      (= operation >) (str " > " value)
+      (= operation >=) (str " >= " value)
+      (= operation <) (str " < " value)
+      (= operation <=) (str " <= " value)
+      (= operation =) (str " = " value)
+      (keyword? operation) (str (name operation) value))))
+
+(defn operation-clause
+  [[key value]]
+  (str (name key) (cond
+                    (vector? value) (str (match-operation value))
+                    :else (str " = " (to-cql-value value)))))
+
+(defn prepare-where-clause
+  [kvs]
+  (str "WHERE "
+       (join " AND " (map
+                      operation-clause
+                      kvs))))
+
+(defn prepare-limit-clause
+  [limit]
+  (str "LIMIT " limit))
+
+(defn prepare-select-query
+  [column-family & {:keys [columns where limit]}]
+  (trim
+   (interpolate-kv select-query
+                   {:column-family-name column-family
+                    :columns-clause (if columns
+                                      (join ", " columns)
+                                      "*")
+                    :where-clause (when where
+                                    (prepare-where-clause where))
+                    :limit-clause (when limit
+                                    (prepare-limit-clause limit))
+                    })))

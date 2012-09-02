@@ -27,7 +27,7 @@
   (is (= "CREATE INDEX ON column_family_name (column_name)"
          (prepare-create-index-query "column_family_name" "column_name")))
   (is (= "CREATE INDEX index_name ON column_family_name (column_name)"
-         (prepare-create-index-query "column_family_name" "index_name" "column_name"))))
+         (prepare-create-index-query "column_family_name" "column_name" "index_name"))))
 
 
 ;;
@@ -40,3 +40,17 @@
     10  "10"
     10N "10"
     :age "age"))
+
+(deftest t-prepare-select-query
+  (is (= "SELECT * FROM column_family_name"
+         (prepare-select-query "column_family_name")))
+  (is (= "SELECT column_name_1, column_name_2 FROM column_family_name"
+         (prepare-select-query "column_family_name" :columns ["column_name_1" "column_name_2"])))
+  (is (= "SELECT * FROM column_family_name WHERE key = 1"
+         (prepare-select-query "column_family_name" :where {:key 1})))
+  (is (= "SELECT * FROM column_family_name WHERE key > 1"
+         (prepare-select-query "column_family_name" :where {:key [> 1]})))
+  (is (= "SELECT * FROM column_family_name WHERE column_1 >= 1 AND column_2 <= 5"
+         (prepare-select-query "column_family_name" :where {:column_1 [>= 1] :column_2 [<= 5]})))
+  (is (= "SELECT * FROM column_family_name WHERE column_1 >= 1 AND column_2 <= 5 LIMIT 5"
+         (prepare-select-query "column_family_name" :where {:column_1 [>= 1] :column_2 [<= 5]} :limit 5))))
