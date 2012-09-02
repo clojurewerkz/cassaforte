@@ -2,6 +2,6 @@ language: clojure
 lein: lein2
 before_script:
   - cassandra-cli -f ./bin/ci/before_build.cql
-script: lein2 all test
+script: lein2 test :ci
 services:
   - cassandra
