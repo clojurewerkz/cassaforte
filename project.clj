@@ -19,7 +19,8 @@
                    :cql     :cql
                    :schema  :schema
                    :indexes :indexes
-                   :default (constantly true)}
+                   :default (constantly true)
+                   :ci (complement :skip-ci)}
   :repositories   {"sonatype" {:url "http://oss.sonatype.org/content/repositories/releases"
                                :snapshots false
                                :releases {:checksum :fail :update :always}}
