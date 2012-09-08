@@ -5,10 +5,10 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure                   "1.4.0"]
-                 [org.apache.cassandra/cassandra-all    "1.1.0"]
-                 [org.apache.cassandra/cassandra-thrift "1.1.0"]
-                 [clojurewerkz/support                  "0.7.0-alpha3"]
-                 [clj-time                              "0.4.3"]]
+                 [org.apache.cassandra/cassandra-all    "1.1.4"]
+                 [org.apache.cassandra/cassandra-thrift "1.1.4"]
+                 [clojurewerkz/support                  "0.7.0"]
+                 [clj-time                              "0.4.4"]]
   :source-paths      ["src/clojure"]
   :java-source-paths ["src/java"]
   :javac-options     ["-target" "1.6" "-source" "1.6"]
