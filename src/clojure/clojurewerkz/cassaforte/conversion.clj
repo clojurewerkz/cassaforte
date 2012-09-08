@@ -70,6 +70,7 @@
 ;; Consistency Conversions
 ;;
 
+
 (defprotocol ConsistencyLevelConversion
   (^org.apache.cassandra.thrift.ConsistencyLevel to-consistency-level [input] "Converts the input to one of the ConsistencyLevel enum values"))
 
@@ -90,23 +91,9 @@
 ;; Value encoders
 ;;
 
-(defprotocol ValueEncoder
-  (encode [value] "Encodes the value"))
-
-(extend-protocol ValueEncoder
-  java.lang.Long
-  (encode [v]
-    (ByteBufferUtil/bytes #^long v))
-
-  java.lang.Integer
-  (encode [v]
-    (ByteBufferUtil/bytes ^int v))
-
-  java.lang.String
-  (encode [v]
-    (ByteBuffer/wrap (.getBytes v "UTF-8")))
-
-  )
+(defn encode
+  [value]
+  (ByteBufferUtil/bytes value))
 
 ;;
 ;; Builders
