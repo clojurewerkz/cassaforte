@@ -12,9 +12,9 @@
   :source-paths      ["src/clojure"]
   :java-source-paths ["src/java"]
   :javac-options     ["-target" "1.6" "-source" "1.6"]
-  :profiles       {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
+  :profiles       {:1.3 {:dependencies [[org.clojure/clojure "1.3.0"]]}
                    :1.5 {:dependencies [[org.clojure/clojure "1.5.0-master-SNAPSHOT"]]}}
-  :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.5"]}
+  :aliases        {"all" ["with-profile" "dev:dev,1.3:dev,1.5"]}
   :test-selectors {:focus   :focus
                    :cql     :cql
                    :schema  :schema
