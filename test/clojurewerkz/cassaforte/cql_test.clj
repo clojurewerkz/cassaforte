@@ -4,11 +4,10 @@
             [clojurewerkz.cassaforte.cql    :as cql])
   (:use clojure.test
         clojurewerkz.cassaforte.conversion
-        clojurewerkz.cassaforte.test.helper)
+        clojurewerkz.cassaforte.utils)
   (:import java.util.UUID))
 
 (cc/connect! "127.0.0.1" "CassaforteTest1")
-
 
 ;;
 ;; CREATE KEYSPACE, DROP KEYSPACE

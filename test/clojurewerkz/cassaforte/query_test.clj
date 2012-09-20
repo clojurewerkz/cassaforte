@@ -1,7 +1,7 @@
 (ns clojurewerkz.cassaforte.cql-test
   (:use clojure.test
         clojurewerkz.cassaforte.query
-        clojurewerkz.cassaforte.test.helper))
+        clojurewerkz.cassaforte.utils))
 
 (deftest t-prepare-create-column-family-query
   (is (= "CREATE TABLE libraries (name varchar, language varchar, rating double, PRIMARY KEY (name));"

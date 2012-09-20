@@ -4,7 +4,7 @@
            [clojurewerkz.cassaforte.cql    :as cql])
   (:use clojure.test
         clojurewerkz.cassaforte.conversion
-        clojurewerkz.cassaforte.test.helper))
+        clojurewerkz.cassaforte.utils))
 
 (cc/connect! "127.0.0.1" "CassaforteTest1")
 
@@ -23,13 +23,14 @@
     (is (sch/drop-keyspace keyspace))))
 
 
-(deftest ^{:schema true :indexes true} test-create-and-drop-an-index-using-a-convenience-function
+(deftest ^{:schema true :indexes true} test-create-columnfamily-bare-cql
   (with-thrift-exception-handling
-    (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
+   (cql/drop-column-family "libraries"))
+  (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
                                                    language varchar,
-                                                   PRIMARY KEY (name))")
-    (is (cql/void-result? (sch/create-index "libraries" "language")))
-    (is (cql/void-result? (sch/drop-index "libraries" "language")))
-    (is (cql/void-result? (sch/create-index "libraries" "language" "by_language")))
-    (is (cql/void-result? (sch/drop-index "by_language")))
-    (cql/execute "DROP COLUMNFAMILY ?" ["libraries"])))
+                                                  PRIMARY KEY (name))")
+  (is (cql/void-result? (sch/create-index "libraries" "language")))
+  (is (cql/void-result? (sch/drop-index "libraries" "language")))
+  (is (cql/void-result? (sch/create-index "libraries" "language" "by_language")))
+  (is (cql/void-result? (sch/drop-index "by_language")))
+  (cql/drop-column-family "libraries"))

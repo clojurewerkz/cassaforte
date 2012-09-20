@@ -8,7 +8,7 @@
             [clojurewerkz.cassaforte.cql :as cql]
             )
   (:use clojurewerkz.cassaforte.thrift.core
-        clojurewerkz.cassaforte.test.helper
+        clojurewerkz.cassaforte.utils
         clojurewerkz.cassaforte.conversion
         clojure.test))
 

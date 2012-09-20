@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.test.helper)
+(ns clojurewerkz.cassaforte.utils)
 
 (defmacro with-thrift-exception-handling
   [& forms]

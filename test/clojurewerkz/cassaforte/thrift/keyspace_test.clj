@@ -2,7 +2,7 @@
   (:require [clojurewerkz.cassaforte.client :as cc])
   (:use clojure.test
         clojurewerkz.cassaforte.thrift.keyspace
-        clojurewerkz.cassaforte.test.helper
+        clojurewerkz.cassaforte.utils
         clojurewerkz.cassaforte.conversion)
   (:require [clojurewerkz.cassaforte.thrift.column-definition :as column-def]
             [clojurewerkz.cassaforte.thrift.column-family-definition :as column-family-def]
