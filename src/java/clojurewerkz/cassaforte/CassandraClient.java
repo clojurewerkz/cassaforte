@@ -18,7 +18,6 @@ public class CassandraClient {
   private TTransport transport;
 
   private static final int DEFAULT_PORT = 9160;
-  private String keyspace;
   private int port;
   private String hostname;
   private static final String DEFAULT_CQL_VERSION = "3.0.0";
@@ -33,20 +32,19 @@ public class CassandraClient {
     transport = thriftTransport;
   }
 
-  public CassandraClient(String hostname, String keyspace) throws TException, InvalidRequestException {
-    this(hostname, DEFAULT_PORT, keyspace);
+  public CassandraClient(String hostname) throws TException, InvalidRequestException {
+    this(hostname, DEFAULT_PORT);
   }
 
-  public CassandraClient(String hostname, int port, String keyspace) throws TException, InvalidRequestException {
+  public CassandraClient(String hostname, int port) throws TException, InvalidRequestException {
     this.hostname = hostname;
     this.port = port;
-    this.keyspace = keyspace;
+
     TTransport tr = new TFramedTransport(new TSocket(hostname, port));
 
     transport = tr;
     client = new Cassandra.Client(new TBinaryProtocol(tr));
     tr.open();
-    client.set_keyspace(keyspace);
     client.set_cql_version(DEFAULT_CQL_VERSION);
   }
 
@@ -57,7 +55,6 @@ public class CassandraClient {
   public String getHostname() { return this.hostname; }
   public String getHost()     { return this.hostname; }
   public int getPort()        { return this.port; }
-  public String getKeyspace() { return this.keyspace; }
 
   /**
    * Executes a CQL query, uses no compression

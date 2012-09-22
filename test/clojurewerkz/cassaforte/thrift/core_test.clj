@@ -13,7 +13,6 @@
         clojure.test))
 
 (def *consistency-level* (conv/to-consistency-level :one))
-(cc/connect! "127.0.0.1" "CassaforteTest1")
 
 ;; (deftest t-batch-mutate
 ;;   (with-thrift-exception-handling

@@ -3,11 +3,12 @@
             [clojurewerkz.cassaforte.schema :as sch]
             [clojurewerkz.cassaforte.cql    :as cql])
   (:use clojure.test
+        clojurewerkz.cassaforte.test-helper
         clojurewerkz.cassaforte.conversion
         clojurewerkz.cassaforte.utils)
   (:import java.util.UUID))
 
-(cc/connect! "127.0.0.1" "CassaforteTest1")
+(use-fixtures :once initialize-cql)
 
 ;;
 ;; CREATE KEYSPACE, DROP KEYSPACE
@@ -68,7 +69,7 @@
   (with-thrift-exception-handling
     (cql/drop-column-family "libraries"))
   (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
-  (is (cql/void-result? (cql/execute-raw "INSERT INTO libraries (name, language) VALUES ('Cassaforte', 'Clojure') USING CONSISTENCY LOCAL_QUORUM AND TTL 86400")))
+  (is (cql/void-result? (cql/execute-raw "INSERT INTO libraries (name, language) VALUES ('Cassaforte', 'Clojure') USING CONSISTENCY ONE AND TTL 86400")))
     (cql/truncate "libraries")
     (cql/drop-column-family "libraries"))
 
@@ -77,7 +78,7 @@
     (cql/drop-column-family "libraries"))
   (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
 
-  (is (cql/void-result? (cql/execute "INSERT INTO libraries (name, language) VALUES ('?', '?') USING CONSISTENCY LOCAL_QUORUM AND TTL 86400" ["Cassaforte", "Clojure"])))
+  (is (cql/void-result? (cql/execute "INSERT INTO libraries (name, language) VALUES ('?', '?') USING CONSISTENCY ONE AND TTL 86400" ["Cassaforte", "Clojure"])))
   (let [res (cql/execute "SELECT COUNT(*) FROM libraries")]
     (is (cql/rows-result? res)))
 
@@ -94,7 +95,7 @@
     (cql/drop-column-family "libraries"))
   (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
 
-  (is (cql/void-result? (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} :consistency "LOCAL_QUORUM" :ttl 86400)))
+  (is (cql/void-result? (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} :consistency "ONE" :ttl 86400)))
 
   (let [res (cql/execute "SELECT COUNT(*) FROM libraries")]
     (is (= 1 (count (:rows res)))))
@@ -119,7 +120,7 @@
     (cql/drop-column-family "libraries"))
   (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
 
-  (is (cql/void-result? (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} :consistency "LOCAL_QUORUM" :ttl 86400)))
+  (is (cql/void-result? (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} :consistency "ONE" :ttl 86400)))
   (is (cql/void-result? (cql/execute "DELETE FROM libraries WHERE name = '?'" ["Cassaforte"])))
   (cql/drop-column-family "libraries"))
 
@@ -140,8 +141,8 @@
     (cql/drop-column-family "libraries"))
   (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
 
-  (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} :consistency "LOCAL_QUORUM" :ttl 86400)
-  (cql/insert "libraries" {:name "Welle" :language "Clojure"} :consistency "LOCAL_QUORUM" :ttl 86400)
+  (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} :consistency "ONE" :ttl 86400)
+  (cql/insert "libraries" {:name "Welle" :language "Clojure"} :consistency "ONE" :ttl 86400)
 
   (let [res (cql/execute-raw "SELECT COUNT(*) FROM libraries")
         n   (cql/count-value res)]

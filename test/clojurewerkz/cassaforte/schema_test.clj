@@ -1,18 +1,13 @@
 (ns clojurewerkz.cassaforte.schema-test
-  (require [clojurewerkz.cassaforte.client :as cc]
-           [clojurewerkz.cassaforte.schema :as sch]
-           [clojurewerkz.cassaforte.cql    :as cql])
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.schema :as sch]
+            [clojurewerkz.cassaforte.cql    :as cql])
   (:use clojure.test
+        clojurewerkz.cassaforte.test-helper
         clojurewerkz.cassaforte.conversion
         clojurewerkz.cassaforte.utils))
 
-(cc/connect! "127.0.0.1" "CassaforteTest1")
-
-(deftest ^{:schema true} test-describe-keyspace-raw
-  (let [keyspace "CassaforteTest1"
-        ks-def   (sch/describe-keyspace-raw keyspace)]
-    (is (= (.getName ks-def) keyspace))))
-
+(use-fixtures :once initialize-cql)
 
 (deftest ^{:schema true} test-add-and-drop-keyspace
   (let [keyspace       "CassaforteTest2"
@@ -25,12 +20,12 @@
 
 (deftest ^{:schema true :indexes true} test-create-columnfamily-bare-cql
   (with-thrift-exception-handling
-   (cql/drop-column-family "libraries"))
-  (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
+    (cql/drop-column-family "libraries")
+    (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
                                                    language varchar,
                                                   PRIMARY KEY (name))")
-  (is (cql/void-result? (sch/create-index "libraries" "language")))
-  (is (cql/void-result? (sch/drop-index "libraries" "language")))
-  (is (cql/void-result? (sch/create-index "libraries" "language" "by_language")))
-  (is (cql/void-result? (sch/drop-index "by_language")))
-  (cql/drop-column-family "libraries"))
+    (is (cql/void-result? (sch/create-index "libraries" "language")))
+    (is (cql/void-result? (sch/drop-index "libraries" "language")))
+    (is (cql/void-result? (sch/create-index "libraries" "language" "by_language")))
+    (is (cql/void-result? (sch/drop-index "by_language")))
+    (cql/drop-column-family "libraries")))

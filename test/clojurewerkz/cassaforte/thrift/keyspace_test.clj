@@ -1,6 +1,7 @@
 (ns clojurewerkz.cassaforte.thrift.keyspace-test
   (:require [clojurewerkz.cassaforte.client :as cc])
   (:use clojure.test
+        clojurewerkz.cassaforte.test-helper
         clojurewerkz.cassaforte.thrift.keyspace
         clojurewerkz.cassaforte.utils
         clojurewerkz.cassaforte.conversion)
@@ -8,7 +9,7 @@
             [clojurewerkz.cassaforte.thrift.column-family-definition :as column-family-def]
             [clojurewerkz.cassaforte.thrift.keyspace-definition :as keyspace-def]))
 
-(cc/connect! "127.0.0.1" "CassaforteTest1")
+(use-fixtures :once initialize-cql)
 
 (deftest test-add-and-drop-keyspace
   (with-thrift-exception-handling

@@ -156,3 +156,7 @@
      (execute "TRUNCATE ?" [column-family]))
   ([^String keyspace ^String column-family]
      (execute "TRUNCATE ?.?" [keyspace column-family])))
+
+(defn set-keyspace!
+  [keyspace]
+  (execute "USE ?" [keyspace]))

@@ -11,6 +11,7 @@
 (defn ^org.apache.cassandra.thrift.KsDef
   describe-keyspace-raw
   [^String name]
+  (.set_keyspace ^CassandraClient cc/*cassandra-client* name)
   (.describe_keyspace ^CassandraClient cc/*cassandra-client* name))
 
 

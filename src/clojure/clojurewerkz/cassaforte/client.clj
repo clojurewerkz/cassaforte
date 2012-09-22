@@ -15,17 +15,23 @@
 
 (defn ^CassandraClient connect
   "Connect to a Cassandra node"
-  ([^String hostname ^String keyspace]
-     (connect hostname default-port keyspace))
-  ([^String hostname ^long port ^String keyspace]
-     (let [client (CassandraClient. hostname port keyspace)]
+  ([^String hostname]
+     (connect hostname default-port))
+  ([^String hostname ^long port]
+     (let [client (CassandraClient. hostname port)]
        client)))
 
 
 (defn ^CassandraClient connect!
-  ([^String hostname ^String keyspace]
-     (connect! hostname default-port keyspace))
-  ([^String hostname ^long port ^String keyspace]
-     (let [client (CassandraClient. hostname port keyspace)]
+  ([^String hostname]
+     (connect! hostname default-port))
+  ([^String hostname ^long port]
+     (let [client (CassandraClient. hostname port)]
        (alter-var-root (var *cassandra-client*) (constantly client))
        client)))
+
+(defn set-keyspace!
+  ([^String keyspace]
+     (.set_keyspace *cassandra-client* keyspace))
+  ([^CassandraClient client ^String keyspace]
+     (set-keyspace! client keyspace)))
