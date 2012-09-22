@@ -327,7 +327,7 @@
                                    (cb/deserialize key-format (:key %)))
                                  list))
              values (reverse (map #(to-plain-hash (or (:columns %) (:value %))) list))]
-         (zipmap names values))))
+         (apply sorted-map (interleave names values)))))
 
   ColumnOrSuperColumn
   (to-plain-hash
