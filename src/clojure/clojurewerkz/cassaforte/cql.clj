@@ -159,4 +159,4 @@
 
 (defn set-keyspace!
   [keyspace]
-  (execute "USE ?" [keyspace]))
+  (execute "USE \"?\" " [keyspace]))

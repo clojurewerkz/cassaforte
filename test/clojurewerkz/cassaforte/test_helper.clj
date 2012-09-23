@@ -9,9 +9,10 @@
   [f]
   (cc/connect! "127.0.0.1")
   (with-thrift-exception-handling
-    (cql/execute "DROP KEYSPACE CassaforteTest1")
-    (cql/execute "CREATE KEYSPACE CassaforteTest1 WITH strategy_class = 'SimpleStrategy' AND strategy_options:replication_factor = 1;")
-    (cql/set-keyspace! "CassaforteTest1"))
+    (cql/execute "DROP KEYSPACE CassaforteTest1"))
+  (with-thrift-exception-handling
+    (cql/execute "CREATE KEYSPACE CassaforteTest1 WITH strategy_class = 'SimpleStrategy' AND strategy_options:replication_factor = 1;"))
+  (cql/set-keyspace! "CassaforteTest1")
   (f))
 
 ;;
