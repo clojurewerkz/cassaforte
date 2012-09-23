@@ -322,11 +322,10 @@
        (to-plain-hash cosc-map "UTF8Type"))
     ([cosc-map key-format]
        (let [list  (map to-map cosc-map)
-             names (reverse (map #(or
-                                   (keyword (:name %))
-                                   (cb/deserialize key-format (:key %)))
-                                 list))
-             values (reverse (map #(to-plain-hash (or (:columns %) (:value %))) list))]
+             names (map #(or (keyword (:name %))
+                             (cb/deserialize key-format (:key %)))
+                        list)
+             values (map #(to-plain-hash (or (:columns %) (:value %))) list)]
          (apply array-map (interleave names values)))))
 
   ColumnOrSuperColumn
