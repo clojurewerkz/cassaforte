@@ -1,4 +1,4 @@
-(defproject clojurewerkz/cassaforte "1.0.0-beta2"
+(defproject clojurewerkz/cassaforte "1.0.0-beta8"
   :min-lein-version "2.0.0"
   :description "A Clojure client for Apache Cassandra"
   :url "http://github.com/clojurewerkz/cassaforte"
@@ -8,12 +8,14 @@
                  [org.apache.cassandra/cassandra-all    "1.1.4"]
                  [org.apache.cassandra/cassandra-thrift "1.1.4"]
                  [clojurewerkz/support                  "0.7.0"]
+                 [com.taoensso/nippy                    "0.10.2"]
                  [clj-time                              "0.4.4"]]
   :source-paths      ["src/clojure"]
   :java-source-paths ["src/java"]
   :javac-options     ["-target" "1.6" "-source" "1.6"]
   :profiles       {:1.3 {:dependencies [[org.clojure/clojure "1.3.0"]]}
-                   :1.5 {:dependencies [[org.clojure/clojure "1.5.0-master-SNAPSHOT"]]}}
+                   :1.5 {:dependencies [[org.clojure/clojure "1.5.0-master-SNAPSHOT"]]}
+                   :dev {:dependencies [[org.xerial.snappy/snappy-java "1.0.5-SNAPSHOT"]]}}
   :aliases        {"all" ["with-profile" "dev:dev,1.3:dev,1.5"]}
   :test-selectors {:focus   :focus
                    :cql     :cql
