@@ -17,6 +17,19 @@
            java.nio.ByteBuffer))
 
 ;;
+;; Map protocols
+;;
+
+(defprotocol DefinitionToMap
+  (to-map [input] "Converts any definition to map"))
+
+(defprotocol ToPlainHash
+  (to-plain-hash
+    [input]
+    [input key-format]
+    ""))
+
+;;
 ;; Implementation
 ;;
 
@@ -29,11 +42,11 @@
           {}
           m))
 
-(defn deserialize-row
+(defn deserialize-columns
   "Returns a row with all column values deserialized from byte arrays to strings, numerics, et cetera
    according to the schema information"
-  [{:keys [columns] :as row} {:keys [value-types default-value-type name-types default-name-type] :as schema}]
-  (let [cols (for [col columns
+  [columns {:keys [value-types default-value-type name-types default-name-type] :as schema}]
+  (for [col columns
                    :let [^bytes k  (:name col)
                          k-buf     (keyword (String. k "UTF-8"))
                          name-type (get name-types k-buf default-name-type)
@@ -43,15 +56,29 @@
                  :name  (when k
                           (cb/deserialize name-type k))
                  :value (when val
-                          (cb/deserialize val-type val))))]
-    (assoc row :columns cols)))
+                          (cb/deserialize val-type val)))))
 
 (defn deserialize-rows
   [rows schema]
   (if schema
     (map (fn [row]
-           (deserialize-row row schema)) rows)
+           (let [columns (deserialize-columns (:columns row) schema)]
+             (assoc row :columns columns)))
+         rows)
     rows))
+
+(defn deserialize-thrift-response
+  ([columns]
+     (deserialize-thrift-response {:default-value-type "UTF8Type" :default-name-type "UTF8Type"}))
+  ([columns schema]
+     (let [deserialize-cosc (fn [x]
+                              (if (cosc/is-super-column? (first columns))
+                                 (deserialize-rows x schema)
+                                 (deserialize-columns x schema)))]
+        (-> columns
+            to-map
+            deserialize-cosc
+            to-plain-hash))))
 
 ;;
 ;; API
@@ -224,8 +251,6 @@
 ;; Map conversions
 ;;
 
-(defprotocol DefinitionToMap
-  (to-map [input] "Converts any definition to map"))
 
 (extend-protocol DefinitionToMap
   java.util.HashMap
@@ -309,11 +334,9 @@
   (to-map [obj]
     obj))
 
-(defprotocol ToPlainHash
-  (to-plain-hash
-    [input]
-    [input key-format]
-    ""))
+
+
+
 
 (extend-protocol ToPlainHash
   java.util.List
@@ -328,13 +351,6 @@
              values (map #(to-plain-hash (or (:columns %) (:value %))) list)]
          (apply array-map (interleave names values)))))
 
-  ColumnOrSuperColumn
-  (to-plain-hash
-    ([cosc]
-       (to-plain-hash cosc "UTF8Type"))
-    ([cosc key-format]
-       (to-plain-hash (list cosc) key-format)))
-
   Object
   (to-plain-hash
     ([obj]
@@ -347,5 +363,4 @@
     ([_]
        nil)
     ([_ key-format]
-       nil))
-  )
+       nil)))

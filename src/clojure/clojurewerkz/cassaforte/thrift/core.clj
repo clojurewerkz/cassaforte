@@ -34,19 +34,24 @@
           column-path
           consistency-level)))
 
-(defn get-slice
-  ([column-family key consistency-level]
-     (get-slice column-family key "" "" consistency-level))
-  ([column-family key slice-start slice-finish consistency-level]
-      (let [column-parent (c/build-column-parent column-family)
-            range         (c/build-slice-range slice-start slice-finish)
-            predicate     (c/build-slice-predicate range)]
-        (.get_slice cc/*cassandra-client*
-                    (to-byte-buffer key)
-                    column-parent
-                    predicate
-                    consistency-level))))
+(defn get-slice-raw*
+  [column-family key slice-start slice-finish consistency-level]
+  (let [column-parent (c/build-column-parent column-family)
+        range         (c/build-slice-range slice-start slice-finish)
+        predicate     (c/build-slice-predicate range)]
 
+    (.get_slice cc/*cassandra-client*
+                (to-byte-buffer key)
+                column-parent
+                predicate
+                consistency-level)))
+
+(defn get-slice
+  ([column-family key consistency-level schema]
+     (get-slice column-family key "" "" consistency-level schema))
+  ([column-family key slice-start slice-finish consistency-level schema]
+     (let [slice (get-slice-raw* column-family key slice-start slice-finish consistency-level)]
+       (c/deserialize-thrift-response slice schema))))
 
 ;; get-count
 ;; insert

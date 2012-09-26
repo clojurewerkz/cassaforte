@@ -37,3 +37,7 @@
 (defmethod deserialize "BooleanType"
   [_ ^bytes bytes]
   (Boolean/valueOf (String. bytes)))
+
+(defmethod deserialize "BytesType"
+  [_ ^bytes bytes]
+  (Boolean/valueOf (String. bytes)))
