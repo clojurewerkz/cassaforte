@@ -89,28 +89,33 @@
   "SELECT :columns-clause FROM :column-family-name :where-clause :limit-clause")
 
 (defn match-operation
-  [[operation orig-value]]
-  (let [value (to-cql-value orig-value)]
-    (cond
-      (= operation >) (str " > " value)
-      (= operation >=) (str " >= " value)
-      (= operation <) (str " < " value)
-      (= operation <=) (str " <= " value)
-      (= operation =) (str " = " value)
-      (keyword? operation) (str (name operation) value))))
+  [[operation orig-value & rest]]
+  (let [value (to-cql-value orig-value)
+        res   (cond
+                (= operation >) (format " > %s" value)
+                (= operation >=) (format " >= %s" value)
+                (= operation <) (format " < %s" value)
+                (= operation <=) (format " <= %s" value)
+                (= operation =) (format " = %s" value)
+                (keyword? operation) (format "%s %s" (name operation) value))]
+    (if rest
+      (conj [res] (match-operation rest))
+      [res])))
 
 (defn operation-clause
-  [[key value]]
-  (str (name key) (cond
-                    (vector? value) (str (match-operation value))
-                    :else (str " = " (to-cql-value value)))))
+  [[orig-key value]]
+  (let [key (name orig-key)]
+    (cond
+      (vector? value) (for [item (flatten (match-operation value))]
+                        (str key item))
+      :else (format "%s = %s" key (to-cql-value value)))))
 
 (defn prepare-where-clause
   [kvs]
   (str "WHERE "
-       (join " AND " (map
-                      operation-clause
-                      kvs))))
+       (join " AND " (flatten (map
+                               operation-clause
+                               kvs)))))
 
 (defn prepare-limit-clause
   [limit]
@@ -129,3 +134,5 @@
                     :limit-clause (when limit
                                     (prepare-limit-clause limit))
                     })))
+
+(def ^{:const true} in "IN")

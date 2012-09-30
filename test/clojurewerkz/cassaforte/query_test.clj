@@ -41,6 +41,7 @@
     10N "10"
     :age "age"))
 
+
 (deftest t-prepare-select-query
   (is (= "SELECT * FROM column_family_name"
          (prepare-select-query "column_family_name")))
@@ -50,6 +51,8 @@
          (prepare-select-query "column_family_name" :where {:key 1})))
   (is (= "SELECT * FROM column_family_name WHERE key > 1"
          (prepare-select-query "column_family_name" :where {:key [> 1]})))
+  (is (= "SELECT * FROM column_family_name WHERE column_1 >= 1 AND column_1 <= 5 AND column_2 >= 1"
+         (prepare-select-query "column_family_name" :where {:column_1 [>= 1 <= 5] :column_2 [>= 1]})))
   (is (= "SELECT * FROM column_family_name WHERE column_1 >= 1 AND column_2 <= 5"
          (prepare-select-query "column_family_name" :where {:column_1 [>= 1] :column_2 [<= 5]})))
   (is (= "SELECT * FROM column_family_name WHERE column_1 >= 1 AND column_2 <= 5 LIMIT 5"
