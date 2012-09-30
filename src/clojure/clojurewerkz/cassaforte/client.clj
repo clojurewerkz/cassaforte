@@ -12,6 +12,10 @@
 (def ^{:dynamic true :tag CassandraClient}
   *cassandra-client*)
 
+(defmacro with-client
+  [client & body]
+  `(binding [*cassandra-client* ~client]
+     (do ~@body)))
 
 (defn ^CassandraClient connect
   "Connect to a Cassandra node"

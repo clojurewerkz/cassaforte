@@ -1,5 +1,5 @@
 (ns clojurewerkz.cassaforte.client-test
-  (require [clojurewerkz.cassaforte.client :as cc])
+  (:require [clojurewerkz.cassaforte.client :as cc])
   (:use clojure.test)
   (:import clojurewerkz.cassaforte.CassandraClient))
 
@@ -10,3 +10,15 @@
         port   cc/default-port
         ^CassandraClient client (cc/connect host port)]
     (is (= host (.getHost client)))))
+
+(deftest test-with-client-binding
+  (testing "When client binding is correct"
+      (let [client (cc/connect "localhost")]
+        (cc/with-client client
+          (cc/set-keyspace! "CassaforteTest1"))))
+  (testing "When client binding is correct"
+    (is (thrown?
+         org.apache.cassandra.thrift.InvalidRequestException
+         (let [client (cc/connect "localhost")]
+           (cc/with-client client
+             (cc/set-keyspace! "NonExistingKeyspace")))))))
