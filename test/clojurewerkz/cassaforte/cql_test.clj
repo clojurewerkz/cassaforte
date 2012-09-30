@@ -209,8 +209,7 @@
   (cql/insert "time_series" {:tstamp "2011-02-07" :description "Description 5"})
   (cql/insert "time_series" {:tstamp "2011-02-08" :description "Description 6"})
 
-  (let [res (to-plain-hash (:rows (cql/select "time_series" :where { :tstamp "2011-02-03" })) "DateType")]
-    (is (= 1 (count res))))
+  (is (= 1 (count (cql/select "time_series" :where { :tstamp "2011-02-03" } :key-type "DateType"))))
 
   (cql/drop-column-family "time_series"))
 
@@ -230,16 +229,20 @@
   (cql/insert "time_series" {:tstamp "2011-02-07" :description "Description 5"})
   (cql/insert "time_series" {:tstamp "2011-02-08" :description "Description 6"})
 
-  (let [res (to-plain-hash (:rows (cql/select "time_series" :where { :tstamp [> "2011-02-03"] })) "DateType")]
+  (let [res (cql/select "time_series" :where { :tstamp [> "2011-02-03"] } :key-type "DateType")]
     (is (= 5 (count res))))
 
-  (let [res (to-plain-hash (:rows (cql/select "time_series" :where { :tstamp [<= "2011-02-05"] })) "DateType")]
+  (let [res (cql/select "time_series" :where { :tstamp [<= "2011-02-05"] } :key-type "DateType")]
     (is (= 3 (count res))))
 
-  (let [res (to-plain-hash (:rows (cql/select "time_series" :where { :tstamp [> "2011-02-03"] } :limit 2)) "DateType")]
+  (let [res (cql/select "time_series" :where { :tstamp [> "2011-02-03"] } :limit 2 :key-type "DateType")]
     (is (= 2 (count res))))
 
+  (let [res (cql/select "time_series" :where { :tstamp [> "2011-02-04" < "2011-02-06"] } :key-type "DateType")]
+    (is (= 1 (count res))))
+
   (cql/drop-column-family "time_series"))
+
 ;; TBD
 
 

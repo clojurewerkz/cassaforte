@@ -5,7 +5,7 @@
   (:use [clojure.string :only [split join]]
         [clojurewerkz.support.string :only [maybe-append to-byte-buffer interpolate-vals interpolate-kv]]
         [clojurewerkz.support.fn :only [fpartial]]
-        [clojurewerkz.cassaforte.conversion :only [from-cql-prepared-result to-map]])
+        [clojurewerkz.cassaforte.conversion :only [from-cql-prepared-result to-map to-plain-hash]])
   (:import clojurewerkz.cassaforte.CassandraClient
            java.util.List
            [org.apache.cassandra.thrift Compression CqlResult CqlRow CqlResultType]))
@@ -125,10 +125,15 @@
                               (str (.toUpperCase (name k)) " " (str v)))
                             opts)))))
 
-(defn select
+(defn select-raw*
   [column-family & opts]
-  (let [query (apply q/prepare-select-query column-family opts)]
+  (let [query (apply q/prepare-select-query column-family (flatten opts))]
     (execute query)))
+
+(defn select
+  [column-family &{:keys [key-type] :or {key-type "UTF8Type"} :as opts}]
+  (let [result (apply select-raw* column-family opts)]
+    (to-plain-hash (:rows result) key-type)))
 
 (defn create-column-family
   [name fields & {:keys [primary-key]}]
