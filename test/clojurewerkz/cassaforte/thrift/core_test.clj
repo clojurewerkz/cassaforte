@@ -23,13 +23,12 @@
   (with-thrift-exception-handling
     (sch/drop-keyspace "keyspace_name"))
 
-  (sch/add-keyspace
-   (kd/build-kd "keyspace_name"
-                              "org.apache.cassandra.locator.SimpleStrategy"
-                              [(cfd/build-cfd "keyspace_name" "ColumnFamily2" [(cd/build-cd "first" "UTF8Type")
-                                                                              (cd/build-cd "second" "UTF8Type")
-                                                                              (cd/build-cd "third" "UTF8Type")])]
-                              :strategy-opts {"replication_factor" "1"}))
+  (sch/add-keyspace "keyspace_name"
+                    "org.apache.cassandra.locator.SimpleStrategy"
+                    [(cfd/build-cfd "keyspace_name" "ColumnFamily2" [(cd/build-cd "first" "UTF8Type")
+                                                                     (cd/build-cd "second" "UTF8Type")
+                                                                     (cd/build-cd "third" "UTF8Type")])]
+                    :strategy-opts {"replication_factor" "1"})
 
   (sch/set-keyspace "keyspace_name")
 
@@ -51,11 +50,11 @@
   (with-thrift-exception-handling
     (sch/drop-keyspace "keyspace_name"))
 
-  (sch/add-keyspace
-   (kd/build-kd "keyspace_name"
-             "org.apache.cassandra.locator.SimpleStrategy"
-             [(cfd/build-cfd "keyspace_name" "ColumnFamily1" [] :column-type "Super")]
-             :strategy-opts {"replication_factor" "1"}))
+  (sch/add-keyspace "keyspace_name"
+                    "org.apache.cassandra.locator.SimpleStrategy"
+                    [(cfd/build-cfd "keyspace_name" "ColumnFamily1" [] :column-type "Super")]
+                    :strategy-opts {"replication_factor" "1"})
+
   (sch/set-keyspace "keyspace_name")
 
   (batch-mutate

@@ -33,9 +33,3 @@
      (let [client (CassandraClient. hostname port)]
        (alter-var-root (var *cassandra-client*) (constantly client))
        client)))
-
-(defn set-keyspace!
-  ([^String keyspace]
-     (.set_keyspace *cassandra-client* keyspace))
-  ([^CassandraClient client ^String keyspace]
-     (set-keyspace! client keyspace)))

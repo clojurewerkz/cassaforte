@@ -1,5 +1,6 @@
 (ns clojurewerkz.cassaforte.client-test
-  (:require [clojurewerkz.cassaforte.client :as cc])
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.schema :as sch])
   (:use clojure.test)
   (:import clojurewerkz.cassaforte.CassandraClient))
 
@@ -15,10 +16,10 @@
   (testing "When client binding is correct"
       (let [client (cc/connect "localhost")]
         (cc/with-client client
-          (cc/set-keyspace! "CassaforteTest1"))))
+          (sch/set-keyspace "CassaforteTest1"))))
   (testing "When client binding is correct"
     (is (thrown?
          org.apache.cassandra.thrift.InvalidRequestException
          (let [client (cc/connect "localhost")]
            (cc/with-client client
-             (cc/set-keyspace! "NonExistingKeyspace")))))))
+             (sch/set-keyspace "NonExistingKeyspace")))))))

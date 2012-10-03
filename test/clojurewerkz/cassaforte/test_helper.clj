@@ -8,7 +8,7 @@
 (defn initialize-cql
   [f]
   (cc/connect! "127.0.0.1")
-  (cql/set-keyspace! "CassaforteTest1")
+  (cql/set-keyspace "CassaforteTest1")
   (f))
 
 ;;

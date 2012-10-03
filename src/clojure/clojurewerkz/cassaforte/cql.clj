@@ -162,6 +162,6 @@
   ([^String keyspace ^String column-family]
      (execute "TRUNCATE ?.?" [keyspace column-family])))
 
-(defn set-keyspace!
+(defn set-keyspace
   [keyspace]
   (execute "USE \"?\"" [keyspace]))
