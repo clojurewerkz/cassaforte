@@ -46,6 +46,7 @@
 ;;
 ;; Clojure Data Type -> ByteBuffer
 ;;
-(defn encode
+
+(defn ^ByteBuffer encode
   [value]
   (ByteBufferUtil/bytes value))

@@ -1,5 +1,5 @@
 (ns clojurewerkz.cassaforte.thrift.column-definition
-  (:use    [clojurewerkz.support.string :only [to-byte-buffer]])
+  (:use    [clojurewerkz.cassaforte.bytes :only [encode]])
   (:import [org.apache.cassandra.thrift ColumnDef]))
 
 ;;
@@ -23,6 +23,6 @@
 
 (defn ^ColumnDef build-column-definition
   [^String name ^String validation-class]
-  (ColumnDef. (to-byte-buffer name) validation-class))
+  (ColumnDef. (encode name) validation-class))
 
 (def build-cd build-column-definition)

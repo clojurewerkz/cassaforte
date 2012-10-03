@@ -1,6 +1,6 @@
 (ns clojurewerkz.cassaforte.thrift.query-builders
   (:use    [clojurewerkz.cassaforte.thrift.column-or-super-column :only [build-cosc]]
-           [clojurewerkz.support.string :only [to-byte-buffer]])
+           [clojurewerkz.cassaforte.bytes :only [encode]])
   (:import [org.apache.cassandra.thrift Mutation SliceRange ColumnParent SlicePredicate ColumnPath]))
 
 (defn build-mutation
@@ -32,19 +32,19 @@
                       slices by passing the last value of one call in as the start of the next instead of increasing
                       count arbitrarily large."
   [^String start ^String finish & {:keys [count reversed]}]
-  (let [slice-range (-> (SliceRange.)
-                        (.setStart (to-byte-buffer start))
-                        (.setFinish (to-byte-buffer finish)))]
+  (let [slice-range ^SliceRange (doto (SliceRange.)
+                      (.setStart (encode start))
+                      (.setFinish (encode finish)))]
     (when count
-      (.setCount count))
+      (.setCount slice-range count))
     (when reversed
-      (.setReversed count))
+      (.setReversed slice-range reversed))
     slice-range))
 
 (defn build-slice-predicate
   [range]
-  (-> (SlicePredicate.)
-      (.setSlice_range range)))
+  (doto (SlicePredicate.)
+    (.setSlice_range range)))
 
 (defn build-column-parent
   [^String column-family]
@@ -54,6 +54,6 @@
   [^String column-family ^String field type]
   (let [column-path (ColumnPath. column-family)]
     (if (= type :super)
-      (.setSuper_column column-path (to-byte-buffer field))
-      (.setColumn column-path (to-byte-buffer field)))
+      (.setSuper_column column-path (encode field))
+      (.setColumn column-path (encode field)))
     column-path))

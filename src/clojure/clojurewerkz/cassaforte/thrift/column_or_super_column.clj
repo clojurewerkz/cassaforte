@@ -5,19 +5,19 @@
 ;; Getters
 ;;
 
-(defn get-column
+(defn ^Column get-column
   [^ColumnOrSuperColumn cosc-def]
   (.getColumn cosc-def))
 
-(defn get-super-column
+(defn ^SuperColumn get-super-column
   [^ColumnOrSuperColumn cosc-def]
   (.getSuper_column cosc-def))
 
-(defn is-column?
+(defn ^boolean is-column?
   [^ColumnOrSuperColumn cosc-def]
-  (.isSet_column cosc-def))
+  (.isSetColumn cosc-def))
 
-(defn is-super-column?
+(defn ^boolean is-super-column?
   [^ColumnOrSuperColumn cosc-def]
   (.isSetSuper_column cosc-def))
 

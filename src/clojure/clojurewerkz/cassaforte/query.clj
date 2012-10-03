@@ -1,6 +1,6 @@
 (ns clojurewerkz.cassaforte.query
   (:use [clojure.string :only [split join trim escape upper-case]]
-        [clojurewerkz.support.string :only [maybe-append to-byte-buffer interpolate-vals interpolate-kv]]))
+        [clojurewerkz.support.string :only [maybe-append interpolate-vals interpolate-kv]]))
 
 (defprotocol CQLValue
   (to-cql-value [value] "Converts the given value to a CQL string representation"))

@@ -82,7 +82,7 @@
   (let [name      "name"
         value     "John Doe"
         timestamp (System/currentTimeMillis)
-        column    (c/build-column clojurewerkz.support.string/to-byte-buffer name value timestamp)
+        column    (c/build-column name value timestamp)
         c-map     (to-map column)]
     (are [expected actual] (is (= expected actual))
          name (deserialize "UTF8Type" (:name c-map))
@@ -93,7 +93,7 @@
   (let [key          "a0b1c2"
         column-map   {:age "26" :last_name "P" :first_name "Alex"}
         timestamp    (System/currentTimeMillis)
-        super-column (sc/build-sc clojurewerkz.support.string/to-byte-buffer key column-map timestamp)
+        super-column (sc/build-sc key column-map timestamp)
         sc-map       (to-map super-column)
         columns      (:columns sc-map)]
     (is (= key (:name sc-map)))

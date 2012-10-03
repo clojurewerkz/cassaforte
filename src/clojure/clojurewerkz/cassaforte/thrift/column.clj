@@ -1,6 +1,5 @@
 (ns clojurewerkz.cassaforte.thrift.column
-  (:use    [clojurewerkz.support.string :only [to-byte-buffer]]
-           [clojurewerkz.cassaforte.bytes :only [encode]])
+  (:use [clojurewerkz.cassaforte.bytes :only [encode]])
   (:import [org.apache.cassandra.thrift Column]))
 
 ;;
@@ -30,9 +29,9 @@
 (defn ^Column build-column
   "Converts clojure map to column"
   ([^String key ^String value]
-     (build-column to-byte-buffer key value (System/currentTimeMillis)))
-  ([^clojure.lang.IFn encoder ^String key ^String value ^Long timestamp]
-     (-> (Column.)
-         (.setName (encoder (name key)))
-         (.setValue (encode value))
-         (.setTimestamp timestamp))))
+     (build-column key value (System/currentTimeMillis)))
+  ([^String key ^String value ^Long timestamp]
+     (doto (Column.)
+       (.setName (encode (name key)))
+       (.setValue (encode value))
+       (.setTimestamp timestamp))))

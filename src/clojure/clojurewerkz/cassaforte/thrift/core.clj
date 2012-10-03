@@ -1,7 +1,7 @@
 (ns clojurewerkz.cassaforte.thrift.core
   (:refer-clojure :exclude [get])
   (:use [clojurewerkz.cassaforte.thrift.query-builders]
-        [clojurewerkz.support.string :only [to-byte-buffer]])
+        [clojurewerkz.cassaforte.bytes :only [encode]])
   (:require [clojurewerkz.cassaforte.client :as client]
             [clojurewerkz.cassaforte.thrift.column :as c]
             [clojurewerkz.cassaforte.thrift.super-column :as sc]
@@ -22,18 +22,18 @@
 
 (defn batch-mutate
   [mutation-map consistency-level & {:keys [type] :or {type :column}}]
-  (let [keys             (map to-byte-buffer (keys mutation-map))
+  (let [keys             (map encode (keys mutation-map))
         mutations        (map #(apply-to-values % (fn [x] (batch-mutate-transform x type))) (vals mutation-map))
         batch-mutate-map (zipmap keys mutations)]
     (.batch_mutate client/*cassandra-client*
-                   (java.util.HashMap. batch-mutate-map)
+                   batch-mutate-map
                    consistency-level)))
 
 (defn get
   [^String column-family ^String key ^String field consistency-level & {:keys [type] :or {type :column}}]
   (let [column-path (build-column-path column-family field type)]
     (.get client/*cassandra-client*
-          (to-byte-buffer key)
+          (encode key)
           column-path
           consistency-level)))
 
@@ -44,7 +44,7 @@
         predicate     (build-slice-predicate range)]
 
     (.get_slice client/*cassandra-client*
-                (to-byte-buffer key)
+                (encode key)
                 column-parent
                 predicate
                 consistency-level)))

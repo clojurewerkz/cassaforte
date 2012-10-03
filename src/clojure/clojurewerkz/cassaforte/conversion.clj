@@ -7,8 +7,7 @@
             [clojurewerkz.cassaforte.thrift.cql-row :as cql-row]
             [clojurewerkz.cassaforte.thrift.super-column :as scol]
             [clojurewerkz.cassaforte.thrift.column-or-super-column :as cosc])
-  (:use [clojure.walk :only [stringify-keys keywordize-keys]]
-        [clojurewerkz.support.string :only [to-byte-buffer from-byte-buffer]])
+  (:use [clojure.walk :only [stringify-keys keywordize-keys]])
   (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef ColumnDef CqlPreparedResult
                                         CqlResult CqlRow Column SuperColumn ColumnOrSuperColumn
                                         CqlMetadata Mutation SliceRange ColumnParent SlicePredicate ColumnPath]

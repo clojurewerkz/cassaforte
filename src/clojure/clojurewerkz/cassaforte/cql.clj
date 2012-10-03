@@ -3,7 +3,7 @@
             [clojurewerkz.cassaforte.bytes  :as cb]
             [clojurewerkz.cassaforte.query  :as q])
   (:use [clojure.string :only [split join]]
-        [clojurewerkz.support.string :only [maybe-append to-byte-buffer interpolate-vals interpolate-kv]]
+        [clojurewerkz.support.string :only [maybe-append interpolate-vals]]
         [clojurewerkz.support.fn :only [fpartial]]
         [clojurewerkz.cassaforte.conversion :only [from-cql-prepared-result to-map to-plain-hash]])
   (:import clojurewerkz.cassaforte.CassandraClient
@@ -39,9 +39,9 @@
 (defn prepare-cql-query
   "Prepares a CQL query for execution. Cassandra 1.1+ only."
   ([^String query]
-     (from-cql-prepared-result (.prepare_cql_query ^CassandraClient cc/*cassandra-client* (to-byte-buffer query) default-compression)))
+     (from-cql-prepared-result (.prepare_cql_query ^CassandraClient cc/*cassandra-client* (cb/encode query) default-compression)))
   ([^String query ^Compression compression]
-     (from-cql-prepared-result (.prepare_cql_query ^CassandraClient cc/*cassandra-client* (to-byte-buffer query) compression))))
+     (from-cql-prepared-result (.prepare_cql_query ^CassandraClient cc/*cassandra-client* (cb/encode query) compression))))
 
 (defn execute-prepared-query
   "Executes a CQL query previously prepared using the prepare-cql-query function
