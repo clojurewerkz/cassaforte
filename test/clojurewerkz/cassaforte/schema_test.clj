@@ -1,7 +1,8 @@
 (ns clojurewerkz.cassaforte.schema-test
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.schema :as sch]
-            [clojurewerkz.cassaforte.cql    :as cql])
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.thrift.column-family-definition :as cfd])
   (:use clojure.test
         clojurewerkz.cassaforte.test-helper
         clojurewerkz.cassaforte.conversion
@@ -13,10 +14,21 @@
   (let [keyspace       "CassaforteTest2"
         strategy-class "org.apache.cassandra.locator.SimpleStrategy"
         strategy-opts  {:replication_factor "1"}
-        cf-defs        [(build-column-family-definition keyspace "movies")]]
+        cf-defs        [(cfd/build-cfd keyspace "movies")]]
     (is (sch/add-keyspace keyspace strategy-class cf-defs :strategy-opts strategy-opts))
     (is (sch/drop-keyspace keyspace))))
 
+
+(deftest test-describe-keyspace
+  (let [keyspace       "CassaforteTest2"
+        strategy-class "org.apache.cassandra.locator.SimpleStrategy"
+        strategy-opts  {:replication_factor "1"}
+        cf-defs        [(cfd/build-cfd keyspace "movies")]]
+    (sch/add-keyspace keyspace strategy-class cf-defs :strategy-opts strategy-opts)
+    (let [ksdef (to-map (sch/describe-keyspace keyspace))]
+      (is (= strategy-class (:strategy-class ksdef)))
+      (is (= keyspace (:name ksdef))))
+    (is (sch/drop-keyspace keyspace))))
 
 (deftest ^{:schema true :indexes true} test-create-columnfamily-bare-cql
   (with-thrift-exception-handling

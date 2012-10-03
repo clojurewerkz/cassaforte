@@ -1,9 +1,10 @@
 (ns clojurewerkz.cassaforte.bytes
-  (:import java.nio.ByteBuffer java.util.Date))
+  (:import java.nio.ByteBuffer java.util.Date
+           org.apache.cassandra.utils.ByteBufferUtil))
 
 
 ;;
-;; API
+;; ByteBuffer -> Clojure Data Type
 ;;
 
 (defmulti deserialize
@@ -32,7 +33,7 @@
 
 (defmethod deserialize "DateType"
   [_ ^bytes bytes]
-  (Date. (deserialize "LongType" bytes)))
+  (Date. ^long (deserialize "LongType" bytes)))
 
 (defmethod deserialize "BooleanType"
   [_ ^bytes bytes]
@@ -41,3 +42,10 @@
 (defmethod deserialize "BytesType"
   [_ ^bytes bytes]
   (Boolean/valueOf (String. bytes)))
+
+;;
+;; Clojure Data Type -> ByteBuffer
+;;
+(defn encode
+  [value]
+  (ByteBufferUtil/bytes value))

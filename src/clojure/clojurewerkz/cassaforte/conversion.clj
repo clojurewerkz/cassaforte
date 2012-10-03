@@ -13,7 +13,6 @@
                                         CqlResult CqlRow Column SuperColumn ColumnOrSuperColumn
                                         CqlMetadata Mutation SliceRange ColumnParent SlicePredicate ColumnPath]
            [org.apache.cassandra.utils ByteBufferUtil]
-           java.util.List
            java.nio.ByteBuffer))
 
 ;;
@@ -115,139 +114,6 @@
     (ConsistencyLevel/valueOf (.toUpperCase (name input)))))
 
 ;;
-;; Value encoders
-;;
-
-(defn encode
-  [value]
-  (ByteBufferUtil/bytes value))
-
-;;
-;; Builders
-;;
-
-(defn ^org.apache.cassandra.thrift.KsDef build-keyspace-definition
-  ([^String name ^String strategy-class ^List column-family-defs]
-     (KsDef. name strategy-class column-family-defs))
-  ([^String name ^String strategy-class ^List column-family-defs & {:keys [strategy-opts]}]
-     (let [ks-def (KsDef. name strategy-class column-family-defs)]
-       (when strategy-opts
-         (.setStrategy_options ks-def (stringify-keys strategy-opts)))
-       (when (not (empty? column-family-defs))
-         (.setCf_defs ks-def column-family-defs))
-       ks-def)))
-
-(def build-kd build-keyspace-definition)
-
-(defn ^ColumnDef build-column-definition
-  [^String name ^String validation-class]
-  (ColumnDef. (to-byte-buffer name) validation-class))
-
-(def build-cd build-column-definition)
-
-(defn ^org.apache.cassandra.thrift.CfDef build-column-family-definition
-  ([^String keyspace ^String name]
-     (CfDef. keyspace name))
-  ([^String keyspace ^String name ^List cdefs & {:keys [column-type comparator-type]
-                                                 :or {column-type "Standard"
-                                                      comparator-type "org.apache.cassandra.db.marshal.BytesType"}}]
-     (let [cfdef (build-column-family-definition keyspace name)]
-       (.setColumn_type cfdef column-type)
-       (.setComparator_type cfdef comparator-type)
-       (doseq [cd cdefs]
-         (.addToColumn_metadata cfdef cd))
-       cfdef)))
-
-(def build-cfd build-column-family-definition)
-
-(defprotocol
-    CoscConversion
-  (^ColumnOrSuperColumn build-cosc [input] "Converts given instance to ColumnOrSupercolumn"))
-
-(extend-protocol CoscConversion
-  Column
-  (build-cosc [^Column input]
-    (.setColumn (ColumnOrSuperColumn.) input))
-  SuperColumn
-  (build-cosc [^SuperColumn input]
-    (.setSuper_column (ColumnOrSuperColumn.) input)))
-
-(defn ^Column build-column
-  "Converts clojure map to column"
-  ([^String key ^String value]
-     (build-column to-byte-buffer key value (System/currentTimeMillis)))
-  ([^clojure.lang.IFn encoder ^String key ^String value ^Long timestamp]
-      (-> (Column.)
-          (.setName (encoder (name key)))
-          (.setValue (encode value))
-          (.setTimestamp timestamp))))
-
-(defn build-super-column
-  "Convert a clojure map to supercolumn"
-  ([^String key ^clojure.lang.IPersistentMap column-map]
-     (build-super-column to-byte-buffer key column-map (System/currentTimeMillis)))
-  ([^clojure.lang.IFn encoder ^String key ^clojure.lang.IPersistentMap column-map ^Long timestamp]
-     (let [columns (map (fn [[key value]] (build-column encoder key value timestamp)) column-map)]
-       (-> (SuperColumn.)
-           (.setName (encoder key))
-           (.setColumns (java.util.ArrayList. columns))))))
-
-(defn build-mutation
-  [cosc]
-  (.setColumn_or_supercolumn (Mutation.) (build-cosc cosc)))
-
-(defn build-slice-range
-  "A SliceRange is a structure that stores basic range, ordering and limit information for a query
-   that will return multiple columns. It could be thought of as Cassandra's version of LIMIT and ORDER BY.
-
-   Params:
-     :start (binary) - The column name to start the slice with. This attribute is not required, though
-                       there is no default value, and can be safely set to '', i.e., an empty byte array, to
-                       start with the first column name. Otherwise, it must be a valid value under the rules
-                       of the Comparator defined for the given ColumnFamily.
-
-    :finish (binary) - The column name to stop the slice at. This attribute is not required,
-                       though there is no default value, and can be safely set to an empty byte array to not
-                       stop until count results are seen. Otherwise, it must also be a valid value to the
-                       ColumnFamily Comparator.
-
-    :reversed (bool) - Whether the results should be ordered in reversed order. Similar to
-                      ORDER BY blah DESC in SQL. When reversed is true, start will determine the right end
-                      of the range while finish will determine the left, meaning start must be >= finish.
-
-    :count (integer), default is 100 - How many columns to return. Similar to LIMIT 100 in SQL.
-                      May be arbitrarily large, but Thrift will materialize the whole result into memory before
-                      returning it to the client, so be aware that you may be better served by iterating through
-                      slices by passing the last value of one call in as the start of the next instead of increasing
-                      count arbitrarily large."
-  [^String start ^String finish & {:keys [count reversed]}]
-  (let [slice-range (-> (SliceRange.)
-                        (.setStart (to-byte-buffer start))
-                        (.setFinish (to-byte-buffer finish)))]
-    (when count
-      (.setCount count))
-    (when reversed
-      (.setReversed count))
-    slice-range))
-
-(defn build-slice-predicate
-  [range]
-  (-> (SlicePredicate.)
-      (.setSlice_range range)))
-
-(defn build-column-parent
-  [^String column-family]
-  (ColumnParent. column-family))
-
-(defn build-column-path
-  [^String column-family ^String field type]
-  (let [column-path (ColumnPath. column-family)]
-    (if (= type :super)
-      (.setSuper_column column-path (to-byte-buffer field))
-      (.setColumn column-path (to-byte-buffer field)))
-    column-path))
-
-;;
 ;; Map conversions
 ;;
 
@@ -322,7 +188,7 @@
         (assoc base :schema schema)
         base)))
 
-  List
+  java.util.List
   (to-map [list]
     (map to-map list))
 

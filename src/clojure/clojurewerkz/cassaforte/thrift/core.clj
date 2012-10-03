@@ -1,14 +1,17 @@
 (ns clojurewerkz.cassaforte.thrift.core
   (:refer-clojure :exclude [get])
-  (:use [clojurewerkz.support.string :only [to-byte-buffer]])
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.conversion :as c]))
+  (:use [clojurewerkz.cassaforte.thrift.query-builders]
+        [clojurewerkz.support.string :only [to-byte-buffer]])
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.thrift.column :as c]
+            [clojurewerkz.cassaforte.thrift.super-column :as sc]
+            [clojurewerkz.cassaforte.conversion :as conv]))
 
 (defn- batch-mutate-transform
   [m type]
-  (map (fn [[key value]] (c/build-mutation
+  (map (fn [[key value]] (build-mutation
                           (if (= type :super)
-                            (c/build-super-column (name key) value)
+                            (sc/build-super-column (name key) value)
                             (c/build-column key value))))
        m))
 
@@ -22,25 +25,25 @@
   (let [keys             (map to-byte-buffer (keys mutation-map))
         mutations        (map #(apply-to-values % (fn [x] (batch-mutate-transform x type))) (vals mutation-map))
         batch-mutate-map (zipmap keys mutations)]
-    (.batch_mutate cc/*cassandra-client*
+    (.batch_mutate client/*cassandra-client*
                    (java.util.HashMap. batch-mutate-map)
                    consistency-level)))
 
 (defn get
   [^String column-family ^String key ^String field consistency-level & {:keys [type] :or {type :column}}]
-  (let [column-path (c/build-column-path column-family field type)]
-    (.get cc/*cassandra-client*
+  (let [column-path (build-column-path column-family field type)]
+    (.get client/*cassandra-client*
           (to-byte-buffer key)
           column-path
           consistency-level)))
 
 (defn get-slice-raw*
   [column-family key slice-start slice-finish consistency-level]
-  (let [column-parent (c/build-column-parent column-family)
-        range         (c/build-slice-range slice-start slice-finish)
-        predicate     (c/build-slice-predicate range)]
+  (let [column-parent (build-column-parent column-family)
+        range         (build-slice-range slice-start slice-finish)
+        predicate     (build-slice-predicate range)]
 
-    (.get_slice cc/*cassandra-client*
+    (.get_slice client/*cassandra-client*
                 (to-byte-buffer key)
                 column-parent
                 predicate
@@ -51,7 +54,8 @@
      (get-slice column-family key "" "" consistency-level schema))
   ([column-family key slice-start slice-finish consistency-level schema]
      (let [slice (get-slice-raw* column-family key slice-start slice-finish consistency-level)]
-       (c/deserialize-thrift-response slice schema))))
+       (conv/deserialize-thrift-response slice schema))))
+
 
 ;; get-count
 ;; insert
