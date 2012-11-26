@@ -1,13 +1,13 @@
-(defproject clojurewerkz/cassaforte "1.0.0-beta10-SNAPSHOT"
+(defproject clojurewerkz/cassaforte "1.0.0-beta10"
   :min-lein-version "2.0.0"
   :description "A Clojure client for Apache Cassandra"
   :url "http://github.com/clojurewerkz/cassaforte"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure                   "1.4.0"]
-                 [org.apache.cassandra/cassandra-all    "1.1.4"]
-                 [org.apache.cassandra/cassandra-thrift "1.1.4"]
-                 [clojurewerkz/support                  "0.7.0"]
+                 [org.apache.cassandra/cassandra-all    "1.1.5"]
+                 [org.apache.cassandra/cassandra-thrift "1.1.5"]
+                 [clojurewerkz/support                  "0.10.0"]
                  [com.taoensso/nippy                    "0.10.2"]
                  [clj-time                              "0.4.4"]]
   :source-paths      ["src/clojure"]
@@ -21,7 +21,7 @@
                    :cql     :cql
                    :schema  :schema
                    :indexes :indexes
-                   :default (constantly true)
+                   :default (complement :skip-ci)
                    :ci (complement :skip-ci)}
   :repositories   {"sonatype" {:url "http://oss.sonatype.org/content/repositories/releases"
                                :snapshots false
@@ -29,4 +29,5 @@
                    "sonatype-snapshots" {:url "http://oss.sonatype.org/content/repositories/snapshots"
                                :snapshots true
                                :releases {:checksum :fail :update :always}}}
-  :warn-on-reflection true)
+  :warn-on-reflection true
+  :pedantic :warn)
