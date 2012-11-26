@@ -33,7 +33,7 @@
 
 (defmethod deserialize "DateType"
   [_ ^bytes bytes]
-  (Date. ^long (deserialize "LongType" bytes)))
+  (Date. (deserialize "LongType" bytes)))
 
 (defmethod deserialize "BooleanType"
   [_ ^bytes bytes]
