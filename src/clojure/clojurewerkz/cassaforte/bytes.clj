@@ -19,6 +19,10 @@
   [_ ^bytes bytes]
   (String. bytes))
 
+(defmethod deserialize "BytesType"
+  [_ ^bytes bytes]
+  bytes)
+
 (defmethod deserialize "DoubleType"
   [_ ^bytes bytes]
   (.getDouble (ByteBuffer/wrap bytes)))
@@ -39,14 +43,12 @@
   [_ ^bytes bytes]
   (Boolean/valueOf (String. bytes)))
 
-(defmethod deserialize "BytesType"
-  [_ ^bytes bytes]
-  (Boolean/valueOf (String. bytes)))
-
 ;;
 ;; Clojure Data Type -> ByteBuffer
 ;;
 
 (defn ^ByteBuffer encode
   [value]
-  (ByteBufferUtil/bytes value))
+  (if (instance? (Class/forName "[B") value)
+    (java.nio.ByteBuffer/wrap value)
+    (ByteBufferUtil/bytes value)))
