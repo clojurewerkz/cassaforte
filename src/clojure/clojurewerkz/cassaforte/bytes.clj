@@ -1,6 +1,8 @@
 (ns clojurewerkz.cassaforte.bytes
   (:import java.nio.ByteBuffer java.util.Date
-           org.apache.cassandra.utils.ByteBufferUtil))
+           org.apache.cassandra.utils.ByteBufferUtil
+           [clojurewerkz.cassaforte.serializers IntegerSerializer StringSerializer LongSerializer]
+           ))
 
 
 ;;
@@ -47,8 +49,21 @@
 ;; Clojure Data Type -> ByteBuffer
 ;;
 
+(def ^:dynamic serializers
+  {java.lang.Integer (IntegerSerializer.)
+   java.lang.Long (LongSerializer.)
+   java.lang.String (StringSerializer.)
+  }
+  )
 (defn ^ByteBuffer encode
   [value]
-  (if (instance? (Class/forName "[B") value)
-    (java.nio.ByteBuffer/wrap value)
-    (ByteBufferUtil/bytes value)))
+  (let [serializer (get-in serializers [(type value)])]
+    (.toByteBuffer serializer value))
+
+  ;; (if (instance? (Class/forName "[B") value)
+  ;;   (java.nio.ByteBuffer/wrap value)
+  ;;   (ByteBufferUtil/bytes value))
+
+
+
+  )

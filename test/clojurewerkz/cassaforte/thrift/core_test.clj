@@ -112,3 +112,25 @@
                         :value-types {:custom "BytesType"}})]
     (println (nippy/thaw-from-bytes (:custom res)))
     (is (= {:second "d" :third "e"} (nippy/thaw-from-bytes (:custom res))))))
+
+
+
+(deftest t-batch-mutate-custom-encoding
+  (with-thrift-exception-handling
+    (sch/drop-keyspace "keyspace_name"))
+
+  (sch/add-keyspace "keyspace_name"
+                    "org.apache.cassandra.locator.SimpleStrategy"
+                    [(cfd/build-cfd "keyspace_name" "ColumnFamily2" [(cd/build-cd "longie" "LongType")])]
+                    :strategy-opts {"replication_factor" "1"})
+
+  (sch/set-keyspace "keyspace_name")
+
+  (batch-mutate
+   {"key1" {"ColumnFamily2" {:longie (java.lang.Long. 1354299155188)}}}
+   *consistency-level*)
+
+  (let [res (get-slice "ColumnFamily2" "key1" *consistency-level*
+                       {:default-value-type "UTF8Type" :default-name-type "UTF8Type"
+                        :value-types {:longie "LongType"}})]
+    (is (= 1354299155188 (:longie res)))))
