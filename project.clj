@@ -1,4 +1,4 @@
-(defproject clojurewerkz/cassaforte "1.0.0-beta11-SNAPSHOT"
+(defproject clojurewerkz/cassaforte "1.0.0-beta11"
   :min-lein-version "2.0.0"
   :description "A Clojure client for Apache Cassandra"
   :url "http://github.com/clojurewerkz/cassaforte"
@@ -8,7 +8,7 @@
                  [org.apache.cassandra/cassandra-all    "1.1.5"]
                  [org.apache.cassandra/cassandra-thrift "1.1.5"]
                  [clojurewerkz/support                  "0.10.0"]
-                 [com.taoensso/nippy                    "0.10.2"]
+                 [com.taoensso/nippy                    "1.0.1"]
                  [clj-time                              "0.4.4"]]
   :source-paths      ["src/clojure"]
   :java-source-paths ["src/java"]
