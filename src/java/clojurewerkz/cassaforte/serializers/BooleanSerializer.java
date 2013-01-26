@@ -19,6 +19,10 @@ public class BooleanSerializer extends AbstractSerializer<Boolean> {
 
   @Override
   public Boolean fromByteBuffer(ByteBuffer byteBuffer) {
-    return null;  //To change body of implemented methods use File | Settings | File Templates.
+    if (byteBuffer == null || byteBuffer.remaining() < 1) {
+      return null;
+    }
+
+    return byteBuffer.get() == (byte) 1;
   }
 }
