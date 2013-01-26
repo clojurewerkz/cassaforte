@@ -1,7 +1,8 @@
 (ns clojurewerkz.cassaforte.bytes
   (:import java.nio.ByteBuffer java.util.Date
            org.apache.cassandra.utils.ByteBufferUtil
-           [clojurewerkz.cassaforte.serializers IntegerSerializer StringSerializer LongSerializer]
+           [clojurewerkz.cassaforte.serializers
+            IntegerSerializer StringSerializer LongSerializer BooleanSerializer BigIntegerSerializer]
            ))
 
 
@@ -53,6 +54,8 @@
   {java.lang.Integer (IntegerSerializer.)
    java.lang.Long (LongSerializer.)
    java.lang.String (StringSerializer.)
+   java.lang.Boolean (BooleanSerializer.)
+   java.math.BigInteger (BigIntegerSerializer.)
   }
   )
 (defn ^ByteBuffer encode
