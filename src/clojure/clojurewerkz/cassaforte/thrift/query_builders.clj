@@ -1,5 +1,5 @@
 (ns clojurewerkz.cassaforte.thrift.query-builders
-  (:use    [clojurewerkz.cassaforte.thrift.column-or-super-column :only [build-cosc]]
+  (:use    [clojurewerkz.cassaforte.ddl.column-or-super-column :only [build-cosc]]
            [clojurewerkz.cassaforte.bytes :only [encode]])
   (:import [org.apache.cassandra.thrift Mutation SliceRange ColumnParent SlicePredicate ColumnPath]))
 

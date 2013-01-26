@@ -2,11 +2,11 @@
   (:use clojure.test
         clojurewerkz.cassaforte.conversion
         clojurewerkz.cassaforte.bytes)
-  (:require [clojurewerkz.cassaforte.thrift.column :as c]
-            [clojurewerkz.cassaforte.thrift.super-column :as sc]
-            [clojurewerkz.cassaforte.thrift.column-definition :as cd]
-            [clojurewerkz.cassaforte.thrift.column-family-definition :as cfd]
-            [clojurewerkz.cassaforte.thrift.keyspace-definition :as kd])
+  (:require [clojurewerkz.cassaforte.ddl.column :as c]
+            [clojurewerkz.cassaforte.ddl.super-column :as sc]
+            [clojurewerkz.cassaforte.ddl.column-definition :as cd]
+            [clojurewerkz.cassaforte.ddl.column-family-definition :as cfd]
+            [clojurewerkz.cassaforte.ddl.keyspace-definition :as kd])
   (:import [org.apache.cassandra.thrift ConsistencyLevel]))
 
 

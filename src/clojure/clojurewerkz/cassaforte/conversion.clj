@@ -1,12 +1,12 @@
 (ns clojurewerkz.cassaforte.conversion
   (:require [clojurewerkz.cassaforte.bytes :as cb]
-            [clojurewerkz.cassaforte.thrift.keyspace-definition :as kd]
-            [clojurewerkz.cassaforte.thrift.column-family-definition :as cfd]
-            [clojurewerkz.cassaforte.thrift.column-definition :as cd]
-            [clojurewerkz.cassaforte.thrift.column :as col]
-            [clojurewerkz.cassaforte.thrift.cql-row :as cql-row]
-            [clojurewerkz.cassaforte.thrift.super-column :as scol]
-            [clojurewerkz.cassaforte.thrift.column-or-super-column :as cosc])
+            [clojurewerkz.cassaforte.ddl.keyspace-definition :as kd]
+            [clojurewerkz.cassaforte.ddl.column-family-definition :as cfd]
+            [clojurewerkz.cassaforte.ddl.column-definition :as cd]
+            [clojurewerkz.cassaforte.ddl.column :as col]
+            [clojurewerkz.cassaforte.ddl.cql-row :as cql-row]
+            [clojurewerkz.cassaforte.ddl.super-column :as scol]
+            [clojurewerkz.cassaforte.ddl.column-or-super-column :as cosc])
   (:use [clojure.walk :only [stringify-keys keywordize-keys]])
   (:import [org.apache.cassandra.thrift ConsistencyLevel KsDef CfDef ColumnDef CqlPreparedResult
                                         CqlResult CqlRow Column SuperColumn ColumnOrSuperColumn

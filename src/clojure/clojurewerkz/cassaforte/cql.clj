@@ -1,7 +1,7 @@
 (ns clojurewerkz.cassaforte.cql
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.bytes  :as cb]
-            [clojurewerkz.cassaforte.query  :as q])
+            [clojurewerkz.cassaforte.cql.query-builder  :as q])
   (:use [clojure.string :only [split join]]
         [clojurewerkz.support.string :only [maybe-append interpolate-vals]]
         [clojurewerkz.support.fn :only [fpartial]]

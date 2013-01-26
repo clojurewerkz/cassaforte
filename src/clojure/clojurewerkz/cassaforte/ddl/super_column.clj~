@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.thrift.super-column
+(ns clojurewerkz.cassaforte.ddl.super-column
   (:use [clojurewerkz.cassaforte.bytes :only [encode]]
         [clojurewerkz.cassaforte.thrift.column :only [build-column]])
   (:import [org.apache.cassandra.thrift SuperColumn]))

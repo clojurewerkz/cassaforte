@@ -4,10 +4,11 @@
             [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.schema :as sch]
             [clojurewerkz.cassaforte.conversion :as conv]
-            [clojurewerkz.cassaforte.thrift.keyspace-definition :as kd]
-            [clojurewerkz.cassaforte.thrift.column-definition :as cd]
-            [clojurewerkz.cassaforte.thrift.column-family-definition :as cfd]
-            [clojurewerkz.cassaforte.thrift.column-or-super-column :as cosc]
+            [clojurewerkz.cassaforte.ddl.keyspace-definition :as kd]
+            [clojurewerkz.cassaforte.ddl.column-definition :as cd]
+
+            [clojurewerkz.cassaforte.ddl.column-family-definition :as cfd]
+            [clojurewerkz.cassaforte.ddl.column-or-super-column :as cosc]
             [clojurewerkz.cassaforte.schema :as sch]
             [clojurewerkz.cassaforte.cql :as cql])
   (:use clojurewerkz.cassaforte.thrift.core

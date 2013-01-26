@@ -3,8 +3,8 @@
   (:use [clojurewerkz.cassaforte.thrift.query-builders]
         [clojurewerkz.cassaforte.bytes :only [encode]])
   (:require [clojurewerkz.cassaforte.client :as client]
-            [clojurewerkz.cassaforte.thrift.column :as c]
-            [clojurewerkz.cassaforte.thrift.super-column :as sc]
+            [clojurewerkz.cassaforte.ddl.column :as c]
+            [clojurewerkz.cassaforte.ddl.super-column :as sc]
             [clojurewerkz.cassaforte.conversion :as conv]))
 
 (defn- batch-mutate-transform

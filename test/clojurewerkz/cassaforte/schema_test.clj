@@ -2,7 +2,7 @@
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.schema :as sch]
             [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.thrift.column-family-definition :as cfd])
+            [clojurewerkz.cassaforte.ddl.column-family-definition :as cfd])
   (:use clojure.test
         clojurewerkz.cassaforte.test-helper
         clojurewerkz.cassaforte.conversion

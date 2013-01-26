@@ -1,6 +1,6 @@
-(ns clojurewerkz.cassaforte.cql-test
+(ns clojurewerkz.cassaforte.cql.query-builder-test
   (:use clojure.test
-        clojurewerkz.cassaforte.query
+        clojurewerkz.cassaforte.cql.query-builder
         clojurewerkz.cassaforte.utils))
 
 (deftest t-prepare-create-column-family-query

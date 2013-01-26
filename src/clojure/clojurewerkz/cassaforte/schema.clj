@@ -1,8 +1,8 @@
 (ns clojurewerkz.cassaforte.schema
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query  :as q])
-  (:use [clojurewerkz.cassaforte.thrift.keyspace-definition :only [build-keyspace-definition]])
+            [clojurewerkz.cassaforte.cql.query-builder  :as q])
+  (:use [clojurewerkz.cassaforte.ddl.keyspace-definition :only [build-keyspace-definition]])
   (:import java.util.List
            clojurewerkz.cassaforte.CassandraClient
            org.apache.cassandra.thrift.KsDef))

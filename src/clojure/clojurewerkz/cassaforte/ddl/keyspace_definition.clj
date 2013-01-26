@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.thrift.keyspace-definition
+(ns clojurewerkz.cassaforte.ddl.keyspace-definition
   (:use [clojure.walk :only [stringify-keys]])
   (:import [org.apache.cassandra.thrift KsDef]
            java.util.List))

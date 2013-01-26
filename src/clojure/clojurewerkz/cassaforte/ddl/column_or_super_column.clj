@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.thrift.column-or-super-column
+(ns clojurewerkz.cassaforte.ddl.column-or-super-column
   (:import [org.apache.cassandra.thrift Column SuperColumn ColumnOrSuperColumn]))
 
 ;;

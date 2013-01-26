@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.query
+(ns clojurewerkz.cassaforte.cql.query-builder
   (:use [clojure.string :only [split join trim escape upper-case]]
         [clojurewerkz.support.string :only [maybe-append interpolate-vals interpolate-kv]]))
 

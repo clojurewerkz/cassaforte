@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.thrift.column-family-definition
+(ns clojurewerkz.cassaforte.ddl.column-family-definition
   (:import [org.apache.cassandra.thrift CfDef]
            java.util.List))
 

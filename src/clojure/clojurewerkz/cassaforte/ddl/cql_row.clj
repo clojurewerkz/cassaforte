@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.thrift.cql-row
+(ns clojurewerkz.cassaforte.ddl.cql-row
   (:import [org.apache.cassandra.thrift CqlRow]))
 
 (defn get-key

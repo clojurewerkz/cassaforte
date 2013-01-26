@@ -85,7 +85,6 @@
   (cql/truncate "libraries")
   (cql/drop-column-family "libraries"))
 
-
 ;;
 ;; INSERT with a map
 ;;
