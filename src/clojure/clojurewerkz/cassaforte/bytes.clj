@@ -6,6 +6,7 @@
             BooleanSerializer BigIntegerSerializer]))
 
 (declare encode)
+(declare deserialize)
 
 (def composite-delimiter (byte 0))
 
@@ -87,15 +88,15 @@
 
 (defmethod deserialize "Int32Type"
   [_ ^bytes bytes]
-  (.fromByteBuffer (get serializers java.lang.Integer) bytes))
+  (.fromBytes (get serializers java.lang.Integer) bytes))
 
 (defmethod deserialize "IntegerType"
   [_ ^bytes bytes]
-  (.fromByteBuffer (get serializers java.math.BigInteger) bytes))
+  (.fromBytes (get serializers java.math.BigInteger) bytes))
 
 (defmethod deserialize "UTF8Type"
   [_ ^bytes bytes]
-  (.fromByteBuffer (get serializers java.lang.String) bytes))
+  (.fromBytes (get serializers java.lang.String) bytes))
 
 (defmethod deserialize "AsciiType"
   [_ ^bytes bytes]
@@ -111,7 +112,7 @@
 
 (defmethod deserialize "LongType"
   [_ ^bytes bytes]
-  (.fromByteBuffer (get serializers java.lang.Long) bytes))
+  (.fromBytes (get serializers java.lang.Long) bytes))
 
 (defmethod deserialize "UUIDType"
   [_ ^bytes bytes]
@@ -119,8 +120,8 @@
 
 (defmethod deserialize "DateType"
   [_ ^bytes bytes]
-  (.fromByteBuffer (get serializers java.lang.Long) bytes))
+  (.fromBytes (get serializers java.lang.Long) bytes))
 
 (defmethod deserialize "BooleanType"
   [_ ^bytes bytes]
-  (.fromByteBuffer (get serializers java.lang.Boolean) bytes))
+  (.fromBytes (get serializers java.lang.Boolean) bytes))
