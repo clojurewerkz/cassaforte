@@ -1,8 +1,8 @@
 # Cassaforte
 
 Cassaforte is an young idiomatic Clojure client for Cassandra.
-Its API and code style closely follow other ClojureWerkz projects, namely [Monger](https://github.com/michaelklishin/monger), [Welle](https://github.com/michaelklishin/welle),
-[Neocons](https://github.com/michaelklishin/neocons), [Elastisch](https://github.com/clojurewerkz/elastisch) and [Spyglass](https://github.com/clojurewerkz/spyglass).
+Its API and code style closely follow other ClojureWerkz projects, namely [Monger](https://clojuremongodb.info), [Welle](https://clojureriak.info),
+[Neocons](https://clojureneo4j.info), [Elastisch](https://clojureelasticsearch.info) and [Spyglass](https://clojurememcached.info).
 
 
 ## Project Goals
@@ -11,15 +11,15 @@ Its API and code style closely follow other ClojureWerkz projects, namely [Monge
  * Be well maintained.
  * Be well documented.
  * Be well tested.
- * Target Clojure 1.3.0 and later from the ground up.
+ * Target Cassandra 1.2 and Clojure 1.4 and later from the ground up.
  * Integrate with libraries like clojure.data.json and Joda Time.
  * Support URI connections to be friendly to Heroku and other PaaS providers.
 
 
 ## Project Maturity
 
-Cassaforte is *very young*. We put it out there mostly to gather feedback from our friends who use Cassandra and to have CI on travis-ci.org.
-It almost certainly is not useable enough for anyone but the author. When Cassaforte matures, we will update this section.
+Cassaforte is *young and incomplete*.  It almost certainly is not useable enough for anyone but the author.
+When Cassaforte matures, we will update this section.
 
 
 
@@ -38,7 +38,7 @@ Cassaforte is built from the ground up for Clojure 1.3 and up.
 
 ## Supported Apache Cassandra versions
 
-Cassaforte is built from the ground up for Cassandra 1.1 and up and is built around CQL.
+Cassaforte is built from the ground up for Cassandra 1.2 and up and is built around CQL 3.
 
 
 
@@ -89,7 +89,8 @@ With Maven:
 ## Cassaforte Is a ClojureWerkz Project
 
 Cassaforte is part of the [group of libraries known as ClojureWerkz](http://clojurewerkz.org), together with
-[Monger](https://github.com/michaelklishin/monger), [Welle](https://github.com/michaelklishin/welle), [Elastisch](https://github.com/clojurewerkz/elastisch), [Neocons](https://github.com/michaelklishin/neocons) and several others.
+[Monger](https://clojuremongodb.info), [Welle](https://clojureriak.info), [Neocons](https://clojureneo4j.info),
+[Elastisch](https://clojureelasticsearch.info) and several others.
 
 
 
