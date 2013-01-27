@@ -35,16 +35,17 @@
 
   (batch-mutate
    {"key1" {"ColumnFamily2" {:first "a" :second "b"} }
-    "key2" {"ColumnFamily2" {:first "c" :second "d" :third "e"} }}
-   *consistency-level*)
+    "key2" {"ColumnFamily2" {:first "c" :second "d" :third "e"} }})
 
   (is (= {:first "a" :second "b"}
-         (get-slice "ColumnFamily2" "key1" *consistency-level*
-                    {:default-value-type "UTF8Type" :default-name-type "UTF8Type"})))
+         (get-slice "ColumnFamily2" "key1"
+                    :schema {:default-value-type "UTF8Type" :default-name-type "UTF8Type"})))
 
   (is (= {:first "c" :second "d"}
-         (get-slice "ColumnFamily2" "key2" "first" "second" *consistency-level*
-                    {:default-value-type "UTF8Type" :default-name-type "UTF8Type"}))))
+         (get-slice "ColumnFamily2" "key2"
+                    :slice-start "first"
+                    :slice-finish "second"
+                    :schema {:default-value-type "UTF8Type" :default-name-type "UTF8Type"}))))
 
 
 (deftest t-batch-mutate-supercolumn
@@ -61,34 +62,28 @@
   (batch-mutate
    {"key1" {"ColumnFamily1" {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"} :name3 {:first "e" :second "f"}}}
     "key2" {"ColumnFamily1" {:name1 {:first "g" :second "h"} :name2 {:first "i" :second "j"} :name3 {:first "k" :second "l"}} }}
-   *consistency-level*
    :type :super)
 
   (are [expected actual] (= expected actual)
 
-       {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"}}
-       (get-slice "ColumnFamily1" "key1" "" "name2" *consistency-level*
-                  {:default-value-type "UTF8Type" :default-name-type "UTF8Type"})
-
        {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"} :name3 {:first "e" :second "f"}}
-       (get-slice "ColumnFamily1" "key1" *consistency-level*
-                  {:default-value-type "UTF8Type" :default-name-type "UTF8Type"})
+       (get-slice "ColumnFamily1" "key1" )
 
        {:name1 {:first "g" :second "h"} :name2 {:first "i" :second "j"} :name3 {:first "k" :second "l"}}
-       (get-slice "ColumnFamily1" "key2" *consistency-level*
-                  {:default-value-type "UTF8Type" :default-name-type "UTF8Type"})
+       (get-slice "ColumnFamily1" "key2")
 
        {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"}}
-       (get-slice "ColumnFamily1" "key1" "name1" "name2" *consistency-level*
-                  {:default-value-type "UTF8Type" :default-name-type "UTF8Type"})
+       (get-slice "ColumnFamily1" "key1"
+                  :slice-start "name1"
+                  :slice-finish "name2")
 
        {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"}}
-       (get-slice "ColumnFamily1" "key1" "" "name2" *consistency-level*
-                  {:default-value-type "UTF8Type" :default-name-type "UTF8Type"})
+       (get-slice "ColumnFamily1" "key1"
+                  :slice-finish "name2")
 
        {:name2 {:first "i" :second "j"} :name3 {:first "k" :second "l"}}
-       (get-slice "ColumnFamily1" "key2" "name2" "" *consistency-level*
-                  {:default-value-type "UTF8Type" :default-name-type "UTF8Type"})))
+       (get-slice "ColumnFamily1" "key2"
+                  :slice-start "name2")))
 
 
 (deftest t-batch-mutate-custom-encoding
@@ -104,13 +99,11 @@
 
   (batch-mutate
    {"key1" {"ColumnFamily2" {:custom (nippy/freeze-to-bytes {:second "d" :third "e"})}}
-    "key2" {"ColumnFamily2" {:custom (nippy/freeze-to-bytes {:second "f" :third "g"})} }}
-   *consistency-level*)
+    "key2" {"ColumnFamily2" {:custom (nippy/freeze-to-bytes {:second "f" :third "g"})} }})
 
   (let [res (get-slice "ColumnFamily2" "key1" *consistency-level*
                        {:default-value-type "UTF8Type" :default-name-type "UTF8Type"
                         :value-types {:custom "BytesType"}})]
-    (println (nippy/thaw-from-bytes (:custom res)))
     (is (= {:second "d" :third "e"} (nippy/thaw-from-bytes (:custom res))))))
 
 
@@ -127,10 +120,9 @@
   (sch/set-keyspace "keyspace_name")
 
   (batch-mutate
-   {"key1" {"ColumnFamily2" {:longie (java.lang.Long. 1354299155188)}}}
-   *consistency-level*)
+   {"key1" {"ColumnFamily2" {:longie (java.lang.Long. 1354299155188)}}})
 
-  (let [res (get-slice "ColumnFamily2" "key1" *consistency-level*
-                       {:default-value-type "UTF8Type" :default-name-type "UTF8Type"
-                        :value-types {:longie "LongType"}})]
+  (let [res (get-slice "ColumnFamily2" "key1"
+                       :schema {:default-value-type "UTF8Type" :default-name-type "UTF8Type"
+                                :value-types {:longie "LongType"}})]
     (is (= 1354299155188 (:longie res)))))

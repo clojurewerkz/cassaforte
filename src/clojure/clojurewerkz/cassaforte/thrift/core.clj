@@ -1,6 +1,7 @@
 (ns clojurewerkz.cassaforte.thrift.core
   (:refer-clojure :exclude [get])
   (:use [clojurewerkz.cassaforte.thrift.query-builders]
+        [clojurewerkz.cassaforte.conversion :as conv]
         [clojurewerkz.cassaforte.bytes :only [encode]])
   (:require [clojurewerkz.cassaforte.client :as client]
             [clojurewerkz.cassaforte.ddl.column :as c]
@@ -21,7 +22,9 @@
              [k (f v)])))
 
 (defn batch-mutate
-  [mutation-map consistency-level & {:keys [type] :or {type :column}}]
+  [mutation-map & {:keys [type consistency-level]
+                   :or {type :column
+                        consistency-level (conv/to-consistency-level :one)}}]
   (let [keys             (map encode (keys mutation-map))
         mutations        (map #(apply-to-values % (fn [x] (batch-mutate-transform x type))) (vals mutation-map))
         batch-mutate-map (zipmap keys mutations)]
@@ -30,19 +33,20 @@
                    consistency-level)))
 
 (defn get
-  [^String column-family ^String key ^String field consistency-level & {:keys [type] :or {type :column}}]
+  [^String column-family ^String key ^String field & {:keys [type consistency-level]
+                                                      :or {type :column
+                                                           consistency-level (conv/to-consistency-level :one)}}]
   (let [column-path (build-column-path column-family field type)]
     (.get client/*cassandra-client*
           (encode key)
           column-path
           consistency-level)))
 
-(defn get-slice-raw*
+(defn- get-slice-raw*
   [column-family key slice-start slice-finish consistency-level]
   (let [column-parent (build-column-parent column-family)
         range         (build-slice-range slice-start slice-finish)
         predicate     (build-slice-predicate range)]
-
     (.get_slice client/*cassandra-client*
                 (encode key)
                 column-parent
@@ -50,11 +54,13 @@
                 consistency-level)))
 
 (defn get-slice
-  ([column-family key consistency-level schema]
-     (get-slice column-family key "" "" consistency-level schema))
-  ([column-family key slice-start slice-finish consistency-level schema]
-     (let [slice (get-slice-raw* column-family key slice-start slice-finish consistency-level)]
-       (conv/deserialize-thrift-response slice schema))))
+  [column-family key & {:keys [slice-start slice-finish consistency-level schema]
+                        :or { slice-start ""
+                             slice-finish ""
+                             consistency-level (conv/to-consistency-level :one)
+                             schema {:default-value-type "UTF8Type" :default-name-type "UTF8Type"}}}]
+  (let [slice (get-slice-raw* column-family key slice-start slice-finish consistency-level)]
+    (conv/deserialize-thrift-response slice schema)))
 
 
 ;; get-count
