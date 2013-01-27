@@ -18,6 +18,7 @@ public class BigIntegerSerializer extends AbstractSerializer<BigInteger> {
 
     int length = byteBuffer.remaining();
     byte[] bytes = new byte[length];
+    byteBuffer.duplicate().get(bytes);
     return new BigInteger(bytes);
   }
 }
