@@ -46,7 +46,8 @@
   (let [name           "CassaforteTest2"
         strategy-class "org.apache.cassandra.locator.SimpleStrategy"
         strategy-opts  {"replication_factor" "1"}
-        cf-defs        [(cfd/build-cfd "CassaforteTest2" "column-family-name" [(cd/build-cd "name" "UTF8Type")])]
+        cf-defs        [(cfd/build-cfd "column-family-name"
+                                       [(cd/build-cd "name" "UTF8Type")])]
         ks-def         (kd/build-kd name strategy-class cf-defs :strategy-opts strategy-opts)]
     (is (= name (kd/get-name ks-def)))
     (is (= strategy-class (kd/get-strategy-class ks-def)))
@@ -70,8 +71,9 @@
 (deftest test-build-column-family-definition
   (let [keyspace           "CassaforteTest2"
         name               "column-family-name"
-        column-definitions [(cd/build-cd "birth_date" "LongType") (cd/build-cd "full_name" "UTF8Type")]
-        cfdef              (cfd/build-cfd keyspace name column-definitions)]
+        column-definitions [(cd/build-cd "birth_date" "LongType")
+                            (cd/build-cd "full_name" "UTF8Type")]
+        cfdef              (cfd/build-cfd name column-definitions :keyspace keyspace)]
     (is (= keyspace (cfd/get-keyspace cfdef)))
     (is (= name (cfd/get-name cfdef)))
     ;; Order is guaranteed by Comparator, so that test does have a predictable order

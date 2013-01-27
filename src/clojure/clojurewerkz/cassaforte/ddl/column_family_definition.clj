@@ -32,17 +32,24 @@
 ;; get-default-validation-class
 ;; get-id
 
+(defn set-keyspace
+  [^CfDef cfdef ^String keyspace]
+  (.setKeyspace cfdef keyspace))
+
 ;;
 ;; Builders
 ;;
 
 (defn ^org.apache.cassandra.thrift.CfDef build-column-family-definition
-  ([^String keyspace ^String name]
-     (CfDef. keyspace name))
-  ([^String keyspace ^String name ^List cdefs & {:keys [column-type comparator-type]
-                                                 :or {column-type "Standard"
-                                                      comparator-type "BytesType"}}]
-     (let [^CfDef cfdef (build-column-family-definition keyspace name)]
+  ([^String name]
+     (let [cfdef (CfDef.)]
+       (.setName cfdef name)))
+  ([^String name ^List cdefs & {:keys [column-type comparator-type keyspace]
+                                :or {column-type "Standard"
+                                     comparator-type "BytesType"}}]
+     (let [^CfDef cfdef (build-column-family-definition name)]
+       (when keyspace
+         (set-keyspace cfdef keyspace))
        (.setColumn_type cfdef column-type)
        (.setComparator_type cfdef comparator-type)
        (doseq [cd cdefs]

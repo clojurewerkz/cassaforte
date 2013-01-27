@@ -1,6 +1,6 @@
 (ns clojurewerkz.cassaforte.client-test
   (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.schema :as sch])
+            [clojurewerkz.cassaforte.thrift.schema :as sch])
   (:use clojure.test)
   (:import clojurewerkz.cassaforte.CassandraClient))
 

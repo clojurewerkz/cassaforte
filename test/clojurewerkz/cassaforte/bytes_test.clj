@@ -1,14 +1,10 @@
 (ns clojurewerkz.cassaforte.bytes-test
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.schema :as sch])
+  (:require [clojurewerkz.cassaforte.client :as cc])
   (:use clojurewerkz.cassaforte.bytes
    clojure.test)
   (:import [clojurewerkz.cassaforte.serializers
             AbstractSerializer IntegerSerializer StringSerializer LongSerializer
-            BooleanSerializer BigIntegerSerializer])
-)
-
-
+            BooleanSerializer BigIntegerSerializer]))
 
 (deftest t-serializer-roundtrip
   (are [serializer value]

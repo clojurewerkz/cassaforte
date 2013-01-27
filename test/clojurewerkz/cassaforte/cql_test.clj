@@ -1,6 +1,6 @@
 (ns clojurewerkz.cassaforte.cql-test
   (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.schema :as sch]
+            [clojurewerkz.cassaforte.cql.schema :as sch]
             [clojurewerkz.cassaforte.cql    :as cql])
   (:use clojure.test
         clojurewerkz.cassaforte.test-helper

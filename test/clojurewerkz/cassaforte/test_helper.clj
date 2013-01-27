@@ -2,7 +2,7 @@
   (:use     clojurewerkz.cassaforte.utils)
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.thrift.core :as thrift]
-            [clojurewerkz.cassaforte.schema :as sch]
+            [clojurewerkz.cassaforte.cql.schema :as sch]
             [clojurewerkz.cassaforte.cql    :as cql]))
 
 (defn initialize-cql

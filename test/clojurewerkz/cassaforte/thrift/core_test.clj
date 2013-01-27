@@ -2,14 +2,13 @@
   (:refer-clojure :exclude [get])
   (:require [taoensso.nippy :as nippy]
             [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.schema :as sch]
+            [clojurewerkz.cassaforte.thrift.schema :as sch]
             [clojurewerkz.cassaforte.conversion :as conv]
             [clojurewerkz.cassaforte.ddl.keyspace-definition :as kd]
             [clojurewerkz.cassaforte.ddl.column-definition :as cd]
 
             [clojurewerkz.cassaforte.ddl.column-family-definition :as cfd]
             [clojurewerkz.cassaforte.ddl.column-or-super-column :as cosc]
-            [clojurewerkz.cassaforte.schema :as sch]
             [clojurewerkz.cassaforte.cql :as cql])
   (:use clojurewerkz.cassaforte.thrift.core
         clojurewerkz.cassaforte.test-helper
@@ -27,9 +26,9 @@
 
   (sch/add-keyspace "keyspace_name"
                     "org.apache.cassandra.locator.SimpleStrategy"
-                    [(cfd/build-cfd "keyspace_name" "ColumnFamily2" [(cd/build-cd "first" "UTF8Type")
-                                                                     (cd/build-cd "second" "UTF8Type")
-                                                                     (cd/build-cd "third" "UTF8Type")])]
+                    [(cfd/build-cfd "ColumnFamily2" [(cd/build-cd "first" "UTF8Type")
+                                                     (cd/build-cd "second" "UTF8Type")
+                                                     (cd/build-cd "third" "UTF8Type")])]
                     :strategy-opts {"replication_factor" "1"})
 
   (sch/set-keyspace "keyspace_name")
@@ -54,7 +53,7 @@
 
   (sch/add-keyspace "keyspace_name"
                     "org.apache.cassandra.locator.SimpleStrategy"
-                    [(cfd/build-cfd "keyspace_name" "ColumnFamily1" [] :column-type "Super")]
+                    [(cfd/build-cfd "ColumnFamily1" [] :column-type "Super")]
                     :strategy-opts {"replication_factor" "1"})
 
   (sch/set-keyspace "keyspace_name")
@@ -98,7 +97,7 @@
 
   (sch/add-keyspace "keyspace_name"
                     "org.apache.cassandra.locator.SimpleStrategy"
-                    [(cfd/build-cfd "keyspace_name" "ColumnFamily2" [(cd/build-cd "custom" "BytesType")])]
+                    [(cfd/build-cfd "ColumnFamily2" [(cd/build-cd "custom" "BytesType")])]
                     :strategy-opts {"replication_factor" "1"})
 
   (sch/set-keyspace "keyspace_name")
@@ -122,7 +121,7 @@
 
   (sch/add-keyspace "keyspace_name"
                     "org.apache.cassandra.locator.SimpleStrategy"
-                    [(cfd/build-cfd "keyspace_name" "ColumnFamily2" [(cd/build-cd "longie" "LongType")])]
+                    [(cfd/build-cfd "ColumnFamily2" [(cd/build-cd "longie" "LongType")])]
                     :strategy-opts {"replication_factor" "1"})
 
   (sch/set-keyspace "keyspace_name")
