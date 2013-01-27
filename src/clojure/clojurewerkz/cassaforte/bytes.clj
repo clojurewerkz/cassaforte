@@ -2,8 +2,8 @@
   (:import java.nio.ByteBuffer java.util.Date
            org.apache.cassandra.utils.ByteBufferUtil
            [clojurewerkz.cassaforte.serializers
-            IntegerSerializer StringSerializer LongSerializer BooleanSerializer BigIntegerSerializer]
-           ))
+            AbstractSerializer IntegerSerializer StringSerializer LongSerializer
+            BooleanSerializer BigIntegerSerializer]))
 
 
 ;;
@@ -46,6 +46,45 @@
   [_ ^bytes bytes]
   (Boolean/valueOf (String. bytes)))
 
+(declare encode)
+
+(def composite-delimiter (byte 0))
+
+(defn- encode-composite-segment
+  [raw-value]
+  (let [segment ^ByteBuffer (encode raw-value)
+        result (ByteBuffer/allocate (+ 3 (.capacity segment)))
+        segment-length (short (.capacity segment))]
+    (.putShort result segment-length)
+    (.put result segment)
+    (.put result ^byte composite-delimiter)
+    (.rewind result)))
+
+(def composite-serializer
+  (proxy [AbstractSerializer] []
+    (toByteBuffer [values]
+      (let [values-bytes (map (fn [v]
+                                (encode-composite-segment v))
+                              values)
+            capacity (reduce (fn [acc v]
+                               (+ acc (.capacity ^ByteBuffer v)))
+                             0
+                             values-bytes)
+            result-buffer (ByteBuffer/allocate capacity)]
+        (doseq [v values-bytes]
+          (.put result-buffer ^ByteBuffer v))
+        (.rewind result-buffer)))
+
+    (fromByteBuffer [byte-buffer]
+      (loop [res []]
+        (if (> (.remaining byte-buffer) 0)
+          (let [segment-length (.getShort byte-buffer)
+                segment (byte-array segment-length)]
+            (.get byte-buffer segment)
+            (.position byte-buffer (inc (.position byte-buffer)))
+            (recur (conj res segment)))
+          res)))))
+
 ;;
 ;; Clojure Data Type -> ByteBuffer
 ;;
@@ -58,6 +97,7 @@
    java.math.BigInteger (BigIntegerSerializer.)
   }
   )
+
 (defn ^ByteBuffer encode
   [value]
   (let [serializer (get-in serializers [(type value)])]
