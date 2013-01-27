@@ -7,15 +7,15 @@
             BooleanSerializer BigIntegerSerializer]))
 
 (deftest t-serializer-roundtrip
-  (are [serializer value]
-       (= value (.fromByteBuffer serializer (.toByteBuffer serializer value)))
-       (IntegerSerializer.) (Integer. 1)
-       (IntegerSerializer.) (Integer. 100)
-       (LongSerializer.) (Long. 100)
-       (BigIntegerSerializer.) (java.math.BigInteger. "123456789")
-       (StringSerializer.) "somer fancy string"
-       (BooleanSerializer.) true
-       (BooleanSerializer.) false)
+  (are [type value]
+       (= value (deserialize type (encode value)))
+       "Int32Type"(Integer. 1)
+       "IntegerType" (java.math.BigInteger. "123456789")
+       "LongType" (Long. 100)
+       "UTF8Type" "some fancy string"
+       "BooleanType" true
+       "BooleanType" false
+)
 
   (is (= ["a" "b" "c"]
          (map #(.fromBytes (StringSerializer.) %)

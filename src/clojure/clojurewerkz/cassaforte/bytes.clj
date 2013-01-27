@@ -5,47 +5,6 @@
             AbstractSerializer IntegerSerializer StringSerializer LongSerializer
             BooleanSerializer BigIntegerSerializer]))
 
-
-;;
-;; ByteBuffer -> Clojure Data Type
-;;
-
-(defmulti deserialize
-  "Instantiates a CQL value from the given array of bytes"
-  (fn [type bytes] type))
-
-(defmethod deserialize "UTF8Type"
-  [_ ^bytes bytes]
-  (String. bytes "UTF-8"))
-
-(defmethod deserialize "AsciiType"
-  [_ ^bytes bytes]
-  (String. bytes))
-
-(defmethod deserialize "BytesType"
-  [_ ^bytes bytes]
-  bytes)
-
-(defmethod deserialize "DoubleType"
-  [_ ^bytes bytes]
-  (.getDouble (ByteBuffer/wrap bytes)))
-
-(defmethod deserialize "LongType"
-  [_ ^bytes bytes]
-  (.getLong (ByteBuffer/wrap bytes)))
-
-(defmethod deserialize "UUIDType"
-  [_ ^bytes bytes]
-  (java.util.UUID/fromString (String. bytes)))
-
-(defmethod deserialize "DateType"
-  [_ ^bytes bytes]
-  (Date. (deserialize "LongType" bytes)))
-
-(defmethod deserialize "BooleanType"
-  [_ ^bytes bytes]
-  (Boolean/valueOf (String. bytes)))
-
 (declare encode)
 
 (def composite-delimiter (byte 0))
@@ -85,9 +44,12 @@
             (recur (conj res segment)))
           res)))))
 
-;;
-;; Clojure Data Type -> ByteBuffer
-;;
+(def date-serializer
+  (proxy [AbstractSerializer] []
+    (toByteBuffer [value]
+      (encode (.getTime value)))
+    (fromByteBuffer [byte-buffer]
+      (Date. (deserialize "LongType" bytes)))))
 
 (def ^:dynamic serializers
   {java.lang.Integer (IntegerSerializer.)
@@ -95,8 +57,12 @@
    java.lang.String (StringSerializer.)
    java.lang.Boolean (BooleanSerializer.)
    java.math.BigInteger (BigIntegerSerializer.)
-  }
-  )
+   java.util.Date date-serializer
+  })
+
+;;
+;; Clojure Data Type -> ByteBuffer
+;;
 
 (defn ^ByteBuffer encode
   [value]
@@ -110,3 +76,51 @@
 
 
   )
+
+;;
+;; ByteBuffer -> Clojure Data Type
+;;
+
+(defmulti deserialize
+  "Instantiates a CQL value from the given array of bytes"
+  (fn [type bytes] type))
+
+(defmethod deserialize "Int32Type"
+  [_ ^bytes bytes]
+  (.fromByteBuffer (get serializers java.lang.Integer) bytes))
+
+(defmethod deserialize "IntegerType"
+  [_ ^bytes bytes]
+  (.fromByteBuffer (get serializers java.math.BigInteger) bytes))
+
+(defmethod deserialize "UTF8Type"
+  [_ ^bytes bytes]
+  (.fromByteBuffer (get serializers java.lang.String) bytes))
+
+(defmethod deserialize "AsciiType"
+  [_ ^bytes bytes]
+  (String. bytes))
+
+(defmethod deserialize "BytesType"
+  [_ ^bytes bytes]
+  bytes)
+
+(defmethod deserialize "DoubleType"
+  [_ ^bytes bytes]
+  (.getDouble (ByteBuffer/wrap bytes)))
+
+(defmethod deserialize "LongType"
+  [_ ^bytes bytes]
+  (.fromByteBuffer (get serializers java.lang.Long) bytes))
+
+(defmethod deserialize "UUIDType"
+  [_ ^bytes bytes]
+  (java.util.UUID/fromString (String. bytes)))
+
+(defmethod deserialize "DateType"
+  [_ ^bytes bytes]
+  (.fromByteBuffer (get serializers java.lang.Long) bytes))
+
+(defmethod deserialize "BooleanType"
+  [_ ^bytes bytes]
+  (.fromByteBuffer (get serializers java.lang.Boolean) bytes))
