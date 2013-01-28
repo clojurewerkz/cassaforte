@@ -25,4 +25,9 @@
     (is (= ["a" "b" "c"])
      (map
       #(deserialize "UTF8Type" %)
-      (.fromByteBuffer composite-serializer serialized)))))
+      (.fromByteBuffer composite-serializer serialized))))
+
+  (let [cs (org.apache.cassandra.db.marshal.ListType/getInstance
+            org.apache.cassandra.db.marshal.UTF8Type/instance)
+        serialized (.decompose cs ["a" "b" "c"])]
+    (is (= ["a" "b" "c"]) (.compose cs serialized))))

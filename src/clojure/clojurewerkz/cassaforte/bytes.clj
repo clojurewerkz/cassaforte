@@ -3,7 +3,7 @@
            org.apache.cassandra.utils.ByteBufferUtil
            [clojurewerkz.cassaforte.serializers AbstractSerializer]
            [org.apache.cassandra.db.marshal UTF8Type Int32Type IntegerType AsciiType
-            DoubleType LongType UUIDType DateType BooleanType CompositeType]))
+            DoubleType LongType UUIDType DateType BooleanType CompositeType ListType]))
 
 (declare encode)
 (declare deserialize)
@@ -78,7 +78,7 @@
    java.math.BigInteger (IntegerType/instance)
    java.util.Date (DateType/instance)
    [java.lang.String "AsciiType"] (AsciiType/instance)
-  })
+   })
 
 ;;
 ;; Clojure Data Type -> ByteBuffer
@@ -147,12 +147,3 @@
 (defmethod deserialize "BooleanType"
   [_ ^bytes bytes]
   (.compose (BooleanType/instance) (ByteBuffer/wrap bytes)))
-
-
-(comment
-  (def cs (org.apache.cassandra.db.marshal.CompositeType/getInstance
-           [org.apache.cassandra.db.marshal.UTF8Type/instance
-            org.apache.cassandra.db.marshal.UTF8Type/instance
-            org.apache.cassandra.db.marshal.UTF8Type/instance]))
-
-  (def ex (.decompose cs (to-array ["a" "b" "c"]))))
