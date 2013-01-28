@@ -50,7 +50,7 @@
     (toByteBuffer [value]
       (encode (.getTime value)))
     (fromByteBuffer [byte-buffer]
-      (Date. (deserialize "LongType" bytes)))))
+      (Date. (.fromByteBuffer (get serializers java.lang.Long) byte-buffer)))))
 
 (def ^:dynamic serializers
   {java.lang.Integer (IntegerSerializer.)
@@ -120,7 +120,7 @@
 
 (defmethod deserialize "DateType"
   [_ ^bytes bytes]
-  (.fromBytes (get serializers java.lang.Long) bytes))
+  (.fromBytes (get serializers java.util.Date) bytes))
 
 (defmethod deserialize "BooleanType"
   [_ ^bytes bytes]

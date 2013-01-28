@@ -21,7 +21,8 @@
        "LongType" (Long. 100)
        "UTF8Type" "some fancy string"
        "BooleanType" true
-       "BooleanType" false)
+       "BooleanType" false
+       "DateType"(java.util.Date.))
 
   (is (= ["a" "b" "c"]
          (map #(.fromBytes (StringSerializer.) %)
