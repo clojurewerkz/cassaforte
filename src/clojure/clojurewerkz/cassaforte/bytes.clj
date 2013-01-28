@@ -3,10 +3,11 @@
            org.apache.cassandra.utils.ByteBufferUtil
            [clojurewerkz.cassaforte.serializers
             AbstractSerializer IntegerSerializer StringSerializer LongSerializer
-            BooleanSerializer BigIntegerSerializer]))
+            AsciiSerializer BooleanSerializer BigIntegerSerializer]))
 
 (declare encode)
 (declare deserialize)
+(declare serializers)
 
 (def composite-delimiter (byte 0))
 
@@ -52,13 +53,25 @@
     (fromByteBuffer [byte-buffer]
       (Date. (.fromByteBuffer (get serializers java.lang.Long) byte-buffer)))))
 
+(def double-serializer
+  (proxy [AbstractSerializer] []
+    (toByteBuffer [value]
+      (.toByteBuffer (get serializers java.lang.Long)
+                     (java.lang.Double/doubleToRawLongBits value)))
+    (fromByteBuffer [byte-buffer]
+      (let [l (.fromByteBuffer (get serializers java.lang.Long) byte-buffer)]
+        (when (not (nil? l))
+          (java.lang.Double/longBitsToDouble l))))))
+
 (def ^:dynamic serializers
   {java.lang.Integer (IntegerSerializer.)
    java.lang.Long (LongSerializer.)
+   java.lang.Double double-serializer
    java.lang.String (StringSerializer.)
    java.lang.Boolean (BooleanSerializer.)
    java.math.BigInteger (BigIntegerSerializer.)
    java.util.Date date-serializer
+   [java.lang.String "AsciiType"] (AsciiSerializer.)
   })
 
 ;;
@@ -100,7 +113,8 @@
 
 (defmethod deserialize "AsciiType"
   [_ ^bytes bytes]
-  (String. bytes))
+  (.fromBytes (get serializers [java.lang.String "AsciiType"]) bytes)
+)
 
 (defmethod deserialize "BytesType"
   [_ ^bytes bytes]
@@ -108,7 +122,7 @@
 
 (defmethod deserialize "DoubleType"
   [_ ^bytes bytes]
-  (.getDouble (ByteBuffer/wrap bytes)))
+  (.fromBytes (get serializers java.lang.Double) bytes))
 
 (defmethod deserialize "LongType"
   [_ ^bytes bytes]

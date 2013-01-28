@@ -20,9 +20,11 @@
        "IntegerType" (java.math.BigInteger. "123456789")
        "LongType" (Long. 100)
        "UTF8Type" "some fancy string"
+       "AsciiType" "some fancy string"
        "BooleanType" true
        "BooleanType" false
-       "DateType"(java.util.Date.))
+       "DateType" (java.util.Date.)
+       "DoubleType" (java.lang.Double. "123"))
 
   (is (= ["a" "b" "c"]
          (map #(.fromBytes (StringSerializer.) %)
