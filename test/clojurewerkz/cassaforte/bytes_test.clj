@@ -1,17 +1,8 @@
 (ns clojurewerkz.cassaforte.bytes-test
   (:require [clojurewerkz.cassaforte.client :as cc])
   (:use clojurewerkz.cassaforte.bytes
-   clojure.test)
-  (:import [java.nio ByteBuffer]
-           [clojurewerkz.cassaforte.serializers
-            AbstractSerializer IntegerSerializer StringSerializer LongSerializer
-            BooleanSerializer BigIntegerSerializer]))
-
-(defn to-bytes
-  [^ByteBuffer byte-buffer]
-  (let [bytes (byte-array (.remaining byte-buffer))]
-    (.get byte-buffer bytes 0 (count bytes))
-    bytes))
+        clojure.test)
+  (:import [java.nio ByteBuffer]))
 
 (deftest t-serializer-roundtrip
   (are [type value]
@@ -26,7 +17,12 @@
        "DateType" (java.util.Date.)
        "DoubleType" (java.lang.Double. "123"))
 
-  (is (= ["a" "b" "c"]
-         (map #(.fromBytes (StringSerializer.) %)
-              (.fromByteBuffer composite-serializer
-                               (.toByteBuffer composite-serializer ["a" "b" "c"]))))))
+  (let [cs (org.apache.cassandra.db.marshal.CompositeType/getInstance
+            [org.apache.cassandra.db.marshal.UTF8Type/instance
+             org.apache.cassandra.db.marshal.UTF8Type/instance
+             org.apache.cassandra.db.marshal.UTF8Type/instance])
+        serialized (.decompose cs (to-array ["a" "b" "c"]))]
+    (is (= ["a" "b" "c"])
+     (map
+      #(deserialize "UTF8Type" %)
+      (.fromByteBuffer composite-serializer serialized)))))

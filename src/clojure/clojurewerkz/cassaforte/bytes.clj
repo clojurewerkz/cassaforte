@@ -1,13 +1,19 @@
 (ns clojurewerkz.cassaforte.bytes
   (:import java.nio.ByteBuffer java.util.Date
            org.apache.cassandra.utils.ByteBufferUtil
-           [clojurewerkz.cassaforte.serializers
-            AbstractSerializer IntegerSerializer StringSerializer LongSerializer
-            AsciiSerializer BooleanSerializer BigIntegerSerializer]))
+           [clojurewerkz.cassaforte.serializers AbstractSerializer]
+           [org.apache.cassandra.db.marshal UTF8Type Int32Type IntegerType AsciiType
+            DoubleType LongType UUIDType DateType BooleanType CompositeType]))
 
 (declare encode)
 (declare deserialize)
 (declare serializers)
+
+(defn to-bytes
+  [^ByteBuffer byte-buffer]
+  (let [bytes (byte-array (.remaining byte-buffer))]
+    (.get byte-buffer bytes 0 (count bytes))
+    bytes))
 
 (def composite-delimiter (byte 0))
 
@@ -64,14 +70,14 @@
           (java.lang.Double/longBitsToDouble l))))))
 
 (def ^:dynamic serializers
-  {java.lang.Integer (IntegerSerializer.)
-   java.lang.Long (LongSerializer.)
-   java.lang.Double double-serializer
-   java.lang.String (StringSerializer.)
-   java.lang.Boolean (BooleanSerializer.)
-   java.math.BigInteger (BigIntegerSerializer.)
-   java.util.Date date-serializer
-   [java.lang.String "AsciiType"] (AsciiSerializer.)
+  {java.lang.Integer (Int32Type/instance)
+   java.lang.Long (LongType/instance)
+   java.lang.Double (DoubleType/instance)
+   java.lang.String (UTF8Type/instance)
+   java.lang.Boolean (BooleanType/instance)
+   java.math.BigInteger (IntegerType/instance)
+   java.util.Date (DateType/instance)
+   [java.lang.String "AsciiType"] (AsciiType/instance)
   })
 
 ;;
@@ -79,9 +85,12 @@
 ;;
 
 (defn ^ByteBuffer encode
-  [value]
-  (let [serializer (get-in serializers [(type value)])]
-    (.toByteBuffer serializer value))
+  ([value serializer-type]
+     (let [serializer (get serializers serializer-type)]
+       (.decompose serializer value)))
+  ([value]
+     (let [serializer (get serializers (type value))]
+       (.decompose serializer value)))
 
   ;; (if (instance? (Class/forName "[B") value)
   ;;   (java.nio.ByteBuffer/wrap value)
@@ -101,20 +110,19 @@
 
 (defmethod deserialize "Int32Type"
   [_ ^bytes bytes]
-  (.fromBytes (get serializers java.lang.Integer) bytes))
+  (.compose (Int32Type/instance) (ByteBuffer/wrap bytes)))
 
 (defmethod deserialize "IntegerType"
   [_ ^bytes bytes]
-  (.fromBytes (get serializers java.math.BigInteger) bytes))
+  (.compose (IntegerType/instance) (ByteBuffer/wrap bytes)))
 
 (defmethod deserialize "UTF8Type"
   [_ ^bytes bytes]
-  (.fromBytes (get serializers java.lang.String) bytes))
+  (.compose (UTF8Type/instance) (ByteBuffer/wrap bytes)))
 
 (defmethod deserialize "AsciiType"
   [_ ^bytes bytes]
-  (.fromBytes (get serializers [java.lang.String "AsciiType"]) bytes)
-)
+  (.compose (AsciiType/instance) (ByteBuffer/wrap bytes)))
 
 (defmethod deserialize "BytesType"
   [_ ^bytes bytes]
@@ -122,20 +130,29 @@
 
 (defmethod deserialize "DoubleType"
   [_ ^bytes bytes]
-  (.fromBytes (get serializers java.lang.Double) bytes))
+  (.compose (DoubleType/instance) (ByteBuffer/wrap bytes)))
 
 (defmethod deserialize "LongType"
   [_ ^bytes bytes]
-  (.fromBytes (get serializers java.lang.Long) bytes))
+  (.compose (LongType/instance) (ByteBuffer/wrap bytes)))
 
 (defmethod deserialize "UUIDType"
   [_ ^bytes bytes]
-  (java.util.UUID/fromString (String. bytes)))
+  (.compose (UUIDType/instance) (ByteBuffer/wrap bytes)))
 
 (defmethod deserialize "DateType"
   [_ ^bytes bytes]
-  (.fromBytes (get serializers java.util.Date) bytes))
+  (.compose (DateType/instance) (ByteBuffer/wrap bytes)))
 
 (defmethod deserialize "BooleanType"
   [_ ^bytes bytes]
-  (.fromBytes (get serializers java.lang.Boolean) bytes))
+  (.compose (BooleanType/instance) (ByteBuffer/wrap bytes)))
+
+
+(comment
+  (def cs (org.apache.cassandra.db.marshal.CompositeType/getInstance
+           [org.apache.cassandra.db.marshal.UTF8Type/instance
+            org.apache.cassandra.db.marshal.UTF8Type/instance
+            org.apache.cassandra.db.marshal.UTF8Type/instance]))
+
+  (def ex (.decompose cs (to-array ["a" "b" "c"]))))
