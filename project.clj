@@ -7,6 +7,7 @@
   :dependencies [[org.clojure/clojure                   "1.4.0"]
                  [org.apache.cassandra/cassandra-all    "1.2.0"]
                  [org.apache.cassandra/cassandra-thrift "1.2.0"]
+                 [org.apache.thrift/libthrift           "0.7.0"]
                  [clojurewerkz/support                  "0.10.0"]
                  [com.taoensso/nippy                    "1.0.1"]
                  [clj-time                              "0.4.4"]]
