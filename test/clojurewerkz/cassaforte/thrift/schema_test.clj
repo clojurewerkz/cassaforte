@@ -82,3 +82,16 @@
       (is (= strategy-class (:strategy-class ksdef)))
       (is (= keyspace (:name ksdef))))
     (is (sch/drop-keyspace keyspace))))
+
+
+
+(deftest ^{:schema true}  t-composite-columns
+  (let [keyspace "add_keyspace_test"]
+    (with-thrift-exception-handling (sch/drop-keyspace keyspace))
+    (sch/add-keyspace
+     keyspace
+     "org.apache.cassandra.locator.SimpleStrategy"
+     [(cfd/build-cfd "ColumnFamily2" [(cd/build-cd "first" "ListType(UTF8Type)")])]
+     :strategy-opts {"replication_factor" "1"})
+
+        (sch/drop-keyspace keyspace)))

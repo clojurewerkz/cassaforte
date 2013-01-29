@@ -8,7 +8,7 @@
         [clojurewerkz.cassaforte.conversion :only [from-cql-prepared-result to-map to-plain-hash]])
   (:import clojurewerkz.cassaforte.CassandraClient
            java.util.List
-           [org.apache.cassandra.thrift Compression CqlResult CqlRow CqlResultType]))
+           [org.apache.cassandra.thrift Compression ConsistencyLevel CqlResult CqlRow CqlResultType]))
 
 
 ;;
@@ -59,9 +59,14 @@
   execute-raw
   "Executes a CQL query given as a string. No argument replacement (a la JDBC) is performed."
   ([^String query]
-     (to-map (.executeCqlQuery ^CassandraClient cc/*cassandra-client* (-> query clean-up))))
+     (execute-raw query Compression/NONE))
   ([^String query ^Compression compression]
-     (to-map (.executeCqlQuery ^CassandraClient cc/*cassandra-client* (-> query clean-up) compression))))
+     (to-map
+      (.execute_cql3_query
+       ^CassandraClient cc/*cassandra-client*
+       (cb/encode (-> query clean-up))
+       compression
+       ConsistencyLevel/ONE))))
 
 (defn execute
   "Executes a CQL query given as a string. Performs positional argument (?) replacement (a la JDBC)."
@@ -164,4 +169,4 @@
 
 (defn set-keyspace
   [keyspace]
-  (execute "USE \"?\"" [keyspace]))
+  (execute "USE \"?\" " [keyspace]))

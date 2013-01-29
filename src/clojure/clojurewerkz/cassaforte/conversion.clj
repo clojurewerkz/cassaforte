@@ -46,7 +46,7 @@
   [columns {:keys [value-types default-value-type name-types default-name-type] :as schema}]
   (for [col columns
                    :let [^bytes k  (:name col)
-                         k-buf     (keyword (String. k "UTF-8"))
+                         k-buf     (keyword (cb/deserialize "UTF8Type" k))
                          name-type (get name-types k-buf default-name-type)
                          val-type  (get value-types k-buf default-value-type)
                          val       (:value col)]]
@@ -207,14 +207,19 @@
   java.util.List
   (to-plain-hash
     ([cosc-map]
-       (to-plain-hash cosc-map "UTF8Type"))
+       (to-plain-hash cosc-map "AsciiType"))
     ([cosc-map key-format]
        (let [list  (map to-map cosc-map)
              names (map #(or (keyword (:name %))
-                             (cb/deserialize key-format (:key %)))
+                             (cb/deserialize "UTF8Type" (:key %)))
                         list)
              values (map #(to-plain-hash (or (:columns %) (:value %))) list)]
-         (apply array-map (interleave names values)))))
+         ;; Since Cassandra 1.2, CQL results do not return keys anymore
+         (if (and
+              (seq? names)
+              (reduce #(and %1 (string? %2) (empty? %2)) true names))
+           values
+           (apply array-map (interleave names values))))))
 
   Object
   (to-plain-hash

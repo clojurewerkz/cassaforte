@@ -59,7 +59,7 @@
   " USING ?")
 
 (defn prepare-insert-query
-  [column-family m & {:keys [consistency timestamp ttl] :or {consistency "ONE"} :as opts}]
+  [column-family m & {:keys [timestamp ttl] :as opts}]
   (interpolate-kv insert-query
                   {:column-family-name column-family
                    :names (trim (join ", " (map #(name %) (keys m))))

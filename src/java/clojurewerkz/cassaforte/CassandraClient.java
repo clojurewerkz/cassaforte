@@ -332,6 +332,10 @@ public class CassandraClient {
     return client.execute_cql_query(query, compression);
   }
 
+  public CqlResult execute_cql3_query(ByteBuffer query, Compression compression, ConsistencyLevel consistency)  throws InvalidRequestException, UnavailableException, TimedOutException, SchemaDisagreementException, org.apache.thrift.TException {
+    return client.execute_cql3_query(query, compression, consistency);
+  }
+
   /**
    *
    * @return

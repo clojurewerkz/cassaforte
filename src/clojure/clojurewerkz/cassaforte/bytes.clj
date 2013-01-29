@@ -96,9 +96,11 @@
   ;;   (java.nio.ByteBuffer/wrap value)
   ;;   (ByteBufferUtil/bytes value))
 
-
-
   )
+
+(defn compose
+  [serializer bytes]
+  (.compose serializer (ByteBuffer/wrap bytes)))
 
 ;;
 ;; ByteBuffer -> Clojure Data Type
@@ -106,23 +108,23 @@
 
 (defmulti deserialize
   "Instantiates a CQL value from the given array of bytes"
-  (fn [type bytes] type))
+  (fn [type bytes] (last (clojure.string/split type #"\."))))
 
 (defmethod deserialize "Int32Type"
   [_ ^bytes bytes]
-  (.compose (Int32Type/instance) (ByteBuffer/wrap bytes)))
+  (compose Int32Type/instance bytes))
 
 (defmethod deserialize "IntegerType"
   [_ ^bytes bytes]
-  (.compose (IntegerType/instance) (ByteBuffer/wrap bytes)))
+  (compose IntegerType/instance bytes))
 
 (defmethod deserialize "UTF8Type"
   [_ ^bytes bytes]
-  (.compose (UTF8Type/instance) (ByteBuffer/wrap bytes)))
+  (compose UTF8Type/instance bytes))
 
 (defmethod deserialize "AsciiType"
   [_ ^bytes bytes]
-  (.compose (AsciiType/instance) (ByteBuffer/wrap bytes)))
+  (compose AsciiType/instance bytes))
 
 (defmethod deserialize "BytesType"
   [_ ^bytes bytes]
@@ -130,20 +132,20 @@
 
 (defmethod deserialize "DoubleType"
   [_ ^bytes bytes]
-  (.compose (DoubleType/instance) (ByteBuffer/wrap bytes)))
+  (compose DoubleType/instance bytes))
 
 (defmethod deserialize "LongType"
   [_ ^bytes bytes]
-  (.compose (LongType/instance) (ByteBuffer/wrap bytes)))
+  (compose LongType/instance bytes))
 
 (defmethod deserialize "UUIDType"
   [_ ^bytes bytes]
-  (.compose (UUIDType/instance) (ByteBuffer/wrap bytes)))
+  (compose UUIDType/instance bytes))
 
 (defmethod deserialize "DateType"
   [_ ^bytes bytes]
-  (.compose (DateType/instance) (ByteBuffer/wrap bytes)))
+  (compose DateType/instance bytes))
 
 (defmethod deserialize "BooleanType"
   [_ ^bytes bytes]
-  (.compose (BooleanType/instance) (ByteBuffer/wrap bytes)))
+  (compose BooleanType/instance bytes))
