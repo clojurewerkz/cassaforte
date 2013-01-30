@@ -22,7 +22,6 @@
                    :cql     :cql
                    :schema  :schema
                    :indexes :indexes
-                   :default (complement :skip-ci)
                    :ci (complement :skip-ci)}
   :repositories   {"sonatype" {:url "http://oss.sonatype.org/content/repositories/releases"
                                :snapshots false
