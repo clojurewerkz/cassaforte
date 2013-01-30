@@ -224,7 +224,7 @@
 
 
   (doseq [i (range 1 10)]
-    (cql/insert "posts" {:userid "user1" :posted_at (java.util.Date. 112 0 i 1 0 0) :entry_title (str "title" i) :content (str "content" i)})
+    (cql/insert "posts" {:userid "user1" :posted_at (str "2012-01-0" i) :entry_title (str "title" i) :content (str "content" i)})
     (cql/insert "posts" {:userid "user2" :posted_at (str "2012-01-0" i) :entry_title (str "title" i) :content (str "content" i)}))
 
   (is (= 9 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2011-01-01"]}))))
