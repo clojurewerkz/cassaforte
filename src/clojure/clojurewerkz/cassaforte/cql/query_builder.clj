@@ -26,9 +26,17 @@
   (to-cql-value [^clojure.lang.Named value]
     (name value))
 
+  java.util.Date
+  (to-cql-value [^java.util.Date value]
+    (to-cql-value (.getTime value)))
+
   String
   (to-cql-value [^String value]
-    (str "'" (escape value {\" "\""}) "'")))
+    (str "'" (escape value {\" "\""}) "'"))
+
+  clojure.lang.PersistentVector
+  (to-cql-value [^clojure.lang.PersistentVector value]
+    (join ", " (map to-cql-value value))))
 
 (def primary-key-clause
   ", PRIMARY KEY (:column)")
@@ -45,9 +53,7 @@
                   {:column-family-name column-family
                    :column-definitions (trim (join ", " (map (fn [[k v]] (str (name k) " " (name v))) column-definitions) ))
                    :primary-key-clause (when primary-key
-                                         (interpolate-kv primary-key-clause {:column (if (coll? primary-key)
-                                                                                       (join ", " (doall (map name primary-key)))
-                                                                                       (name primary-key))}))}))
+                                         (interpolate-kv primary-key-clause {:column (to-cql-value primary-key)}))}))
 
 (defn prepare-drop-column-family-query
   [column-family]
@@ -90,16 +96,19 @@
 (def select-query
   "SELECT :columns-clause FROM :column-family-name :where-clause :limit-clause")
 
+(def ^{:const true} in "IN")
+
 (defn match-operation
   [[operation orig-value & rest]]
   (let [value (to-cql-value orig-value)
         res   (cond
-                (= operation >) (format " > %s" value)
-                (= operation >=) (format " >= %s" value)
-                (= operation <) (format " < %s" value)
-                (= operation <=) (format " <= %s" value)
-                (= operation =) (format " = %s" value)
-                (keyword? operation) (format "%s %s" (name operation) value))]
+               (= operation >) (format " > %s" value)
+               (= operation >=) (format " >= %s" value)
+               (= operation <) (format " < %s" value)
+               (= operation <=) (format " <= %s" value)
+               (= operation =) (format " = %s" value)
+               (= operation :in) (format " IN (%s)" value)
+               (keyword? operation) (format "%s %s" (name operation) value))]
     (if rest
       (conj [res] (match-operation rest))
       [res])))
@@ -136,5 +145,3 @@
                     :limit-clause (when limit
                                     (prepare-limit-clause limit))
                     })))
-
-(def ^{:const true} in "IN")

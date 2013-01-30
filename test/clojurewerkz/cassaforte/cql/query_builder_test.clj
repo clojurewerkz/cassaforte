@@ -54,6 +54,8 @@
          (prepare-select-query "column_family_name" :columns ["column_name_1" "column_name_2"])))
   (is (= "SELECT * FROM column_family_name WHERE key = 1"
          (prepare-select-query "column_family_name" :where {:key 1})))
+  (is (= "SELECT * FROM column_family_name WHERE key IN (1, 2, 3)"
+         (prepare-select-query "column_family_name" :where {:key [:in [1 2 3]]})))
   (is (= "SELECT * FROM column_family_name WHERE key > 1"
          (prepare-select-query "column_family_name" :where {:key [> 1]})))
   (is (= "SELECT * FROM column_family_name WHERE column_1 >= 1 AND column_1 <= 5 AND column_2 >= 1"

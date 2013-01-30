@@ -222,14 +222,24 @@
                              :content :text}
                             :primary-key [:userid :posted_at])
 
+
   (doseq [i (range 1 10)]
-    (cql/insert "posts" {:userid "user1" :posted_at (str "2012-01-0" i) :entry_title (str "title" i) :content (str "content" i)}))
+    (cql/insert "posts" {:userid "user1" :posted_at (java.util.Date. 112 0 i 1 0 0) :entry_title (str "title" i) :content (str "content" i)})
+    (cql/insert "posts" {:userid "user2" :posted_at (str "2012-01-0" i) :entry_title (str "title" i) :content (str "content" i)}))
 
   (is (= 9 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2011-01-01"]}))))
   (is (= 8 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2012-01-01"]}))))
   (is (= 3 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2012-01-01" < "2012-01-05"]}))))
   (is (= 5 (count (cql/select "posts" :where {:userid "user1" :posted_at [>= "2012-01-01" <= "2012-01-05"]}))))
-)
+
+
+  (is (= 18 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2011-01-01"]}))))
+  (is (= 16 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2012-01-01"]}))))
+  (is (= 6 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2012-01-01" < "2012-01-05"]}))))
+  (is (= 10 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [>= "2012-01-01" <= "2012-01-05"]}))))
+
+  (is (= 10 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2011-01-01"]} :limit 10)))))
+
 ;;
 ;; TRUNCATE
 ;;
