@@ -8,6 +8,11 @@
          (prepare-create-column-family-query "libraries"
                                              {:name :varchar :language :varchar :rating :double }
                                              :primary-key :name)))
+  (is (= "CREATE TABLE posts (content text, posted_at timestamp, entry_title text, userid text, PRIMARY KEY (userid, posted_at));"
+         (prepare-create-column-family-query "posts"
+                                             {:userid :text :posted_at :timestamp :entry_title :text :content :text}
+                                             :primary-key [:userid :posted_at])))
+
   (is (= "CREATE TABLE libraries (name varchar, language varchar, rating double);"
          (prepare-create-column-family-query "libraries"
                                              {:name :varchar :language :varchar :rating :double }))))

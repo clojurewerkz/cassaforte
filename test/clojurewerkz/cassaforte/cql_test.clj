@@ -181,11 +181,9 @@
     (is (= {:name "Cassaforte" :language "Clojure" :rating 4.0 :released nil :votes nil :year 2012}
            (second res))))
 
-  (comment
-    ;; By indexed column
-    (let [res (to-plain-hash (:rows (cql/execute-raw "SELECT * FROM libraries WHERE language='Erlang'")))]
-      (is (= {:name "Riak" :language "Erlang" :rating 5.0 :released nil :votes nil :year 2009}
-             (get res "Riak")))))
+  (let [res (to-plain-hash (:rows (cql/execute-raw "SELECT * FROM libraries WHERE language='Erlang'")))]
+    (is (= {:name "Riak" :language "Erlang" :rating 5.0 :released nil :votes nil :year 2009}
+           (first res))))
 
   (cql/drop-column-family "libraries"))
 
@@ -213,6 +211,25 @@
 
   (cql/drop-column-family "time_series"))
 
+(deftest ^{:cql true} test-composite-keys
+  (with-thrift-exception-handling
+    (cql/drop-column-family "posts"))
+
+  (cql/create-column-family "posts"
+                            {:userid :text
+                             :posted_at :timestamp
+                             :entry_title :text
+                             :content :text}
+                            :primary-key [:userid :posted_at])
+
+  (doseq [i (range 1 10)]
+    (cql/insert "posts" {:userid "user1" :posted_at (str "2012-01-0" i) :entry_title (str "title" i) :content (str "content" i)}))
+
+  (is (= 9 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2011-01-01"]}))))
+  (is (= 8 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2012-01-01"]}))))
+  (is (= 3 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2012-01-01" < "2012-01-05"]}))))
+  (is (= 5 (count (cql/select "posts" :where {:userid "user1" :posted_at [>= "2012-01-01" <= "2012-01-05"]}))))
+)
 ;;
 ;; TRUNCATE
 ;;

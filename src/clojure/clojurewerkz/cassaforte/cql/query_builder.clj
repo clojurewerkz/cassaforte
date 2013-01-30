@@ -45,7 +45,9 @@
                   {:column-family-name column-family
                    :column-definitions (trim (join ", " (map (fn [[k v]] (str (name k) " " (name v))) column-definitions) ))
                    :primary-key-clause (when primary-key
-                                         (interpolate-kv primary-key-clause {:column (name primary-key)}))}))
+                                         (interpolate-kv primary-key-clause {:column (if (coll? primary-key)
+                                                                                       (join ", " (doall (map name primary-key)))
+                                                                                       (name primary-key))}))}))
 
 (defn prepare-drop-column-family-query
   [column-family]
