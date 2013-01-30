@@ -54,6 +54,19 @@
          (prepare-select-query "column_family_name" :columns ["column_name_1" "column_name_2"])))
   (is (= "SELECT * FROM column_family_name WHERE key = 1"
          (prepare-select-query "column_family_name" :where {:key 1})))
+
+  (is (= "SELECT * FROM column_family_name WHERE key = 1 ORDER BY second_key"
+         (prepare-select-query "column_family_name" :where {:key 1} :order :second_key)))
+  (is (= "SELECT * FROM column_family_name WHERE key = 1 ORDER BY second_key"
+         (prepare-select-query "column_family_name" :where {:key 1} :order [:second_key])))
+  (is (= "SELECT * FROM column_family_name WHERE key = 1 ORDER BY second_key ASC"
+         (prepare-select-query "column_family_name" :where {:key 1} :order [:second_key :asc])))
+  (is (= "SELECT * FROM column_family_name WHERE key = 1 ORDER BY second_key DESC"
+         (prepare-select-query "column_family_name" :where {:key 1} :order [:second_key :desc])))
+
+  (is (thrown? Exception
+               (prepare-select-query "column_family_name" :where {:key 1} :order [:second_key :desc :third_key])))
+
   (is (= "SELECT * FROM column_family_name WHERE key IN (1, 2, 3)"
          (prepare-select-query "column_family_name" :where {:key [:in [1 2 3]]})))
   (is (= "SELECT * FROM column_family_name WHERE key > 1"

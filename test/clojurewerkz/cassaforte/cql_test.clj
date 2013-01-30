@@ -227,18 +227,32 @@
     (cql/insert "posts" {:userid "user1" :posted_at (str "2012-01-0" i) :entry_title (str "title" i) :content (str "content" i)})
     (cql/insert "posts" {:userid "user2" :posted_at (str "2012-01-0" i) :entry_title (str "title" i) :content (str "content" i)}))
 
-  (is (= 9 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2011-01-01"]}))))
-  (is (= 8 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2012-01-01"]}))))
-  (is (= 3 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2012-01-01" < "2012-01-05"]}))))
-  (is (= 5 (count (cql/select "posts" :where {:userid "user1" :posted_at [>= "2012-01-01" <= "2012-01-05"]}))))
+  (testing "Ordering by key part with exact match"
+    (is (= "content1"
+           (:content (first
+                      (cql/select "posts" :where {:userid "user1" :posted_at [> "2011-01-05"]}
+                                  :order [:posted_at :asc])))))
 
+    (is (= "content9"
+           (:content (first
+                      (cql/select "posts" :where {:userid "user1" :posted_at [> "2011-01-05"]}
+                                  :order [:posted_at :desc]))))))
 
-  (is (= 18 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2011-01-01"]}))))
-  (is (= 16 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2012-01-01"]}))))
-  (is (= 6 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2012-01-01" < "2012-01-05"]}))))
-  (is (= 10 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [>= "2012-01-01" <= "2012-01-05"]}))))
+  (testing "Range queries with open end"
+    (is (= 9 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2011-01-01"]}))))
+    (is (= 8 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2012-01-01"]})))))
 
-  (is (= 10 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2011-01-01"]} :limit 10)))))
+  (testing "Range queries"
+    (is (= 3 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2012-01-01" < "2012-01-05"]}))))
+    (is (= 5 (count (cql/select "posts" :where {:userid "user1" :posted_at [>= "2012-01-01" <= "2012-01-05"]})))))
+
+  (testing "Range queries and IN clause"
+    (is (= 18 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2011-01-01"]}))))
+    (is (= 16 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2012-01-01"]}))))
+    (is (= 6 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2012-01-01" < "2012-01-05"]}))))
+    (is (= 10 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [>= "2012-01-01" <= "2012-01-05"]}))))
+
+    (is (= 10 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2011-01-01"]} :limit 10))))))
 
 ;;
 ;; TRUNCATE

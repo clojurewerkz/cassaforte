@@ -132,7 +132,7 @@
 
 (defn select-raw*
   [column-family & opts]
-  (let [query (apply q/prepare-select-query column-family (flatten opts))]
+  (let [query (apply q/prepare-select-query column-family (apply concat opts))]
     (execute query)))
 
 (defn select

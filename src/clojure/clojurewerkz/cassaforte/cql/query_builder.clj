@@ -1,5 +1,5 @@
 (ns clojurewerkz.cassaforte.cql.query-builder
-  (:use [clojure.string :only [split join trim escape upper-case]]
+  (:use [clojure.string :only [split join trim trimr escape upper-case]]
         [clojurewerkz.support.string :only [maybe-append interpolate-vals interpolate-kv]]))
 
 (defprotocol CQLValue
@@ -94,7 +94,7 @@
                       :column-name (name column-name)})))
 
 (def select-query
-  "SELECT :columns-clause FROM :column-family-name :where-clause :limit-clause")
+  "SELECT :columns-clause FROM :column-family-name :where-clause:order-clause:limit-clause")
 
 (def ^{:const true} in "IN")
 
@@ -130,10 +130,20 @@
 
 (defn prepare-limit-clause
   [limit]
-  (str "LIMIT " limit))
+  (str " LIMIT " limit))
+
+(defn prepare-order-clause
+  [limit]
+  (str " ORDER BY "
+       (if (vector? limit)
+         (let [[order direction & rest] limit]
+           (when (not (empty? rest))
+             (throw (Exception. "Limit clause should contain exactly 2 iterms, column and direction")))
+           (str (to-cql-value order) " " (if direction (upper-case (to-cql-value direction)) "")))
+         (to-cql-value limit))))
 
 (defn prepare-select-query
-  [column-family & {:keys [columns where limit]}]
+  [column-family & {:keys [columns where limit order]}]
   (trim
    (interpolate-kv select-query
                    {:column-family-name column-family
@@ -142,6 +152,8 @@
                                       "*")
                     :where-clause (when where
                                     (prepare-where-clause where))
+                    :order-clause (when order
+                                    (trimr (prepare-order-clause order)))
                     :limit-clause (when limit
                                     (prepare-limit-clause limit))
                     })))
