@@ -84,14 +84,11 @@
   "CREATE INDEX:index-name ON :column-family-name (:column-name)")
 
 (defn prepare-create-index-query
-  ([column-family column-name]
-     (prepare-create-index-query column-family column-name nil))
-  ([column-family column-name index-name]
-     (interpolate-kv create-index-query
-                     {:index-name (when index-name
-                                    (interpolate-kv index-name-clause {:index-name index-name}))
-                      :column-family-name column-family
-                      :column-name (name column-name)})))
+  [column-family column-name]
+  (interpolate-kv create-index-query
+                  {:index-name (interpolate-kv index-name-clause {:index-name (str column-family "_" column-name "_idx")})
+                   :column-family-name column-family
+                   :column-name (name column-name)}))
 
 (def select-query
   "SELECT :columns-clause FROM :column-family-name :where-clause:order-clause:limit-clause")

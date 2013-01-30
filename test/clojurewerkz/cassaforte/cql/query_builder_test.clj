@@ -29,10 +29,8 @@
 
 
 (deftest t-prepare-create-index-query
-  (is (= "CREATE INDEX ON column_family_name (column_name)"
-         (prepare-create-index-query "column_family_name" "column_name")))
-  (is (= "CREATE INDEX index_name ON column_family_name (column_name)"
-         (prepare-create-index-query "column_family_name" "column_name" "index_name"))))
+  (is (= "CREATE INDEX column_family_name_column_name_idx ON column_family_name (column_name)"
+         (prepare-create-index-query "column_family_name" "column_name"))))
 
 
 ;;

@@ -170,3 +170,14 @@
 (defn set-keyspace
   [keyspace]
   (execute "USE \"?\" " [keyspace]))
+
+(defn describe
+  ([keyspace]
+     (select "system.schema_keyspaces" :where {:keyspace_name keyspace}))
+  ([keyspace column-family & {:keys [with-columns]}]
+     (let [res (first (select "system.schema_columnfamilies" :where {:keyspace_name keyspace :columnfamily_name column-family}))]
+       (if with-columns
+         (assoc res
+           :columns
+           (select "system.schema_columns" :where {:keyspace_name keyspace :columnfamily_name column-family}))
+         res))))

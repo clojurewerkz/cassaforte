@@ -44,17 +44,6 @@
 
 
 ;;
-;; CREATE INDEX, DROP INDEX
-;;
-
-(deftest ^{:cql true} test-create-and-drop-an-index-using-raw-cql
-  (with-thrift-exception-handling
-    (cql/drop-column-family "libraries"))
-  (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
-  (let [result (sch/create-index "libraries" :language)]
-    (is (cql/void-result? result))))
-
-;;
 ;; BATCH
 ;;
 
@@ -170,7 +159,7 @@
                              :released  "boolean"}
                             :primary-key :name)
 
-  (sch/create-index "libraries" :language)
+  (sch/create-index "libraries" "language")
 
   (cql/insert "libraries" {:name "Cassaforte" :language "Clojure" :rating 4.0 :year 2012})
   (cql/insert "libraries" {:name "Riak" :language "Erlang" :rating 5.0 :year 2009})
