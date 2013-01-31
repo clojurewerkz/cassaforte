@@ -11,8 +11,7 @@
   [f v]
   (if *cql-stack*
     (do
-      (swap! *cql-stack* #(conj % v))
-      (println *cql-stack*)
+      (conj! *cql-stack* v)
       "?")
     (f)))
 
@@ -169,9 +168,9 @@
 (defn prepare-select-query
   [column-family & {:keys [columns where limit order as-prepared-statement] :as opts}]
   (if as-prepared-statement
-    (binding [*cql-stack* (atom [])]
+    (binding [*cql-stack* (transient [])]
       (let [res (apply prepare-select-query column-family (apply concat (dissoc opts :as-prepared-statement)))]
-        [@*cql-stack* res]))
+        [(persistent! *cql-stack*) res]))
     (trim
      (interpolate-kv select-query
                      {:column-family-name column-family
