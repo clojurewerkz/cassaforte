@@ -144,6 +144,14 @@
   (let [result (apply select-raw* column-family opts)]
     (to-plain-hash (:rows result) key-type)))
 
+(defn select-prepared
+  [column-family &{:keys [key-type] :or {key-type "UTF8Type"} :as opts}]
+  (let [[vals query] (apply q/prepare-select-query
+                            column-family (apply concat
+                                                 (assoc opts
+                                                   :as-prepared-statement true)))]
+    (execute-prepared-query query vals)))
+
 (defn create-column-family
   [name fields & {:keys [primary-key]}]
   (let [query (q/prepare-create-column-family-query name fields :primary-key primary-key)]
