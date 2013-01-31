@@ -5,38 +5,65 @@
 (defprotocol CQLValue
   (to-cql-value [value] "Converts the given value to a CQL string representation"))
 
+(def ^:dynamic *cql-stack* nil)
+
+(defn- to-cql-value-wrapper
+  [f v]
+  (if *cql-stack*
+    (do
+      (swap! *cql-stack* #(conj % v))
+      (println *cql-stack*)
+      "?")
+    (f)))
+
 (extend-protocol CQLValue
   nil
   (to-cql-value [value]
-    "null")
+    (to-cql-value-wrapper
+     (fn [] "null")
+     value))
 
   Number
   (to-cql-value [^Number value]
-    (str value))
+    (to-cql-value-wrapper
+     #(str value)
+     value))
 
   Long
   (to-cql-value [^Long value]
-    (str value))
+    (to-cql-value-wrapper
+     #(str value)
+     value))
 
   clojure.lang.BigInt
   (to-cql-value [^clojure.lang.BigInt value]
-    (str value))
+    (to-cql-value-wrapper
+     #(str value)
+     value))
 
   clojure.lang.Named
   (to-cql-value [^clojure.lang.Named value]
-    (name value))
+    (to-cql-value-wrapper
+     #(name value)
+     value))
 
   java.util.Date
   (to-cql-value [^java.util.Date value]
-    (to-cql-value (.getTime value)))
+    (to-cql-value-wrapper
+     #(to-cql-value (.getTime value))
+     value))
 
   String
   (to-cql-value [^String value]
-    (str "'" (escape value {\" "\""}) "'"))
+    (to-cql-value-wrapper
+     #(str "'" (escape value {\" "\""}) "'")
+     value))
 
   clojure.lang.PersistentVector
   (to-cql-value [^clojure.lang.PersistentVector value]
-    (join ", " (map to-cql-value value))))
+    (to-cql-value-wrapper
+     #(join ", " (map to-cql-value value))
+     value)))
 
 (def primary-key-clause
   ", PRIMARY KEY (:column)")
@@ -140,17 +167,21 @@
          (to-cql-value limit))))
 
 (defn prepare-select-query
-  [column-family & {:keys [columns where limit order]}]
-  (trim
-   (interpolate-kv select-query
-                   {:column-family-name column-family
-                    :columns-clause (if columns
-                                      (join ", " columns)
-                                      "*")
-                    :where-clause (when where
-                                    (prepare-where-clause where))
-                    :order-clause (when order
-                                    (trimr (prepare-order-clause order)))
-                    :limit-clause (when limit
-                                    (prepare-limit-clause limit))
-                    })))
+  [column-family & {:keys [columns where limit order as-prepared-statement] :as opts}]
+  (if as-prepared-statement
+    (binding [*cql-stack* (atom [])]
+      (let [res (apply prepare-select-query column-family (apply concat (dissoc opts :as-prepared-statement)))]
+        [@*cql-stack* res]))
+    (trim
+     (interpolate-kv select-query
+                     {:column-family-name column-family
+                      :columns-clause (if columns
+                                        (join ", " columns)
+                                        "*")
+                      :where-clause (when where
+                                      (prepare-where-clause where))
+                      :order-clause (when order
+                                      (trimr (prepare-order-clause order)))
+                      :limit-clause (when limit
+                                      (prepare-limit-clause limit))
+                      }))))

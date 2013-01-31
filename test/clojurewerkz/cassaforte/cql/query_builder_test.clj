@@ -75,3 +75,8 @@
          (prepare-select-query "column_family_name" :where {:column_1 [>= 1] :column_2 [<= 5]})))
   (is (= "SELECT * FROM column_family_name WHERE column_1 >= 1 AND column_2 <= 5 LIMIT 5"
          (prepare-select-query "column_family_name" :where {:column_1 [>= 1] :column_2 [<= 5]} :limit 5))))
+
+
+(deftest prepared-statments
+  (println (prepare-select-query "column_family_name" :where {:column_1 [>= 1] :column_2 [<= 5]} :limit 5
+                               :as-prepared-statement true)))
