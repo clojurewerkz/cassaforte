@@ -93,15 +93,19 @@
   " USING ?")
 
 (defn prepare-insert-query
-  [column-family m & {:keys [timestamp ttl] :as opts}]
-  (interpolate-kv insert-query
-                  {:column-family-name column-family
-                   :names (trim (join ", " (map #(name %) (keys m))))
-                   :values (trim (join ", " (map #(to-cql-value %) (vals m))))
-                   :opts (when opts
-                           (interpolate-vals
-                            opts-clause
-                            [(join " AND " (map (fn [[k v]] (str (upper-case (name k)) " " v)) opts))]))}))
+  [column-family m & {:keys [timestamp ttl as-prepared-statement] :as opts}]
+  (if as-prepared-statement
+    (binding [*cql-stack* (transient [])]
+      (let [res (apply prepare-insert-query column-family m (apply concat (dissoc opts :as-prepared-statement)))]
+        [(persistent! *cql-stack*) res]))
+    (interpolate-kv insert-query
+                    {:column-family-name column-family
+                     :names (trim (join ", " (map #(name %) (keys m))))
+                     :values (trim (join ", " (map #(to-cql-value %) (vals m))))
+                     :opts (when opts
+                             (interpolate-vals
+                              opts-clause
+                              [(join " AND " (map (fn [[k v]] (str (upper-case (name k)) " " v)) opts))]))})))
 
 (def index-name-clause
   " :index-name")

@@ -25,7 +25,13 @@
   (is (= "INSERT INTO libraries (name, language, rating) VALUES ('name', 'language', 1.0) USING CONSISTENCY ONE AND TTL 100;"
          (prepare-insert-query "libraries" {:name "name" :language "language" :rating 1.0}
                                :consistency "ONE"
-                               :ttl 100))))
+                               :ttl 100)))
+
+  (is (= [["name" "language" 1.0] "INSERT INTO libraries (name, language, rating) VALUES (?, ?, ?) USING CONSISTENCY ONE AND TTL 100;"]
+         (prepare-insert-query "libraries" {:name "name" :language "language" :rating 1.0}
+                               :consistency "ONE"
+                               :ttl 100
+                               :as-prepared-statement true))))
 
 
 (deftest t-prepare-create-index-query

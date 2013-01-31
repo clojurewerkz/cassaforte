@@ -162,6 +162,15 @@
   (let [query (apply q/prepare-insert-query column-family vals opts)]
     (execute-raw query)))
 
+(defn insert-prepared
+  [column-family vals & opts]
+  (let [[vals query] (apply q/prepare-insert-query
+                            column-family vals
+                            (apply concat
+                                   (assoc opts
+                                     :as-prepared-statement true)))]
+    (execute-prepared-query query vals)))
+
 (defn drop-column-family
   [name]
   (let [query (q/prepare-drop-column-family-query name)]
