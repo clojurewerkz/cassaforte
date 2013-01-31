@@ -10,6 +10,8 @@
                  [org.apache.thrift/libthrift           "0.7.0"]
                  [clojurewerkz/support                  "0.10.0"]
                  [com.taoensso/nippy                    "1.0.1"]
+                 [io.netty/netty                        "3.6.2.Final"]
+                 [org.slf4j/slf4j-log4j12               "1.6.6"]
                  [clj-time                              "0.4.4"]]
   :source-paths      ["src/clojure"]
   :java-source-paths ["src/java"]
