@@ -241,16 +241,18 @@
     (is (= 6 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2012-01-01" < "2012-01-05"]}))))
     (is (= 10 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [>= "2012-01-01" <= "2012-01-05"]}))))
 
-    (is (= 10 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2011-01-01"]} :limit 10))))))
+    (is (= 10 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2011-01-01"]} :limit 10))))
+
+    )
+
+  (testing "With a prepared query"
+    (is (= 4 (count (cql/execute-prepared-query "select * from posts where userid = ? and posted_at > ? limit 10" ["user1" (java.util.Date. 112 0 5 1 0 0)]))))))
 
 ;;
 ;; TRUNCATE
 ;;
 
 ;; TBD
-
-
-
 
 ;;
 ;; Conversion to CQL values, escaping

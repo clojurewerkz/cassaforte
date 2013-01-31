@@ -33,23 +33,31 @@
   [^String query]
   (-> query .trim maybe-append-semicolon))
 
-(comment
-  (defn prepare-cql-query
-    "Prepares a CQL query for execution. Cassandra 1.1+ only."
-    ([^String query]
-       (from-cql-prepared-result (.prepare_cql_query ^Client cc/*client* (cb/encode query) default-compression)))
-    ([^String query ^Compression compression]
-       (from-cql-prepared-result (.prepare_cql_query ^Client cc/*client* (cb/encode query) compression))))
+;; (def b (.bytes (.statementId (cql/prepare-cql-query "select * from posts where userid = ?"))))
 
-  (defn execute-prepared-query
-    "Executes a CQL query previously prepared using the prepare-cql-query function
+(def prepared-statements-cache (atom {}))
+
+(defn prepare-cql-query
+  "Prepares a CQL query for execution. Cassandra 1.1+ only."
+  [^String query]
+  (if-let [statement-id (get @prepared-statements-cache query)]
+    statement-id
+    (let [statement-id (.bytes (.statementId (.prepare ^Client cc/*client* query)))]
+      (swap! prepared-statements-cache assoc query statement-id)
+      statement-id)))
+
+(defn execute-prepared-query
+  "Executes a CQL query previously prepared using the prepare-cql-query function
    by providing the actual values for placeholders"
-    [^long prepared-statement-id ^List values]
-    (.execute_prepared_cql_query ^Client cc/*client* prepared-statement-id values)))
+  [^String query ^List values]
+  (to-plain-hash (:rows
+                  (to-map (.toThriftResult
+                           (.executePrepared ^Client cc/*client*
+                                             (prepare-cql-query query)
+                                             (map cb/encode values)
+                                             *default-consistency-level*))))))
 
 
-
-;;
 ;; API
 ;;
 
