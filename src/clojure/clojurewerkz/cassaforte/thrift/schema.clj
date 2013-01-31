@@ -23,7 +23,7 @@
 (defn ^org.apache.cassandra.thrift.KsDef
   describe-keyspace
   [^String name]
-  (.set_keyspace ^CassandraClient cc/*cassandra-client* name)
+
   (conv/to-map (.describe_keyspace ^CassandraClient cc/*cassandra-client* name)))
 
 (defn update-keyspace

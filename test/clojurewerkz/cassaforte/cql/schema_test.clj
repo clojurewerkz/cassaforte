@@ -1,5 +1,5 @@
 (ns clojurewerkz.cassaforte.cql.schema-test
-  (:require [clojurewerkz.cassaforte.client :as cc]
+  (:require [clojurewerkz.cassaforte.cql.client :as cc]
             [clojurewerkz.cassaforte.cql.schema :as sch]
             [clojurewerkz.cassaforte.cql    :as cql]
             [clojurewerkz.cassaforte.ddl.column-family-definition :as cfd])
@@ -11,7 +11,7 @@
 (use-fixtures :once initialize-cql)
 
 (deftest ^{:schema true :indexes true} test-create-columnfamily-bare-cql
-  (with-thrift-exception-handling
+  (with-native-exception-handling
     (cql/drop-column-family "libraries"))
 
   (cql/execute-raw "CREATE COLUMNFAMILY libraries (name     varchar,
@@ -27,7 +27,7 @@
 
 
 (deftest ^{:schema true :cql true} test-create-describe
-  (with-thrift-exception-handling
+  (with-native-exception-handling
     (cql/drop-column-family "posts"))
   (cql/create-column-family "posts"
                             {:userid :text

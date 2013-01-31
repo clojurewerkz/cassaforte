@@ -3,6 +3,7 @@
            org.apache.cassandra.utils.ByteBufferUtil
            [clojurewerkz.cassaforte.serializers AbstractSerializer]
            [org.apache.cassandra.db.marshal UTF8Type Int32Type IntegerType AsciiType
+            BytesType
             DoubleType LongType UUIDType DateType BooleanType CompositeType ListType]))
 
 (declare encode)
@@ -70,7 +71,8 @@
           (java.lang.Double/longBitsToDouble l))))))
 
 (def ^:dynamic serializers
-  {java.lang.Integer (Int32Type/instance)
+  {java.nio.HeapByteBuffer (BytesType/instance)
+   java.lang.Integer (Int32Type/instance)
    java.lang.Long (LongType/instance)
    java.lang.Double (DoubleType/instance)
    java.lang.String (UTF8Type/instance)

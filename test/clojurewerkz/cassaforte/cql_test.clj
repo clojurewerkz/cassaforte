@@ -15,7 +15,7 @@
 ;;
 
 (deftest ^{:cql true} test-create-and-drop-keyspace-using-raw-cql
-  (with-thrift-exception-handling
+  (with-native-exception-handling
     (cql/execute-raw "DROP KEYSPACE \"amazeballs\";"))
   (let [query "CREATE KEYSPACE amazeballs WITH replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 }"]
     (is (cql/void-result? (cql/execute-raw query)))
@@ -27,7 +27,7 @@
 ;;
 
 (deftest ^{:cql true} test-create-and-drop-column-family-using-cql
-  (with-thrift-exception-handling
+  (with-native-exception-handling
     (cql/drop-column-family "libraries"))
 
   (let [result (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)]
@@ -36,7 +36,7 @@
     (cql/drop-column-family "libraries")))
 
 (deftest ^{:cql true} test-create-truncate-and-drop-column-family-using-cql
-  (with-thrift-exception-handling
+  (with-native-exception-handling
     (let [result (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)]
       (is (cql/void-result? result))
       (is (cql/void-result? (cql/truncate "libraries")))
@@ -55,7 +55,7 @@
 ;;
 
 (deftest ^{:cql true} test-insert-and-select-count-using-raw-cql
-  (with-thrift-exception-handling
+  (with-native-exception-handling
     (cql/drop-column-family "libraries"))
   (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
   (is (cql/void-result? (cql/execute-raw "INSERT INTO libraries (name, language) VALUES ('Cassaforte', 'Clojure') USING TTL 86400")))
@@ -63,7 +63,7 @@
     (cql/drop-column-family "libraries"))
 
 (deftest ^{:cql true} test-insert-and-select-count-using-prepared-cql-statement
-  (with-thrift-exception-handling
+  (with-native-exception-handling
     (cql/drop-column-family "libraries"))
   (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
 
@@ -79,7 +79,7 @@
 ;;
 
 (deftest ^{:cql true} test-insert-and-select-count-using-convenience-function
-  (with-thrift-exception-handling
+  (with-native-exception-handling
     (cql/drop-column-family "libraries"))
   (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
 
@@ -104,7 +104,7 @@
 ;;
 
 (deftest ^{:cql true} test-delete-with-prepared-cql-statement
-  (with-thrift-exception-handling
+  (with-native-exception-handling
     (cql/drop-column-family "libraries"))
   (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
 
@@ -125,7 +125,7 @@
 ;;
 
 (deftest ^{:cql true} test-select-count-with-raw-cql
-  (with-thrift-exception-handling
+  (with-native-exception-handling
     (cql/drop-column-family "libraries"))
   (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
 
@@ -147,7 +147,7 @@
 ;;
 
 (deftest ^{:cql true} test-select-with-raw-cql-and-utf8-named-columns
-  (with-thrift-exception-handling
+  (with-native-exception-handling
     (cql/drop-column-family "libraries"))
 
   (cql/create-column-family "libraries"
@@ -181,7 +181,7 @@
 ;;
 
 (deftest ^{:cql true} test-select-with-generated-query
-  (with-thrift-exception-handling
+  (with-native-exception-handling
     (cql/drop-column-family "time_series"))
 
   (cql/create-column-family "time_series"
@@ -201,7 +201,7 @@
   (cql/drop-column-family "time_series"))
 
 (deftest ^{:cql true} test-composite-keys
-  (with-thrift-exception-handling
+  (with-native-exception-handling
     (cql/drop-column-family "posts"))
 
   (cql/create-column-family "posts"

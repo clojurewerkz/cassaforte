@@ -1,22 +1,19 @@
 (ns clojurewerkz.cassaforte.cql
-  (:require [clojurewerkz.cassaforte.client :as cc]
+  (:require [clojurewerkz.cassaforte.cql.client :as cc]
             [clojurewerkz.cassaforte.bytes  :as cb]
             [clojurewerkz.cassaforte.cql.query-builder  :as q])
   (:use [clojure.string :only [split join]]
         [clojurewerkz.support.string :only [maybe-append interpolate-vals]]
         [clojurewerkz.support.fn :only [fpartial]]
         [clojurewerkz.cassaforte.conversion :only [from-cql-prepared-result to-map to-plain-hash]])
-  (:import clojurewerkz.cassaforte.CassandraClient
-           java.util.List
-           [org.apache.cassandra.thrift Compression ConsistencyLevel CqlResult CqlRow CqlResultType]))
+  (:import java.util.List
+           [org.apache.cassandra.thrift Compression ConsistencyLevel CqlResult CqlRow CqlResultType]
+           [org.apache.cassandra.transport Client]))
 
-
+(def ^:dynamic *default-consistency-level* org.apache.cassandra.db.ConsistencyLevel/ONE)
 ;;
 ;; Implementation
 ;;
-
-(def ^{:cons true :doc "Default compression level that is used for CQL queries"}
-  default-compression (Compression/NONE))
 
 (defn quote-identifier
   "Quotes the provided identifier"
@@ -36,18 +33,19 @@
   [^String query]
   (-> query .trim maybe-append-semicolon))
 
-(defn prepare-cql-query
-  "Prepares a CQL query for execution. Cassandra 1.1+ only."
-  ([^String query]
-     (from-cql-prepared-result (.prepare_cql_query ^CassandraClient cc/*cassandra-client* (cb/encode query) default-compression)))
-  ([^String query ^Compression compression]
-     (from-cql-prepared-result (.prepare_cql_query ^CassandraClient cc/*cassandra-client* (cb/encode query) compression))))
+(comment
+  (defn prepare-cql-query
+    "Prepares a CQL query for execution. Cassandra 1.1+ only."
+    ([^String query]
+       (from-cql-prepared-result (.prepare_cql_query ^Client cc/*client* (cb/encode query) default-compression)))
+    ([^String query ^Compression compression]
+       (from-cql-prepared-result (.prepare_cql_query ^Client cc/*client* (cb/encode query) compression))))
 
-(defn execute-prepared-query
-  "Executes a CQL query previously prepared using the prepare-cql-query function
+  (defn execute-prepared-query
+    "Executes a CQL query previously prepared using the prepare-cql-query function
    by providing the actual values for placeholders"
-  [^long prepared-statement-id ^List values]
-  (.execute_prepared_cql_query ^CassandraClient cc/*cassandra-client* prepared-statement-id values))
+    [^long prepared-statement-id ^List values]
+    (.execute_prepared_cql_query ^Client cc/*client* prepared-statement-id values)))
 
 
 
@@ -59,14 +57,12 @@
   execute-raw
   "Executes a CQL query given as a string. No argument replacement (a la JDBC) is performed."
   ([^String query]
-     (execute-raw query Compression/NONE))
-  ([^String query ^Compression compression]
-     (to-map
-      (.execute_cql3_query
-       ^CassandraClient cc/*cassandra-client*
-       (cb/encode (-> query clean-up))
-       compression
-       ConsistencyLevel/ONE))))
+     (execute-raw query *default-consistency-level*))
+  ([^String query compression]
+     (let [res (.execute cc/*client*
+                         (-> query clean-up)
+                         compression)]
+       (to-map (.toThriftResult res)))))
 
 (defn execute
   "Executes a CQL query given as a string. Performs positional argument (?) replacement (a la JDBC)."

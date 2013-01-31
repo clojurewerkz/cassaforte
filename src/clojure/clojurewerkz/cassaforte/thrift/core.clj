@@ -28,6 +28,7 @@
   (let [keys             (map encode (keys mutation-map))
         mutations        (map #(apply-to-values % (fn [x] (batch-mutate-transform x type))) (vals mutation-map))
         batch-mutate-map (zipmap keys mutations)]
+
     (.batch_mutate client/*cassandra-client*
                    batch-mutate-map
                    consistency-level)))

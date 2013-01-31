@@ -18,7 +18,7 @@
 
 (def *consistency-level* (conv/to-consistency-level :one))
 
-(use-fixtures :once initialize-cql)
+(use-fixtures :each initialize-thrift)
 
 (deftest t-batch-mutate
   (with-thrift-exception-handling

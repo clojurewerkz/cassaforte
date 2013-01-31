@@ -14,7 +14,7 @@
         clojurewerkz.cassaforte.conversion
         clojure.test))
 
-(use-fixtures :once initialize-cql)
+(use-fixtures :once initialize-thrift)
 
 (deftest ^{:schema true}  t-add-describe-keyspace
   (let [keyspace "add_keyspace_test"]

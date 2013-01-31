@@ -1,6 +1,6 @@
 (ns clojurewerkz.cassaforte.client
   (:import [clojurewerkz.cassaforte CassandraClient]
-   ))
+           [org.apache.cassandra.transport Client]))
 
 ;;
 ;; API
