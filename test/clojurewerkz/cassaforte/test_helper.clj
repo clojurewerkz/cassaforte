@@ -16,7 +16,7 @@
 
 (defn initialize-cql
   [f]
-  (when (not (bound? (var thrift-client/*cassandra-client*)))
+  (when (not (bound? (var cql-client/*client*)))
     (cql-client/connect! "127.0.0.1")
     (with-thrift-exception-handling
       (cql/set-keyspace "cassaforte_test_1")))
