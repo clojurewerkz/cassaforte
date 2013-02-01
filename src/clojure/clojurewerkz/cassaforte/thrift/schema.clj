@@ -1,5 +1,5 @@
 (ns clojurewerkz.cassaforte.thrift.schema
-  (:require [clojurewerkz.cassaforte.client :as cc]
+  (:require [clojurewerkz.cassaforte.thrift.client :as cc]
             [clojurewerkz.cassaforte.conversion :as conv]
             [clojurewerkz.cassaforte.ddl.column-family-definition :as cfdef])
   (:use [clojurewerkz.cassaforte.ddl.keyspace-definition :only [build-keyspace-definition]])

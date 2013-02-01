@@ -1,7 +1,7 @@
 (ns clojurewerkz.cassaforte.thrift.core-test
   (:refer-clojure :exclude [get])
   (:require [taoensso.nippy :as nippy]
-            [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.thrift.client :as cc]
             [clojurewerkz.cassaforte.thrift.schema :as sch]
             [clojurewerkz.cassaforte.conversion :as conv]
             [clojurewerkz.cassaforte.ddl.keyspace-definition :as kd]

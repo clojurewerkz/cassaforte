@@ -1,6 +1,6 @@
 (ns clojurewerkz.cassaforte.thrift.schema-test
   (:refer-clojure :exclude [get])
-  (:require [clojurewerkz.cassaforte.client :as cc]
+  (:require [clojurewerkz.cassaforte.thrift.client :as cc]
             [clojurewerkz.cassaforte.thrift.schema :as sch]
             [clojurewerkz.cassaforte.conversion :as conv]
             [clojurewerkz.cassaforte.ddl.keyspace-definition :as kd]

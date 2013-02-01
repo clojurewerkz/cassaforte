@@ -1,5 +1,4 @@
 (ns clojurewerkz.cassaforte.bytes-test
-  (:require [clojurewerkz.cassaforte.client :as cc])
   (:use clojurewerkz.cassaforte.bytes
         clojure.test)
   (:import [java.nio ByteBuffer]))

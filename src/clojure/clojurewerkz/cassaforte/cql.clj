@@ -33,12 +33,10 @@
   [^String query]
   (-> query .trim maybe-append-semicolon))
 
-;; (def b (.bytes (.statementId (cql/prepare-cql-query "select * from posts where userid = ?"))))
-
 (def prepared-statements-cache (atom {}))
 
 (defn prepare-cql-query
-  "Prepares a CQL query for execution. Cassandra 1.1+ only."
+  "Prepares a CQL query for execution. Cassandra 1.2+ only."
   [^String query]
   (if-let [statement-id (get @prepared-statements-cache query)]
     statement-id
@@ -57,7 +55,7 @@
                                              (map cb/encode values)
                                              *default-consistency-level*))))))
 
-
+;;
 ;; API
 ;;
 
@@ -152,11 +150,6 @@
                                                    :as-prepared-statement true)))]
     (execute-prepared-query query vals)))
 
-(defn create-column-family
-  [name fields & {:keys [primary-key]}]
-  (let [query (q/prepare-create-column-family-query name fields :primary-key primary-key)]
-    (execute-raw query)))
-
 (defn insert
   [column-family vals & opts]
   (let [query (apply q/prepare-insert-query column-family vals opts)]
@@ -170,35 +163,3 @@
                                    (assoc opts
                                      :as-prepared-statement true)))]
     (execute-prepared-query query vals)))
-
-(defn drop-column-family
-  [name]
-  (let [query (q/prepare-drop-column-family-query name)]
-    (execute-raw query)))
-
-
-
-(defn truncate
-  "Truncates a column family.
-
-   1-arity form takes a column family name as the only argument.
-   2-arity form takes keyspace and column family names."
-  ([^String column-family]
-     (execute "TRUNCATE ?" [column-family]))
-  ([^String keyspace ^String column-family]
-     (execute "TRUNCATE ?.?" [keyspace column-family])))
-
-(defn set-keyspace
-  [keyspace]
-  (execute "USE \"?\" " [keyspace]))
-
-(defn describe
-  ([keyspace]
-     (select "system.schema_keyspaces" :where {:keyspace_name keyspace}))
-  ([keyspace column-family & {:keys [with-columns]}]
-     (let [res (first (select "system.schema_columnfamilies" :where {:keyspace_name keyspace :columnfamily_name column-family}))]
-       (if with-columns
-         (assoc res
-           :columns
-           (select "system.schema_columns" :where {:keyspace_name keyspace :columnfamily_name column-family}))
-         res))))

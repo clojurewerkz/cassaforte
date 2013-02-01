@@ -3,7 +3,7 @@
   (:use [clojurewerkz.cassaforte.thrift.query-builders]
         [clojurewerkz.cassaforte.conversion :as conv]
         [clojurewerkz.cassaforte.bytes :only [encode]])
-  (:require [clojurewerkz.cassaforte.client :as client]
+  (:require [clojurewerkz.cassaforte.thrift.client :as client]
             [clojurewerkz.cassaforte.ddl.column :as c]
             [clojurewerkz.cassaforte.ddl.super-column :as sc]
             [clojurewerkz.cassaforte.conversion :as conv]))

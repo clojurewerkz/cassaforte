@@ -1,6 +1,6 @@
 (ns clojurewerkz.cassaforte.cql-test
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql.schema :as sch]
+  (:require [clojurewerkz.cassaforte.cql.client :as cc]
+            [clojurewerkz.cassaforte.cql.schema :as cql-schema]
             [clojurewerkz.cassaforte.cql    :as cql])
   (:use clojure.test
         clojurewerkz.cassaforte.test-helper
@@ -28,19 +28,19 @@
 
 (deftest ^{:cql true} test-create-and-drop-column-family-using-cql
   (with-native-exception-handling
-    (cql/drop-column-family "libraries"))
+    (cql-schema/drop-column-family "libraries"))
 
-  (let [result (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)]
+  (let [result (cql-schema/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)]
     (is (cql/void-result? result))
     (is (empty? (:rows result)))
-    (cql/drop-column-family "libraries")))
+    (cql-schema/drop-column-family "libraries")))
 
 (deftest ^{:cql true} test-create-truncate-and-drop-column-family-using-cql
   (with-native-exception-handling
-    (let [result (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)]
+    (let [result (cql-schema/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)]
       (is (cql/void-result? result))
-      (is (cql/void-result? (cql/truncate "libraries")))
-    (cql/drop-column-family "libraries"))))
+      (is (cql/void-result? (cql-schema/truncate "libraries")))
+    (cql-schema/drop-column-family "libraries"))))
 
 
 ;;
@@ -56,23 +56,23 @@
 
 (deftest ^{:cql true} test-insert-and-select-count-using-raw-cql
   (with-native-exception-handling
-    (cql/drop-column-family "libraries"))
-  (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
+    (cql-schema/drop-column-family "libraries"))
+  (cql-schema/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
   (is (cql/void-result? (cql/execute-raw "INSERT INTO libraries (name, language) VALUES ('Cassaforte', 'Clojure') USING TTL 86400")))
-    (cql/truncate "libraries")
-    (cql/drop-column-family "libraries"))
+    (cql-schema/truncate "libraries")
+    (cql-schema/drop-column-family "libraries"))
 
 (deftest ^{:cql true} test-insert-and-select-count-using-prepared-cql-statement
   (with-native-exception-handling
-    (cql/drop-column-family "libraries"))
-  (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
+    (cql-schema/drop-column-family "libraries"))
+  (cql-schema/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
 
   (is (cql/void-result? (cql/execute "INSERT INTO libraries (name, language) VALUES ('?', '?') USING TTL 86400" ["Cassaforte", "Clojure"])))
   (let [res (cql/execute "SELECT COUNT(*) FROM libraries")]
     (is (cql/rows-result? res)))
 
-  (cql/truncate "libraries")
-  (cql/drop-column-family "libraries"))
+  (cql-schema/truncate "libraries")
+  (cql-schema/drop-column-family "libraries"))
 
 ;;
 ;; INSERT with a map
@@ -80,16 +80,16 @@
 
 (deftest ^{:cql true} test-insert-and-select-count-using-convenience-function
   (with-native-exception-handling
-    (cql/drop-column-family "libraries"))
-  (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
+    (cql-schema/drop-column-family "libraries"))
+  (cql-schema/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
 
   (is (cql/void-result? (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} :ttl 86400)))
 
   (let [res (cql/execute "SELECT COUNT(*) FROM libraries")]
     (is (= 1 (count (:rows res)))))
 
-  (cql/truncate "libraries")
-  (cql/drop-column-family "libraries"))
+  (cql-schema/truncate "libraries")
+  (cql-schema/drop-column-family "libraries"))
 
 
 ;;
@@ -105,12 +105,12 @@
 
 (deftest ^{:cql true} test-delete-with-prepared-cql-statement
   (with-native-exception-handling
-    (cql/drop-column-family "libraries"))
-  (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
+    (cql-schema/drop-column-family "libraries"))
+  (cql-schema/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
 
   (is (cql/void-result? (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} :ttl 86400)))
   (is (cql/void-result? (cql/execute "DELETE FROM libraries WHERE name = '?'" ["Cassaforte"])))
-  (cql/drop-column-family "libraries"))
+  (cql-schema/drop-column-family "libraries"))
 
 
 ;;
@@ -126,8 +126,8 @@
 
 (deftest ^{:cql true} test-select-count-with-raw-cql
   (with-native-exception-handling
-    (cql/drop-column-family "libraries"))
-  (cql/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
+    (cql-schema/drop-column-family "libraries"))
+  (cql-schema/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
 
   (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} :ttl 86400)
   (cql/insert "libraries" {:name "Welle" :language "Clojure"}  :ttl 86400)
@@ -139,7 +139,7 @@
   (let [res (cql/execute-raw "SELECT COUNT(*) FROM libraries")
         n   (cql/count-value res)]
     (is (= 1 n)))
-  (cql/drop-column-family "libraries"))
+  (cql-schema/drop-column-family "libraries"))
 
 
 ;;
@@ -148,9 +148,9 @@
 
 (deftest ^{:cql true} test-select-with-raw-cql-and-utf8-named-columns
   (with-native-exception-handling
-    (cql/drop-column-family "libraries"))
+    (cql-schema/drop-column-family "libraries"))
 
-  (cql/create-column-family "libraries"
+  (cql-schema/create-column-family "libraries"
                             {:name      "varchar"
                              :language  "varchar"
                              :rating    "double"
@@ -159,7 +159,7 @@
                              :released  "boolean"}
                             :primary-key :name)
 
-  (sch/create-index "libraries" "language")
+  (cql-schema/create-index "libraries" "language")
 
   (cql/insert "libraries" {:name "Cassaforte" :language "Clojure" :rating 4.0 :year 2012})
   (cql/insert "libraries" {:name "Riak" :language "Erlang" :rating 5.0 :year 2009})
@@ -174,7 +174,7 @@
     (is (= {:name "Riak" :language "Erlang" :rating 5.0 :released nil :votes nil :year 2009}
            (first res))))
 
-  (cql/drop-column-family "libraries"))
+  (cql-schema/drop-column-family "libraries"))
 
 ;;
 ;; SELECT with generated query
@@ -182,9 +182,9 @@
 
 (deftest ^{:cql true} test-select-with-generated-query
   (with-native-exception-handling
-    (cql/drop-column-family "time_series"))
+    (cql-schema/drop-column-family "time_series"))
 
-  (cql/create-column-family "time_series"
+  (cql-schema/create-column-family "time_series"
                             {:tstamp "timestamp"
                              :description "varchar"}
                             :primary-key :tstamp)
@@ -198,13 +198,13 @@
 
   (is (= 1 (count (cql/select "time_series" :where { :tstamp "2011-02-03" } :key-type "DateType"))))
 
-  (cql/drop-column-family "time_series"))
+  (cql-schema/drop-column-family "time_series"))
 
 (deftest ^{:cql true} test-composite-keys
   (with-native-exception-handling
-    (cql/drop-column-family "posts"))
+    (cql-schema/drop-column-family "posts"))
 
-  (cql/create-column-family "posts"
+  (cql-schema/create-column-family "posts"
                             {:userid :text
                              :posted_at :timestamp
                              :entry_title :text

@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.client
+(ns clojurewerkz.cassaforte.thrift.client
   (:import [clojurewerkz.cassaforte CassandraClient]
            [org.apache.cassandra.transport Client]))
 

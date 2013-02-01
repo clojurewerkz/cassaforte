@@ -1,5 +1,5 @@
-(ns clojurewerkz.cassaforte.client-test
-  (:require [clojurewerkz.cassaforte.client :as cc]
+(ns clojurewerkz.cassaforte.thrift.client-test
+  (:require [clojurewerkz.cassaforte.thrift.client :as cc]
             [clojurewerkz.cassaforte.thrift.schema :as sch])
   (:use clojure.test
         clojurewerkz.cassaforte.utils)
