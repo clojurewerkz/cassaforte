@@ -16,17 +16,11 @@
        "DateType" (java.util.Date.)
        "DoubleType" (java.lang.Double. "123"))
 
-  (let [cs (org.apache.cassandra.db.marshal.CompositeType/getInstance
-            [org.apache.cassandra.db.marshal.UTF8Type/instance
-             org.apache.cassandra.db.marshal.UTF8Type/instance
-             org.apache.cassandra.db.marshal.UTF8Type/instance])
-        serialized (.decompose cs (to-array ["a" "b" "c"]))]
-    (is (= ["a" "b" "c"])
-     (map
-      #(deserialize "UTF8Type" %)
-      (.fromByteBuffer composite-serializer serialized))))
+  (is (= ["a" "b" "c"])
+      (map
+       #(deserialize "UTF8Type" %)
+       (.fromByteBuffer composite-serializer (encode (composite "a" "b" "c")))))
 
-  (let [cs (org.apache.cassandra.db.marshal.ListType/getInstance
-            org.apache.cassandra.db.marshal.UTF8Type/instance)
-        serialized (.decompose cs ["a" "b" "c"])]
+  (let [cs (get-serializer ["a" "b" "c"])
+        serialized (encode ["a" "b" "c"])]
     (is (= ["a" "b" "c"]) (.compose cs serialized))))

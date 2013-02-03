@@ -86,23 +86,30 @@
 ;; Clojure Data Type -> ByteBuffer
 ;;
 
+(defn get-serializer
+  [value]
+  (cond
+   (not (nil? (get serializers (type value)))) (get serializers (type value))
+   (= (type value) clojure.lang.PersistentVector) (ListType/getInstance (get-serializer (first value)))
+   (:composite (meta value)) (CompositeType/getInstance
+                              (map get-serializer value))
+
+   :else (throw (Exception. "Can't find matching serializer"))))
+
 (defn ^ByteBuffer encode
-  ([value serializer-type]
-     (let [serializer (get serializers serializer-type)]
-       (.decompose serializer value)))
-  ([value]
-     (let [serializer (get serializers (type value))]
-       (.decompose serializer value)))
-
-  ;; (if (instance? (Class/forName "[B") value)
-  ;;   (java.nio.ByteBuffer/wrap value)
-  ;;   (ByteBufferUtil/bytes value))
-
-  )
+  [value]
+  (let [serializer (get-serializer value)]
+    (if (= CompositeType (type serializer))
+      (.decompose serializer (to-array value))
+      (.decompose serializer value))))
 
 (defn compose
   [serializer bytes]
   (.compose serializer (ByteBuffer/wrap bytes)))
+
+(defn composite
+  [& values]
+  (vary-meta values assoc :composite true))
 
 ;;
 ;; ByteBuffer -> Clojure Data Type
