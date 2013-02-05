@@ -11,16 +11,9 @@
        "LongType" (Long. 100)
        "UTF8Type" "some fancy string"
        "AsciiType" "some fancy string"
-       "BooleanType" true
        "BooleanType" false
-       "DateType" (java.util.Date.)
-       "DoubleType" (java.lang.Double. "123"))
-
-  (is (= ["a" "b" "c"])
-      (map
-       #(deserialize "UTF8Type" %)
-       (.fromByteBuffer composite-serializer (encode (composite "a" "b" "c")))))
-
-  (let [cs (get-serializer ["a" "b" "c"])
-        serialized (encode ["a" "b" "c"])]
-    (is (= ["a" "b" "c"]) (.compose cs serialized))))
+       "BooleanType" true
+       "org.apache.cassandra.db.marshal.DateType" (java.util.Date.)
+       "DoubleType" (java.lang.Double. "123")
+       "ListType(UTF8Type)" ["a" "b" "c"]
+       "CompositeType(UTF8Type,UTF8Type,UTF8Type)" (composite "a" "b" "c")))

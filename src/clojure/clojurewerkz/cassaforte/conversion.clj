@@ -50,11 +50,12 @@
                          name-type (get name-types k-buf default-name-type)
                          val-type  (get value-types k-buf default-value-type)
                          val       (:value col)]]
-               (assoc col
-                 :name  (when k
-                          (cb/deserialize name-type k))
-                 :value (when val
-                          (cb/deserialize val-type val)))))
+    (do
+      (assoc col
+        :name  (when k
+                 (cb/deserialize name-type k))
+        :value (when val
+                 (cb/deserialize val-type val))))))
 
 (defn deserialize-rows
   [rows schema]
@@ -204,14 +205,22 @@
 
 
 (extend-protocol ToPlainHash
+  java.util.ArrayList
+  (to-plain-hash
+    ([cosc-map]
+       (vec cosc-map))
+    ([cosc-map _]
+       (vec cosc-map)))
+
   java.util.List
   (to-plain-hash
     ([cosc-map]
        (to-plain-hash cosc-map "AsciiType"))
     ([cosc-map key-format]
        (let [list  (map to-map cosc-map)
-             names (map #(or (keyword (:name %))
-                             (cb/deserialize "UTF8Type" (:key %)))
+             names (map (fn [a]
+                          (or (keyword (:name a))
+                              (cb/deserialize "UTF8Type" (:key a))))
                         list)
              values (map #(to-plain-hash (or (:columns %) (:value %))) list)]
          ;; Since Cassandra 1.2, CQL results do not return keys anymore

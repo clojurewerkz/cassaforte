@@ -248,6 +248,20 @@
     (is (= 2 (count (cql/select-prepared "posts" :where {:userid "user1" :posted_at [> (java.util.Date. 112 0 5 1 0 0) < (java.util.Date. 112 0 8 1 0 0)]}))))
     (is (= 4 (count (cql/execute-prepared-query "select * from posts where userid = ? and posted_at > ? limit 10" ["user1" (java.util.Date. 112 0 5 1 0 0)]))))))
 
+(deftest list-type-test
+  (with-native-exception-handling
+    (cql-schema/drop-column-family "posts"))
+
+  (cql-schema/create-column-family "posts"
+                            {:userid :varchar
+                             :modified_lines "list<int>"}
+                            :primary-key :userid)
+
+  (cql/insert-prepared "posts" {:userid "user1" :modified_lines [(int 1) (int 2) (int 3)]})
+
+  (is (= [(int 1) (int 2) (int 3)] (:modified_lines (first (cql/select "posts")))))
+
+)
 ;;
 ;; TRUNCATE
 ;;
