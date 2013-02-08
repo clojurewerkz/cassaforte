@@ -21,9 +21,3 @@
     (with-native-exception-handling
       (cql-schema/set-keyspace "cassaforte_test_1")))
   (f))
-
-;;
-;; TBD
-;;
-(defn initialize-thrift
-  [f])
