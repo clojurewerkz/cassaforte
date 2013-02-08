@@ -45,8 +45,8 @@
 
 (deftest ^{:cql true} test-conversion-to-cql-values
   (are [val cql] (is (= cql (to-cql-value val)))
-    nil "null"
     10  "10"
+    nil "null"
     10N "10"
     :age "age"))
 

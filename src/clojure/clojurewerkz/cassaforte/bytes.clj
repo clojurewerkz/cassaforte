@@ -4,7 +4,7 @@
            [clojurewerkz.cassaforte SerializerHelper]
            [org.apache.cassandra.db.marshal UTF8Type Int32Type IntegerType AsciiType
             BytesType DoubleType LongType UUIDType DateType BooleanType CompositeType
-            ListType]))
+            ListType MapType]))
 
 (declare encode)
 (declare deserialize)
@@ -29,7 +29,7 @@
    java.lang.Boolean (BooleanType/instance)
    java.math.BigInteger (IntegerType/instance)
    java.util.Date (DateType/instance)
-   [java.lang.String "AsciiType"] (AsciiType/instance)
+
    })
 
 ;;
@@ -41,6 +41,8 @@
   (cond
    (not (nil? (get serializers (type value)))) (get serializers (type value))
    (= (type value) clojure.lang.PersistentVector) (ListType/getInstance (get-serializer (first value)))
+   (map? value) (MapType/getInstance (get-serializer (first (first value)))
+                                     (get-serializer (last (first value))))
    (:composite (meta value)) (CompositeType/getInstance
                               (map get-serializer value))
 
@@ -72,9 +74,10 @@
 (defn deserialize
   [type-str bytes]
   (let [t (infer-type type-str)]
-    (if (isa? CompositeType (type t))
-      (apply composite
-             (map (fn [i]
-                    (compose (.get (.types t) i) (to-bytes (extract-component (ByteBuffer/wrap bytes) i))))
-                  (range 0 (count (.types t)))))
-      (compose t bytes))))
+    (cond
+     (isa? MapType (type t)) (into {} (compose t bytes))
+     (isa? CompositeType (type t)) (apply composite
+                                          (map (fn [i]
+                                                 (compose (.get (.types t) i) (to-bytes (extract-component (ByteBuffer/wrap bytes) i))))
+                                               (range 0 (count (.types t)))))
+     :else (compose t bytes))))

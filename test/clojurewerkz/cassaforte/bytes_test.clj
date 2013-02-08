@@ -16,4 +16,5 @@
        "org.apache.cassandra.db.marshal.DateType" (java.util.Date.)
        "DoubleType" (java.lang.Double. "123")
        "ListType(UTF8Type)" ["a" "b" "c"]
+       "MapType(UTF8Type,UTF8Type)" {"a" "b"}
        "CompositeType(UTF8Type,UTF8Type,UTF8Type)" (composite "a" "b" "c")))

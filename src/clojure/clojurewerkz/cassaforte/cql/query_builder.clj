@@ -62,7 +62,21 @@
   (to-cql-value [^clojure.lang.PersistentVector value]
     (to-cql-value-wrapper
      #(join ", " (map to-cql-value value))
-     value)))
+     value))
+
+  clojure.lang.PersistentArrayMap
+  (to-cql-value [^clojure.lang.PersistentVector value]
+    (to-cql-value-wrapper
+     #(str "{"
+       (join
+         ", "
+         (map
+          (fn [[k v]] (str (to-cql-value k) ":" (to-cql-value v)))
+          value))
+       "}")
+     value))
+
+  )
 
 (def primary-key-clause
   ", PRIMARY KEY (:column)")

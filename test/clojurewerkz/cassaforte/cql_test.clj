@@ -259,9 +259,22 @@
 
   (cql/insert-prepared "posts" {:userid "user1" :modified_lines [(int 1) (int 2) (int 3)]})
 
-  (is (= [(int 1) (int 2) (int 3)] (:modified_lines (first (cql/select "posts")))))
+  (is (= [(int 1) (int 2) (int 3)] (:modified_lines (first (cql/select "posts"))))))
 
-)
+
+(deftest map-type-test
+  (with-native-exception-handling
+    (cql-schema/drop-column-family "posts"))
+
+  (cql-schema/create-column-family "posts"
+                                   {:userid :varchar
+                                    :pairs "map<varchar,varchar>"}
+                                   :primary-key :userid)
+
+  (cql/insert-prepared "posts" {:userid "user1" :pairs {"a" "b"}})
+
+  (is (= {"a" "b"} (:pairs (first (cql/select "posts"))))))
+
 ;;
 ;; TRUNCATE
 ;;
