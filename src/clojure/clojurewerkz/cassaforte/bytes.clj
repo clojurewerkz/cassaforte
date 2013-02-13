@@ -2,8 +2,8 @@
   (:import java.nio.ByteBuffer java.util.Date
            org.apache.cassandra.utils.ByteBufferUtil
            [clojurewerkz.cassaforte SerializerHelper]
-           [org.apache.cassandra.db.marshal UTF8Type Int32Type IntegerType AsciiType
-            BytesType DoubleType LongType UUIDType DateType BooleanType CompositeType
+           [org.apache.cassandra.db.marshal UTF8Type Int32Type IntegerType AsciiType FloatType
+            DecimalType BytesType DoubleType LongType UUIDType DateType BooleanType CompositeType
             ListType MapType]))
 
 (declare encode)
@@ -23,13 +23,14 @@
 (def ^:dynamic serializers
   {java.nio.HeapByteBuffer (BytesType/instance)
    java.lang.Integer (Int32Type/instance)
+   java.math.BigDecimal (DecimalType/instance)
    java.lang.Long (LongType/instance)
+   java.lang.Float (FloatType/instance)
    java.lang.Double (DoubleType/instance)
    java.lang.String (UTF8Type/instance)
    java.lang.Boolean (BooleanType/instance)
    java.math.BigInteger (IntegerType/instance)
    java.util.Date (DateType/instance)
-
    })
 
 ;;

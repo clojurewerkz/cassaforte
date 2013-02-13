@@ -6,7 +6,9 @@
 (deftest t-serializer-roundtrip
   (are [type value]
        (= value (deserialize type (to-bytes (encode value))))
-       "Int32Type"(Integer. 1)
+       "Int32Type" (Integer. 1)
+       "FloatType" (float 1)
+       "DecimalType" 1.2M
        "IntegerType" (java.math.BigInteger. "123456789")
        "LongType" (Long. 100)
        "UTF8Type" "some fancy string"
