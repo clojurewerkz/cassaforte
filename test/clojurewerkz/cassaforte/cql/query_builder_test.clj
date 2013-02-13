@@ -83,7 +83,16 @@
          (prepare-select-query "column_family_name" :where {:column_1 [>= 1] :column_2 [<= 5]} :limit 5))))
 
 
-(deftest prepared-statments
+(deftest prepared-statments-test
   (is (= [[1 5] "SELECT * FROM column_family_name WHERE column_1 >= ? AND column_2 <= ? LIMIT 5"]
          (prepare-select-query "column_family_name" :where {:column_1 [>= 1] :column_2 [<= 5]} :limit 5
                              :as-prepared-statement true))))
+
+(deftest to-cql-value-test
+  (are [expected value] (= expected (to-cql-value value))
+       "1" 1
+       "1.0" (float 1)
+       "'str'" "str"
+       "[1, 2, 3]" [1 2 3]
+       )
+  )

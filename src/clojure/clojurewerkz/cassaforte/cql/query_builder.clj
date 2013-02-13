@@ -3,7 +3,9 @@
         [clojurewerkz.support.string :only [maybe-append interpolate-vals interpolate-kv]]))
 
 (defprotocol CQLValue
-  (to-cql-value [value] "Converts the given value to a CQL string representation"))
+  (to-cql-value
+    [value]
+    [value opts]"Converts the given value to a CQL string representation"))
 
 (def ^:dynamic *cql-stack* nil)
 
@@ -58,13 +60,28 @@
      #(str "'" (escape value {\" "\""}) "'")
      value))
 
-  clojure.lang.PersistentVector
-  (to-cql-value [^clojure.lang.PersistentVector value]
-    (to-cql-value-wrapper
-     #(join ", " (map to-cql-value value))
-     value))
+  clojure.lang.LazySeq
+  (to-cql-value
+    ([^clojure.lang.LazySeq value]
+       (to-cql-value value nil))
+    ([^clojure.lang.LazySeq value opts]
+       (to-cql-value-wrapper
+        #(to-cql-value (vec value) opts)
+        value)))
 
-  clojure.lang.PersistentArrayMap
+  clojure.lang.PersistentVector
+  (to-cql-value
+    ([^clojure.lang.PersistentVector value {:keys [skip-brackets]}]
+       (to-cql-value-wrapper
+        #(let [v (join ", " (map to-cql-value value))]
+          (if skip-brackets
+            v
+            (str "[" v "]")))
+        value))
+    ([^clojure.lang.PersistentVector value]
+       (to-cql-value value {:skip-brackets false})))
+
+  clojure.lang.IPersistentMap
   (to-cql-value [^clojure.lang.PersistentVector value]
     (to-cql-value-wrapper
      #(str "{"
@@ -93,7 +110,9 @@
                   {:column-family-name column-family
                    :column-definitions (trim (join ", " (map (fn [[k v]] (str (name k) " " (name v))) column-definitions) ))
                    :primary-key-clause (when primary-key
-                                         (interpolate-kv primary-key-clause {:column (to-cql-value primary-key)}))}))
+                                         (interpolate-kv primary-key-clause
+                                                         {:column (to-cql-value
+                                                                   (flatten [primary-key]) {:skip-brackets true})}))}))
 
 (defn prepare-drop-column-family-query
   [column-family]
@@ -141,15 +160,14 @@
 
 (defn match-operation
   [[operation orig-value & rest]]
-  (let [value (to-cql-value orig-value)
-        res   (cond
-               (= operation >) (format " > %s" value)
-               (= operation >=) (format " >= %s" value)
-               (= operation <) (format " < %s" value)
-               (= operation <=) (format " <= %s" value)
-               (= operation =) (format " = %s" value)
-               (= operation :in) (format " IN (%s)" value)
-               (keyword? operation) (format "%s %s" (name operation) value))]
+  (let [res   (cond
+               (= operation >) (format " > %s" (to-cql-value orig-value))
+               (= operation >=) (format " >= %s" (to-cql-value orig-value))
+               (= operation <) (format " < %s" (to-cql-value orig-value))
+               (= operation <=) (format " <= %s" (to-cql-value orig-value))
+               (= operation =) (format " = %s" (to-cql-value orig-value))
+               (= operation :in) (format " IN (%s)" (to-cql-value orig-value {:skip-brackets true}))
+               (keyword? operation) (format "%s %s" (name operation) (to-cql-value orig-value)))]
     (if rest
       (conj [res] (match-operation rest))
       [res])))
