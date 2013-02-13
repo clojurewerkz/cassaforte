@@ -22,6 +22,7 @@
 
 (defn ^org.apache.cassandra.thrift.KsDef
   describe-keyspace
+  "Doesn't show any of cql3-created column famlies: https://issues.apache.org/jira/browse/CASSANDRA-4913"
   [^String name]
 
   (conv/to-map (.describe_keyspace ^CassandraClient cc/*cassandra-client* name)))
