@@ -275,6 +275,21 @@
 
   (is (= {"a" "b"} (:pairs (first (cql/select "posts"))))))
 
+(deftest update-test
+  (with-native-exception-handling
+    (cql-schema/drop-column-family "people"))
+
+  (cql-schema/create-column-family "people"
+                                   {:username :varchar
+                                    :full_name "varchar"}
+                                   :primary-key :username)
+
+
+  (cql/insert-prepared "people" {:username "user1" :full_name "Alex P"})
+  (is (= {:username "user1," :full_name "Alex P"} (first (cql/select "people"))))
+  (cql/update-prepared "people" {:full_name "Alex D"} :where {:username "user1"})
+  (is (= {:username "user1," :full_name "Alex D"} (first (cql/select "people")))))
+
 ;;
 ;; TRUNCATE
 ;;

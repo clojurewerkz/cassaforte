@@ -31,8 +31,19 @@
          (prepare-insert-query "libraries" {:name "name" :language "language" :rating 1.0}
                                :consistency "ONE"
                                :ttl 100
-                               :as-prepared-statement true))))
+                               <:as-prepared-statement true))))
 
+(deftest t-prepare-update-query
+  (is (= "UPDATE libraries SET name = 'name', language = 'language', rating = 1.0 WHERE name = 'name'"
+         (prepare-update-query "libraries" {:name "name" :language "language" :rating 1.0}
+                               :where {:name "name"})))
+
+  (is (= [["name" "language" 1.0 "name"]
+          "UPDATE libraries SET name = ?, language = ?, rating = ? WHERE name = ?"]
+         (prepare-update-query "libraries" {:name "name" :language "language" :rating 1.0}
+                               :where {:name "name"}
+                               :as-prepared-statement true)))
+  )
 
 (deftest t-prepare-create-index-query
   (is (= "CREATE INDEX column_family_name_column_name_idx ON column_family_name (column_name)"

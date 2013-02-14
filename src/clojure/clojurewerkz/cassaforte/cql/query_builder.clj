@@ -122,23 +122,11 @@
 (def insert-query
   "INSERT INTO :column-family-name (:names) VALUES (:values):opts;")
 
+(def update-query
+  "UPDATE :column-family-name SET :kvps :where-clause")
+
 (def opts-clause
   " USING ?")
-
-(defn prepare-insert-query
-  [column-family m & {:keys [timestamp ttl as-prepared-statement] :as opts}]
-  (if as-prepared-statement
-    (binding [*cql-stack* (transient [])]
-      (let [res (apply prepare-insert-query column-family m (apply concat (dissoc opts :as-prepared-statement)))]
-        [(persistent! *cql-stack*) res]))
-    (interpolate-kv insert-query
-                    {:column-family-name column-family
-                     :names (trim (join ", " (map #(name %) (keys m))))
-                     :values (trim (join ", " (map #(to-cql-value %) (vals m))))
-                     :opts (when opts
-                             (interpolate-vals
-                              opts-clause
-                              [(join " AND " (map (fn [[k v]] (str (upper-case (name k)) " " v)) opts))]))})))
 
 (def index-name-clause
   " :index-name")
@@ -160,14 +148,14 @@
 
 (defn match-operation
   [[operation orig-value & rest]]
-  (let [res   (cond
-               (= operation >) (format " > %s" (to-cql-value orig-value))
-               (= operation >=) (format " >= %s" (to-cql-value orig-value))
-               (= operation <) (format " < %s" (to-cql-value orig-value))
-               (= operation <=) (format " <= %s" (to-cql-value orig-value))
-               (= operation =) (format " = %s" (to-cql-value orig-value))
-               (= operation :in) (format " IN (%s)" (to-cql-value orig-value {:skip-brackets true}))
-               (keyword? operation) (format "%s %s" (name operation) (to-cql-value orig-value)))]
+  (let [res (cond
+             (= operation >) (format " > %s" (to-cql-value orig-value))
+             (= operation >=) (format " >= %s" (to-cql-value orig-value))
+             (= operation <) (format " < %s" (to-cql-value orig-value))
+             (= operation <=) (format " <= %s" (to-cql-value orig-value))
+             (= operation =) (format " = %s" (to-cql-value orig-value))
+             (= operation :in) (format " IN (%s)" (to-cql-value orig-value {:skip-brackets true}))
+             (keyword? operation) (format "%s %s" (name operation) (to-cql-value orig-value)))]
     (if rest
       (conj [res] (match-operation rest))
       [res])))
@@ -200,6 +188,34 @@
              (throw (Exception. "Limit clause should contain exactly 2 iterms, column and direction")))
            (str (to-cql-value order) " " (if direction (upper-case (to-cql-value direction)) "")))
          (to-cql-value limit))))
+
+
+(defn prepare-update-query
+  [column-family m & {:keys [timestamp where ttl as-prepared-statement] :as opts}]
+  (if as-prepared-statement
+    (binding [*cql-stack* (transient [])]
+      (let [res (apply prepare-update-query column-family m (apply concat (dissoc opts :as-prepared-statement)))]
+        [(persistent! *cql-stack*) res]))
+    (interpolate-kv update-query
+                    {:column-family-name column-family
+                     :kvps (join ", " (map (fn [[k v]] (str (name k) " = " (to-cql-value v))) m))
+                     :where-clause (when where
+                                     (prepare-where-clause where))})))
+
+(defn prepare-insert-query
+  [column-family m & {:keys [timestamp ttl as-prepared-statement] :as opts}]
+  (if as-prepared-statement
+    (binding [*cql-stack* (transient [])]
+      (let [res (apply prepare-insert-query column-family m (apply concat (dissoc opts :as-prepared-statement)))]
+        [(persistent! *cql-stack*) res]))
+    (interpolate-kv insert-query
+                    {:column-family-name column-family
+                     :names (trim (join ", " (map #(name %) (keys m))))
+                     :values (trim (join ", " (map #(to-cql-value %) (vals m))))
+                     :opts (when opts
+                             (interpolate-vals
+                              opts-clause
+                              [(join " AND " (map (fn [[k v]] (str (upper-case (name k)) " " v)) opts))]))})))
 
 (defn prepare-select-query
   [column-family & {:keys [columns where limit order as-prepared-statement] :as opts}]

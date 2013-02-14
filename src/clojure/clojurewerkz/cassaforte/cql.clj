@@ -155,11 +155,26 @@
   (let [query (apply q/prepare-insert-query column-family vals opts)]
     (execute-raw query)))
 
+(defn update
+  [column-family vals & opts]
+  (let [query (apply q/prepare-update-query column-family vals opts)]
+    (execute-raw query)))
+
 (defn insert-prepared
   [column-family vals & opts]
   (let [[vals query] (apply q/prepare-insert-query
                             column-family vals
                             (apply concat
                                    (assoc opts
+                                     :as-prepared-statement true)))]
+    (execute-prepared-query query vals)))
+
+(defn update-prepared
+  [column-family vals & opts]
+  (println opts)
+  (let [[vals query] (apply q/prepare-update-query
+                            column-family vals
+                            (apply concat
+                                   (assoc (apply hash-map opts)
                                      :as-prepared-statement true)))]
     (execute-prepared-query query vals)))
