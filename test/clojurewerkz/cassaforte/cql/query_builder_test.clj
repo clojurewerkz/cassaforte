@@ -3,7 +3,7 @@
         clojurewerkz.cassaforte.cql.query-builder
         clojurewerkz.cassaforte.utils))
 
-(deftest t-prepare-create-column-family-query
+(deftest test-prepare-create-column-family-query
   (is (= "CREATE TABLE libraries (name varchar, language varchar, rating double, PRIMARY KEY (name));"
          (prepare-create-column-family-query "libraries"
                                              {:name :varchar :language :varchar :rating :double }
@@ -17,11 +17,11 @@
          (prepare-create-column-family-query "libraries"
                                              {:name :varchar :language :varchar :rating :double }))))
 
-(deftest t-prepare-drop-column-family-query
+(deftest test-prepare-drop-column-family-query
   (is (= "DROP TABLE libraries;"
          (prepare-drop-column-family-query "libraries"))))
 
-(deftest t-prepare-insert-query
+(deftest test-prepare-insert-query
   (is (= "INSERT INTO libraries (name, language, rating) VALUES ('name', 'language', 1.0) USING CONSISTENCY ONE AND TTL 100;"
          (prepare-insert-query "libraries" {:name "name" :language "language" :rating 1.0}
                                :consistency "ONE"
@@ -45,7 +45,7 @@
                                :as-prepared-statement true)))
   )
 
-(deftest t-prepare-create-index-query
+(deftest test-prepare-create-index-query
   (is (= "CREATE INDEX column_family_name_column_name_idx ON column_family_name (column_name)"
          (prepare-create-index-query "column_family_name" "column_name"))))
 
@@ -62,7 +62,7 @@
     :age "age"))
 
 
-(deftest t-prepare-select-query
+(deftest test-prepare-select-query
   (is (= "SELECT * FROM column_family_name"
          (prepare-select-query "column_family_name")))
   (is (= "SELECT column_name_1, column_name_2 FROM column_family_name"
@@ -94,16 +94,14 @@
          (prepare-select-query "column_family_name" :where {:column_1 [>= 1] :column_2 [<= 5]} :limit 5))))
 
 
-(deftest prepared-statments-test
+(deftest test-prepared-statments
   (is (= [[1 5] "SELECT * FROM column_family_name WHERE column_1 >= ? AND column_2 <= ? LIMIT 5"]
          (prepare-select-query "column_family_name" :where {:column_1 [>= 1] :column_2 [<= 5]} :limit 5
                              :as-prepared-statement true))))
 
-(deftest to-cql-value-test
+(deftest test-to-cql-value
   (are [expected value] (= expected (to-cql-value value))
        "1" 1
        "1.0" (float 1)
        "'str'" "str"
-       "[1, 2, 3]" [1 2 3]
-       )
-  )
+       "[1, 2, 3]" [1 2 3]))
