@@ -1,42 +1,19 @@
 (ns clojurewerkz.cassaforte.cql
   (:require [clojurewerkz.cassaforte.cql.client :as cc]
             [clojurewerkz.cassaforte.bytes  :as cb]
-            [clojurewerkz.cassaforte.cql.query-builder  :as q])
-  (:use [clojure.string :only [split join]]
-        [clojurewerkz.support.string :only [maybe-append interpolate-vals]]
-        [clojurewerkz.support.fn :only [fpartial]]
-        [clojurewerkz.cassaforte.conversion :only [from-cql-prepared-result to-map to-plain-hash]])
-  (:import java.util.List
-           [org.apache.cassandra.thrift Compression ConsistencyLevel CqlResult CqlRow CqlResultType]
-           [org.apache.cassandra.transport Client]))
+            [clojurewerkz.cassaforte.conversion :as conv]
+            [clojurewerkz.cassaforte.cql.query :as query]
+            [clojurewerkz.cassaforte.utils :as utils]
+            [qbits.hayt.cql :as cql])
+  (:import [org.apache.cassandra.transport Client]))
 
+(def ^:dynamic *debug-output* false)
 (def ^:dynamic *default-consistency-level* org.apache.cassandra.db.ConsistencyLevel/ONE)
-;;
-;; Implementation
-;;
-
-(defn quote-identifier
-  "Quotes the provided identifier"
-  [identifier]
-  (str "\"" (name identifier) "\""))
-
-(defn quote
-  "Quotes the provided string"
-  [identifier]
-  (str "'" (name identifier) "'"))
-
-(def ^{:private true}
-  maybe-append-semicolon (fpartial maybe-append ";"))
-
-(defn- clean-up
-  "Cleans up the provided query string by trimming it and appending the semicolon if needed"
-  [^String query]
-  (-> query .trim maybe-append-semicolon))
 
 (def prepared-statements-cache (atom {}))
 
 (defn prepare-cql-query
-  "Prepares a CQL query for execution. Cassandra 1.2+ only."
+  "Prepares a CQL query for execution."
   [^String query]
   (if-let [statement-id (get @prepared-statements-cache query)]
     statement-id
@@ -44,137 +21,100 @@
       (swap! prepared-statements-cache assoc query statement-id)
       statement-id)))
 
-(defn execute-prepared-query
+(defn execute-prepared
   "Executes a CQL query previously prepared using the prepare-cql-query function
    by providing the actual values for placeholders"
-  [^String query ^List values]
-  (to-plain-hash (:rows
-                  (to-map (.toThriftResult
-                           (.executePrepared ^Client cc/*client*
-                                             (prepare-cql-query query)
-                                             (map cb/encode values)
-                                             *default-consistency-level*))))))
+  ([q]
+     (execute-prepared q *default-consistency-level*))
+  ([[^String query ^java.util.List values] consistency-level]
+     (conv/to-plain-hash (:rows
+                          (conv/to-map (.toThriftResult
+                                        (.executePrepared ^Client cc/*client*
+                                                          (prepare-cql-query query)
+                                                          (map cb/encode values)
+                                                          consistency-level)))))))
 
-;;
-;; API
-;;
 
-(defn ^clojure.lang.IPersistentMap
-  execute-raw
-  "Executes a CQL query given as a string. No argument replacement (a la JDBC) is performed."
-  ([^String query]
+(defn ^clojure.lang.IPersistentMap execute-raw
+  ([query]
      (execute-raw query *default-consistency-level*))
-  ([^String query compression]
-     (let [res (.execute cc/*client*
-                         (-> query clean-up)
-                         compression)]
-       (to-map (.toThriftResult res)))))
+  ([^String query consistency-level]
+     (-> (.execute cc/*client* query consistency-level)
+         (.toThriftResult)
+         conv/to-map
+         (:rows)
+         conv/to-plain-hash)))
 
-(defn execute
-  "Executes a CQL query given as a string. Performs positional argument (?) replacement (a la JDBC)."
-  ([^String query]
-     (execute-raw query))
-  ([^String query args]
-     (execute-raw (interpolate-vals query args))))
+;; Execute could be a protocol, taht takes either string or map, converts map to string (renders query when
+;; needed?
 
+;; Ability to turn on and off prepared statements by default? Turn on prepared statements on per-query basis
+;; (macro+binding)
 
+;; Result of query rendering should be pushed stragiht to execute, it should figure out wether to
+;; run the prepared or regular query itself, all the time
 
+;; Add switch (as clj-http, throw exceptions)
 
-(defprotocol CqlStatementResult
-  (^Boolean void-result? [result] "Returns true if the provided CQL query result is of type void (carries no result set)")
-  (^Boolean int-result? [result] "Returns true if the provided CQL query result is of type int (carries a single value)")
-  (^Boolean rows-result? [result] "Returns true if the provided CQL query result is of type rows (carries result set)")
-  (^long count-value [result] "Extracts numerical value of a COUNT query"))
+;; Maybe add with-template kind of a helper?......
 
-(extend-protocol CqlStatementResult
-  CqlResult
-  (void-result?
-    [^CqlResult result]
-    (= (.getType result) CqlResultType/VOID))
-  (int-result?
-    [^CqlResult result]
-    (= (.getType result) CqlResultType/INT))
-  (rows-result?
-    [^CqlResult result]
-    (= (.getType result) CqlResultType/ROWS))
+(defn maybe-output-debug
+  [q]
+  (when *debug-output*
+    (println "Built query: " q))
+  q)
 
-  clojure.lang.IPersistentMap
-  (void-result?
-    [m]
-    (= (:type m) CqlResultType/VOID))
-  (int-result?
-    [m]
-    (= (:type m) CqlResultType/INT))
-  (rows-result?
-    [m]
-    (= (:type m) CqlResultType/ROWS))
-  (count-value
-    [m]
-    (-> m :rows first :columns first :value)))
+(defmacro prepared
+  [& body]
+  `(binding [cql/*prepared-statement* true
+             cql/*param-stack* (atom [])]
+     (do ~@body)))
 
+(defn execute*
+  [query-params builder]
+  (utils/with-native-exception-handling ;; add check for throw exceptions
+    (let [renderer (if cql/*prepared-statement* query/->prepared query/->raw)
+          executor (if cql/*prepared-statement* execute-prepared execute-raw)]
+      (-> (apply builder (flatten query-params))
+          renderer
+          maybe-output-debug
+          executor))))
 
+(defn drop-keyspace
+  [ks]
+  (execute* [ks] query/drop-keyspace-query))
 
+(defn create-keyspace
+  [& query-params]
+  (execute* query-params query/create-keyspace-query))
 
+(defn create-table
+  [& query-params]
+  (execute* query-params query/create-table-query))
 
+(defn drop-table
+  [ks]
+  (execute* [ks] query/drop-table-query))
 
-
-;;
-;; CQL commands (not related to schema)
-;;
-
-(defn- using-clause
-  [opts]
-  (if (or (empty? opts)
-          (nil? opts))
-    ""
-    (str "USING "
-         (join " AND " (map (fn [[k v]]
-                              (str (.toUpperCase (name k)) " " (str v)))
-                            opts)))))
-
-(defn select-raw*
-  [column-family & opts]
-  (let [query (apply q/prepare-select-query column-family (apply concat opts))]
-    (execute query)))
-
-(defn select
-  [column-family &{:keys [key-type] :or {key-type "UTF8Type"} :as opts}]
-  (let [result (apply select-raw* column-family opts)]
-    (to-plain-hash (:rows result) key-type)))
-
-(defn select-prepared
-  [column-family &{:keys [key-type] :or {key-type "UTF8Type"} :as opts}]
-  (let [[vals query] (apply q/prepare-select-query
-                            column-family (apply concat
-                                                 (assoc opts
-                                                   :as-prepared-statement true)))]
-    (execute-prepared-query query vals)))
+(defn use-keyspace
+  [ks]
+  (execute* [ks] query/use-keyspace-query))
 
 (defn insert
-  [column-family vals & opts]
-  (let [query (apply q/prepare-insert-query column-family vals opts)]
-    (execute-raw query)))
+  [& query-params]
+  (execute* query-params query/insert-query))
 
-(defn update
-  [column-family vals & opts]
-  (let [query (apply q/prepare-update-query column-family vals opts)]
-    (execute-raw query)))
+(defn select
+  [& query-params]
+  (execute* query-params query/select-query))
 
-(defn insert-prepared
-  [column-family vals & opts]
-  (let [[vals query] (apply q/prepare-insert-query
-                            column-family vals
-                            (apply concat
-                                   (assoc opts
-                                     :as-prepared-statement true)))]
-    (execute-prepared-query query vals)))
+(defn describe-keyspace
+  [ks]
+  (first (select :system.schema_keyspaces
+                 {:where [[:keyspace_name ks]]})))
 
-(defn update-prepared
-  [column-family vals & opts]
-  (println opts)
-  (let [[vals query] (apply q/prepare-update-query
-                            column-family vals
-                            (apply concat
-                                   (assoc (apply hash-map opts)
-                                     :as-prepared-statement true)))]
-    (execute-prepared-query query vals)))
+(defn describe-table
+  [ks table]
+  (first (select :system.schema_columnfamilies
+                 {:where [[:keyspace_name ks]
+                          [:columnfamily_name table]]})))
