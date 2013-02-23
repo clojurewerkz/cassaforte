@@ -1,62 +1,28 @@
-(ns clojurewerkz.cassaforte.cql
-  (:require [clojurewerkz.cassaforte.cql.client :as cc]
+(ns clojurewerkz.cassaforte.cluster
+  (:require [clojurewerkz.cassaforte.cluster.client :as cc]
             [clojurewerkz.cassaforte.bytes  :as cb]
             [clojurewerkz.cassaforte.conversion :as conv]
             [clojurewerkz.cassaforte.cql.query :as query]
             [clojurewerkz.cassaforte.utils :as utils]
             [qbits.hayt.cql :as cql])
-  (:import [org.apache.cassandra.transport Client]))
+  (:import [com.datastax.driver.core Session BoundStatement]))
 
 (def ^:dynamic *debug-output* false)
 (def ^:dynamic *default-consistency-level* org.apache.cassandra.db.ConsistencyLevel/ONE)
 
-(def prepared-statements-cache (atom {}))
-
-(defn prepare-cql-query
-  "Prepares a CQL query for execution."
+(defn ^clojure.lang.IPersistentMap execute-raw
   [^String query]
-  (if-let [statement-id (get @prepared-statements-cache query)]
-    statement-id
-    (let [statement-id (.bytes (.statementId (.prepare ^Client cc/*client* query)))]
-      (swap! prepared-statements-cache assoc query statement-id)
-      statement-id)))
+  (-> (.execute cc/*client* query)
+))
 
 (defn execute-prepared
   "Executes a CQL query previously prepared using the prepare-cql-query function
    by providing the actual values for placeholders"
-  ([q]
-     (execute-prepared q *default-consistency-level*))
-  ([[^String query ^java.util.List values] consistency-level]
-     (conv/to-plain-hash (:rows
-                          (conv/to-map (.toThriftResult
-                                        (.executePrepared ^Client cc/*client*
-                                                          (prepare-cql-query query)
-                                                          (map cb/encode values)
-                                                          consistency-level)))))))
-
-
-(defn ^clojure.lang.IPersistentMap execute-raw
-  ([query]
-     (execute-raw query *default-consistency-level*))
-  ([^String query consistency-level]
-     (-> (.execute cc/*client* query consistency-level)
-         (.toThriftResult)
-         conv/to-map
-         (:rows)
-         conv/to-plain-hash)))
-
-;; Execute could be a protocol, taht takes either string or map, converts map to string (renders query when
-;; needed?
-
-;; Ability to turn on and off prepared statements by default? Turn on prepared statements on per-query basis
-;; (macro+binding)
-
-;; Result of query rendering should be pushed stragiht to execute, it should figure out wether to
-;; run the prepared or regular query itself, all the time
-
-;; Add switch (as clj-http, throw exceptions)
-
-;; Maybe add with-template kind of a helper?......
+  [[^String query ^java.util.List values]]
+  (let [^BoundStatement bound-statement (.bind (.prepare cc/*client* query) (to-array values))]
+    (-> (.execute cc/*client* bound-statement)
+        ))
+  )
 
 (defn maybe-output-debug
   [q]
@@ -79,6 +45,7 @@
           renderer
           maybe-output-debug
           executor))))
+
 
 (defn drop-keyspace
   [ks]

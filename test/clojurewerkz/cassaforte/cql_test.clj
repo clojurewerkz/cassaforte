@@ -5,16 +5,20 @@
         clojurewerkz.cassaforte.test-helper
         clojurewerkz.cassaforte.conversion))
 
-(use-fixtures :each initialize-cql)
-
-(deftest test-range-queries
-  (drop-keyspace :new_cql_keyspace)
+(defn init-keyspace
+  [f]
   (create-keyspace :new_cql_keyspace
                    (with {:replication
                           {:class "SimpleStrategy"
                            :replication_factor 1 }}))
 
   (use-keyspace :new_cql_keyspace)
+  (f)
+  (drop-keyspace :new_cql_keyspace))
+
+(use-fixtures :each initialize-cql init-keyspace)
+
+(deftest test-range-queries
   (create-table :posts
                 (column-definitions {:userid :text
                                      :posted_at :timestamp
@@ -32,12 +36,12 @@
                    :ttl 200000))
     (prepared
      (insert :posts
-            (values {:userid "user2"
-                     :posted_at (java.util.Date. 112 0 i 1 0 0)
-                     :entry_title (str "title" i)
-                     :content (str "content" i)})
-            (using :timestamp 100000
-                   :ttl 200000))))
+             (values {:userid "user2"
+                      :posted_at (java.util.Date. 112 0 i 1 0 0)
+                      :entry_title (str "title" i)
+                      :content (str "content" i)})
+             (using :timestamp 100000
+                    :ttl 200000))))
 
   (is (= "content1"
          (:content (first
@@ -94,12 +98,6 @@
   )
 
 (deftest test-create-keyspace
-  (drop-keyspace :new_cql_keyspace)
-  (create-keyspace :new_cql_keyspace
-                   (with {:replication
-                          {:class "SimpleStrategy"
-                           :replication_factor 1 }}))
-
   (let [ksdef (describe-keyspace :new_cql_keyspace)]
     (is (= "{\"replication_factor\":\"1\"}" (:strategy_options ksdef)))
     (is (= "org.apache.cassandra.locator.SimpleStrategy" (:strategy_class ksdef)))
@@ -107,12 +105,6 @@
 
 
 (deftest test-create-table
-  (drop-keyspace :new_cql_keyspace)
-  (create-keyspace :new_cql_keyspace
-                   (with {:replication
-                          {:class "SimpleStrategy"
-                           :replication_factor 1 }}))
-
   (create-table :posts
                 (column-definitions {:userid :text
                                      :posted_at :timestamp
@@ -121,6 +113,26 @@
                                      :primary-key [:userid :posted_at]}))
 
   (let [cfdef (describe-table :new_cql_keyspace :posts)]
-    (= ["userid"] (:key_aliases cfdef))
-    (= ["posted_at"] (:column_aliases cfdef))
-    (= "posts" (:columnfamily_name cfdef))))
+    (is (= "[\"userid\"]" (:key_aliases cfdef)))
+    (is (= "[\"posted_at\"]" (:column_aliases cfdef)))
+    (is (= "posts" (:columnfamily_name cfdef))))
+
+
+  (let [cols (describe-columns :new_cql_keyspace :posts)]
+    (is (= "content" (:column_name (first cols))))
+    (is (= "entry_title" (:column_name (second cols))))))
+
+(deftest test-alter-table
+  (create-table :posts
+                (column-definitions {:userid :text
+                                     :to_be_int :text
+                                     :primary-key [:userid]}))
+
+  (let [cols (describe-columns :new_cql_keyspace :posts)]
+    (is (= "org.apache.cassandra.db.marshal.UTF8Type" (:validator (first cols)))))
+
+  (alter-table :posts
+               (alter-column :to_be_int :int))
+
+  (let [cols (describe-columns :new_cql_keyspace :posts)]
+    (is (= "org.apache.cassandra.db.marshal.Int32Type" (:validator (first cols))))))

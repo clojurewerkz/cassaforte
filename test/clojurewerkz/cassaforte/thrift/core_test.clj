@@ -1,7 +1,6 @@
 (ns clojurewerkz.cassaforte.thrift.core-test
   (:refer-clojure :exclude [get])
-  (:require [taoensso.nippy :as nippy]
-            [clojurewerkz.cassaforte.thrift.client :as cc]
+  (:require [clojurewerkz.cassaforte.thrift.client :as cc]
             [clojurewerkz.cassaforte.thrift.schema :as sch]
             [clojurewerkz.cassaforte.conversion :as conv]
             [clojurewerkz.cassaforte.ddl.keyspace-definition :as kd]
@@ -84,28 +83,6 @@
        {:name2 {:first "i" :second "j"} :name3 {:first "k" :second "l"}}
        (get-slice "ColumnFamily1" "key2"
                   :slice-start "name2")))
-
-
-(deftest t-batch-mutate-custom-encoding
-  (with-thrift-exception-handling
-    (sch/drop-keyspace "keyspace_name"))
-
-  (sch/add-keyspace "keyspace_name"
-                    "org.apache.cassandra.locator.SimpleStrategy"
-                    [(cfd/build-cfd "ColumnFamily2" [(cd/build-cd "custom" "BytesType")])]
-                    :strategy-opts {"replication_factor" "1"})
-
-  (sch/set-keyspace "keyspace_name")
-
-  (batch-mutate
-   {"key1" {"ColumnFamily2" {:custom (nippy/freeze-to-bytes {:second "d" :third "e"})}}
-    "key2" {"ColumnFamily2" {:custom (nippy/freeze-to-bytes {:second "f" :third "g"})} }})
-
-  (let [res (get-slice "ColumnFamily2" "key1" *consistency-level*
-                       {:default-value-type "UTF8Type" :default-name-type "UTF8Type"
-                        :value-types {:custom "BytesType"}})]
-    (is (= {:second "d" :third "e"} (nippy/thaw-from-bytes (:custom res))))))
-
 
 
 (deftest t-batch-mutate-custom-encoding

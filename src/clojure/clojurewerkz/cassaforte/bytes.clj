@@ -82,3 +82,15 @@
                                                  (compose (.get (.types t) i) (to-bytes (extract-component (ByteBuffer/wrap bytes) i))))
                                                (range 0 (count (.types t)))))
      :else (compose t bytes))))
+
+
+(defn deserialize2
+  [t bb]
+  (let [bytes (to-bytes bb)]
+    (cond
+     (isa? MapType (type t)) (into {} (compose t bytes))
+     (isa? CompositeType (type t)) (apply composite
+                                          (map (fn [i]
+                                                 (compose (.get (.types t) i) (to-bytes (extract-component (ByteBuffer/wrap bytes) i))))
+                                               (range 0 (count (.types t)))))
+     :else (compose t bytes))))
