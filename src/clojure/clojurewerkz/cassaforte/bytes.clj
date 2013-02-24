@@ -72,25 +72,16 @@
   [s]
   (org.apache.cassandra.db.marshal.TypeParser/parse s))
 
+(defn deserialize-intern
+  [t bytes]
+  (cond
+   (isa? MapType (type t)) (into {} (compose t bytes))
+   (isa? CompositeType (type t)) (apply composite
+                                        (map (fn [i]
+                                               (compose (.get (.types t) i) (to-bytes (extract-component (ByteBuffer/wrap bytes) i))))
+                                             (range 0 (count (.types t)))))
+   :else (compose t bytes)))
+
 (defn deserialize
   [type-str bytes]
-  (let [t (infer-type type-str)]
-    (cond
-     (isa? MapType (type t)) (into {} (compose t bytes))
-     (isa? CompositeType (type t)) (apply composite
-                                          (map (fn [i]
-                                                 (compose (.get (.types t) i) (to-bytes (extract-component (ByteBuffer/wrap bytes) i))))
-                                               (range 0 (count (.types t)))))
-     :else (compose t bytes))))
-
-
-(defn deserialize2
-  [t bb]
-  (let [bytes (to-bytes bb)]
-    (cond
-     (isa? MapType (type t)) (into {} (compose t bytes))
-     (isa? CompositeType (type t)) (apply composite
-                                          (map (fn [i]
-                                                 (compose (.get (.types t) i) (to-bytes (extract-component (ByteBuffer/wrap bytes) i))))
-                                               (range 0 (count (.types t)))))
-     :else (compose t bytes))))
+  (deserialize-intern (infer-type type-str) bytes))

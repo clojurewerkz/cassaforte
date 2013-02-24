@@ -1,22 +1,34 @@
 (ns clojurewerkz.cassaforte.cql-test
   (:use clojurewerkz.cassaforte.cql
         clojure.test
-        clojurewerkz.cassaforte.cql.query
+        clojurewerkz.cassaforte.query
         clojurewerkz.cassaforte.test-helper
         clojurewerkz.cassaforte.conversion))
 
-(defn init-keyspace
+(declare simple-client)
+(declare cluster-client)
+
+(defn run!
   [f]
   (create-keyspace :new_cql_keyspace
                    (with {:replication
                           {:class "SimpleStrategy"
                            :replication_factor 1 }}))
-
   (use-keyspace :new_cql_keyspace)
   (f)
   (drop-keyspace :new_cql_keyspace))
 
-(use-fixtures :each initialize-cql init-keyspace)
+(defn initialize!
+  [f]
+  (defonce simple-client (connect! "127.0.0.1"))
+  (defonce cluster-client (connect! ["192.168.60.10" "192.168.60.11" "192.168.60.12"]))
+
+  (with-client simple-client
+    (run! f))
+  (with-client cluster-client
+    (run! f)))
+
+(use-fixtures :each initialize!)
 
 (deftest test-range-queries
   (create-table :posts

@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.cql.query
+(ns clojurewerkz.cassaforte.query
   (:require [qbits.hayt :as hayt]
             [qbits.hayt.cql :as cql]))
 
