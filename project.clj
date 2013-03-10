@@ -4,11 +4,11 @@
   :url "http://github.com/clojurewerkz/cassaforte"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure                   "1.4.0"]
+  :dependencies [[org.clojure/clojure                   "1.5.0"]
                  [org.apache.cassandra/cassandra-all    "1.2.0"]
                  [org.apache.cassandra/cassandra-thrift "1.2.0"]
                  [org.apache.thrift/libthrift           "0.7.0"]
-                 [clojurewerkz/support                  "0.10.0"]
+                 [clojurewerkz/support                  "0.14.0"]
                  [com.taoensso/nippy                    "1.0.1"]
                  [io.netty/netty                        "3.6.2.Final"]
                  [org.slf4j/slf4j-log4j12               "1.6.6"]
@@ -17,9 +17,11 @@
   :java-source-paths ["src/java"]
   :javac-options     ["-target" "1.6" "-source" "1.6"]
   :profiles       {:1.3 {:dependencies [[org.clojure/clojure "1.3.0"]]}
-                   :1.5 {:dependencies [[org.clojure/clojure "1.5.0-master-SNAPSHOT"]]}
+                   :1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
+                   :1.6 {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
+                   :master {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
                    :dev {:dependencies [[org.xerial.snappy/snappy-java "1.0.5-SNAPSHOT"]]}}
-  :aliases        {"all" ["with-profile" "dev:dev,1.3:dev,1.5"]}
+  :aliases        {"all" ["with-profile" "dev:dev,1.3:dev,1.4:dev,1.6:dev,master"]}
   :test-selectors {:focus   :focus
                    :cql     :cql
                    :schema  :schema
