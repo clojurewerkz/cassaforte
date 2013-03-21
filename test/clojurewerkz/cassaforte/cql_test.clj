@@ -16,7 +16,8 @@
                            :replication_factor 1 }}))
   (use-keyspace :new_cql_keyspace)
   (f)
-  (drop-keyspace :new_cql_keyspace))
+  (drop-keyspace :new_cql_keyspace)
+  )
 
 (defn initialize!
   [f]
@@ -44,7 +45,7 @@
                      :posted_at (str "2012-01-0" i)
                      :entry_title (str "title" i)
                      :content (str "content" i)})
-            (using :timestamp 100000
+            (using :timestamp (.getTime (new java.util.Date))
                    :ttl 200000))
     (prepared
      (insert :posts
@@ -52,7 +53,7 @@
                       :posted_at (java.util.Date. 112 0 i 1 0 0)
                       :entry_title (str "title" i)
                       :content (str "content" i)})
-             (using :timestamp 100000
+             (using :timestamp (.getTime (new java.util.Date))
                     :ttl 200000))))
 
   (is (= "content1"
@@ -88,26 +89,25 @@
 
 
   (testing "Range queries and IN clause"
-    (is (= 18 (count (select :posts
+    (is (= 18 (perform-count :posts
+                            (where :userid [:in ["user1" "user2"]]
+                                    :posted_at [> "2011-01-01"]))))
+    (is (= 16 (perform-count :posts
                              (where :userid [:in ["user1" "user2"]]
-                                    :posted_at [> "2011-01-01"])))))
-    (is (= 16 (count (select :posts
-                             (where :userid [:in ["user1" "user2"]]
-                                    :posted_at [> "2012-01-01"])))))
-    (is (= 6 (count (select :posts
+                                    :posted_at [> "2012-01-01"]))))
+
+    (is (= 6 (perform-count :posts
                             (where :userid [:in ["user1" "user2"]]
                                    :posted_at [> "2012-01-01"]
-                                   :posted_at [< "2012-01-05"])))))
-    (is (= 10 (count (select :posts
+                                   :posted_at [< "2012-01-05"]))))
+    (is (= 10 (perform-count :posts
                              (where :userid [:in ["user1" "user2"]]
                                     :posted_at [>= "2012-01-01"]
-                                    :posted_at [<= "2012-01-05"])))))
+                                    :posted_at [<= "2012-01-05"]))))
 
-    (is (= 18 (count (select :posts
+    (is (= 18 (perform-count :posts
                              (where :userid [:in ["user1" "user2"]]
                                     :posted_at [> "2011-01-01"]))))))
-  ;; (drop-keyspace :new_cql_keyspace)
-  )
 
 (deftest test-create-keyspace
   (let [ksdef (describe-keyspace :new_cql_keyspace)]
@@ -115,6 +115,12 @@
     (is (= "org.apache.cassandra.locator.SimpleStrategy" (:strategy_class ksdef)))
     (is (= "new_cql_keyspace" (:keyspace_name ksdef)))))
 
+(deftest test-alter-keyspace
+  (alter-keyspace :new_cql_keyspace
+                  (with {:durable_writes true}))
+
+  (let [ksdef (describe-keyspace :new_cql_keyspace)]
+    (is (:durable_writes ksdef))))
 
 (deftest test-create-table
   (create-table :posts
@@ -148,3 +154,20 @@
 
   (let [cols (describe-columns :new_cql_keyspace :posts)]
     (is (= "org.apache.cassandra.db.marshal.Int32Type" (:validator (first cols))))))
+
+
+(deftest test-ttl
+  (create-table :posts
+                (column-definitions {:userid :text
+                                     :content :text
+                                     :primary-key [:userid]}))
+
+  (insert :posts
+          (values {:userid "user1"
+                   :content "content"})
+          (using :ttl 1))
+
+  (Thread/sleep 2000)
+  (is (= 0 (perform-count :posts))))
+
+;; TODO: Cover count with query with tests

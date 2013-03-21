@@ -185,3 +185,8 @@
   ""
   [& args]
   {:add args})
+
+(def count* hayt/count*)
+(def count1 hayt/count1)
+(def now hayt/now)
+(def compose hayt/q->)

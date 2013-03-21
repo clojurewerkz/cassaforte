@@ -26,6 +26,8 @@
   (-> (.execute client query)
       conv/to-map))
 
+;; TODO: separate prepare command from execute-prepared
+
 (defn execute-prepared
   [client [^String query ^java.util.List values]]
   (let [^BoundStatement bound-statement (.bind (.prepare client query) (to-array values))]

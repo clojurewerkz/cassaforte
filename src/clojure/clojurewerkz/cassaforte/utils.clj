@@ -13,5 +13,7 @@
   [& forms]
   `(try
      (do ~@forms)
+     (catch com.datastax.driver.core.exceptions.DriverException ire#
+       (println (.getMessage ire#)))
      (catch org.apache.cassandra.exceptions.CassandraException ire#
        (println (.getMessage ire#)))))

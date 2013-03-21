@@ -64,7 +64,6 @@
    :type :super)
 
   (are [expected actual] (= expected actual)
-
        {:name1 {:first "a" :second "b"} :name2 {:first "c" :second "d"} :name3 {:first "e" :second "f"}}
        (get-slice "ColumnFamily1" "key1" )
 

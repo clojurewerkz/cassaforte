@@ -6,7 +6,7 @@
 
   (:import clojurewerkz.cassaforte.CassandraClient))
 
-(def ^String keyspace "cassaforte_test_1")
+(def ^String keyspace "cassaforte_test_thrift")
 
 (deftest test-connection-with-explicitly-specified-host
   (let [host   (or (System/getenv "CASSANDRA_HOST") "127.0.0.1")
@@ -18,7 +18,7 @@
   (testing "When client binding is correct"
       (let [client (cc/connect "localhost")]
         (cc/with-client client
-          (sch/set-keyspace "cassaforte_test_1"))))
+          (sch/set-keyspace "cassaforte_test_thrift"))))
   (testing "When client binding is correct"
     (is (thrown?
          org.apache.cassandra.thrift.InvalidRequestException

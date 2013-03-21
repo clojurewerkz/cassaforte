@@ -6,7 +6,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies [[org.clojure/clojure                   "1.4.0"]
-                 [cc.qbits/hayt                         "0.1.1"]
+                 [cc.qbits/hayt                         "0.4.0-beta2"]
                  [org.apache.cassandra/cassandra-all    "1.2.0"]
                  [org.apache.cassandra/cassandra-thrift "1.2.0"]
                  [org.apache.thrift/libthrift           "0.7.0"]
@@ -15,6 +15,7 @@
 
                  [com.datastax.cassandra/cassandra-driver-core "1.0.0-beta1"]]
   :source-paths      ["src/clojure"]
+  :resource-paths    ["resources"]
   :java-source-paths ["src/java"]
   :javac-options     ["-target" "1.6" "-source" "1.6"]
   :profiles       {:1.3 {:dependencies [[org.clojure/clojure "1.3.0"]]}

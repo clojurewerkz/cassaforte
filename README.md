@@ -4,6 +4,30 @@ Cassaforte is an young idiomatic Clojure client for Cassandra.
 Its API and code style closely follow other ClojureWerkz projects, namely [Monger](https://clojuremongodb.info), [Welle](https://clojureriak.info),
 [Neocons](https://clojureneo4j.info), [Elastisch](https://clojureelasticsearch.info) and [Spyglass](https://clojurememcached.info).
 
+## Quickstart
+
+Cassaforte supports both Thrift and native CQL protocols. While it is possible to use CQL via Thrift, it's strongly advised (and is a default )
+to use native CQL protocol for everything related to CQL.
+
+### CQL
+
+In order to connect to CQL:
+
+```clojure
+(ns my.app
+  (:require [clojurewerkz.cassaforte.cql.client :as cql-client]))
+
+(cql-client/connect! "127.0.0.1")
+```
+
+Executing raw cql queries:
+
+
+Executing prepared cql statements:
+
+
+
+
 
 ## Project Goals
 
@@ -22,14 +46,12 @@ Cassaforte is *young and incomplete*.  It almost certainly is not useable enough
 When Cassaforte matures, we will update this section.
 
 
-
 ## Supported Features
 
  * Connection to a single node
  * Create, destroy keyspace
  * CQL 3.0 queries, including queries with placeholders (?, a la JDBC)
  * Deserialization of column names and values according to response schema (not all types are supported yet)
-
 
 ## Supported Clojure versions
 

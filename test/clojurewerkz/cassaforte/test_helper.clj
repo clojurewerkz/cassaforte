@@ -10,12 +10,5 @@
   (when (not (bound? (var thrift-client/*cassandra-client*)))
     (thrift-client/connect! "127.0.0.1")
     (with-thrift-exception-handling
-      (thrift-schema/set-keyspace "cassaforte_test_1")))
+      (thrift-schema/set-keyspace "cassaforte_test_thrift")))
   (f))
-
-
-(comment (defn initialize-cluster
-           [f]
-           (when (not (bound? (var cluster-client/*client*)))
-             (cluster-client/connect! ["192.168.60.10" "192.168.60.11" "192.168.60.12"]))
-           (f)))

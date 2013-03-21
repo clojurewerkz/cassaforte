@@ -86,7 +86,7 @@
   [& query-params]
   (execute query-params query/create-table-query))
 
-
+(def create-column-family create-table)
 
 (defn drop-table
   [ks]
@@ -104,6 +104,7 @@
   [& query-params]
   (execute query-params query/select-query))
 
+;; TBD, add Limit
 (defn get-one
   [& query-params]
   (execute query-params query/select-query))
@@ -128,6 +129,19 @@
                        :columnfamily_name table)))
 
 
+(defn perform-count
+  [table & query-params]
+  (:count
+   (first
+    (select table
+            (cons
+             (query/columns (query/count*))
+             query-params)))))
+
 (defn alter-table
   [& query-params]
   (execute query-params query/alter-table-query))
+
+(defn alter-keyspace
+  [& query-params]
+  (execute query-params query/alter-keyspace-query))
