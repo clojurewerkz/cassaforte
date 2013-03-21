@@ -24,7 +24,6 @@ public class CassandraClient {
   private static final int DEFAULT_PORT = 9160;
   private int port;
   private String hostname;
-  private static final String DEFAULT_CQL_VERSION = "3.0.0";
 
 
   //
@@ -67,7 +66,6 @@ public class CassandraClient {
     transport = tr;
     client = new Cassandra.Client(new TBinaryProtocol(tr));
     tr.open();
-    client.set_cql_version(DEFAULT_CQL_VERSION);
   }
 
   //
@@ -330,10 +328,6 @@ public class CassandraClient {
    */
   public CqlResult execute_cql_query(ByteBuffer query, Compression compression) throws InvalidRequestException, UnavailableException, TimedOutException, SchemaDisagreementException, TException {
     return client.execute_cql_query(query, compression);
-  }
-
-  public CqlResult execute_cql3_query(ByteBuffer query, Compression compression, ConsistencyLevel consistency)  throws InvalidRequestException, UnavailableException, TimedOutException, SchemaDisagreementException, org.apache.thrift.TException {
-    return client.execute_cql3_query(query, compression, consistency);
   }
 
   /**
