@@ -1,11 +1,11 @@
 (ns clojurewerkz.cassaforte.cql-test
+  (:require [clojurewerkz.cassaforte.embedded :as e])
   (:use clojurewerkz.cassaforte.cql
         clojure.test
         clojurewerkz.cassaforte.query
         clojurewerkz.cassaforte.test-helper
         clojurewerkz.cassaforte.conversion))
 
-(declare simple-client)
 (declare cluster-client)
 
 (defn run!
@@ -16,16 +16,14 @@
                            :replication_factor 1 }}))
   (use-keyspace :new_cql_keyspace)
   (f)
-  (drop-keyspace :new_cql_keyspace)
-  )
+  (drop-keyspace :new_cql_keyspace))
 
 (defn initialize!
   [f]
-  (defonce simple-client (connect! "127.0.0.1"))
-  (defonce cluster-client (connect! ["192.168.60.10" "192.168.60.11" "192.168.60.12"]))
+  (e/start-server! "/Users/ifesdjeen/p/clojurewerkz/cassaforte/resources/cassandra.yaml")
+  (def cluster-client (connect! ["127.0.0.1"]))
+  ;; (defonce cluster-client (connect! ["192.168.60.10" "192.168.60.11" "192.168.60.12"]))
 
-  (with-client simple-client
-    (run! f))
   (with-client cluster-client
     (run! f)))
 
@@ -90,7 +88,7 @@
 
   (testing "Range queries and IN clause"
     (is (= 18 (perform-count :posts
-                            (where :userid [:in ["user1" "user2"]]
+                             (where :userid [:in ["user1" "user2"]]
                                     :posted_at [> "2011-01-01"]))))
     (is (= 16 (perform-count :posts
                              (where :userid [:in ["user1" "user2"]]

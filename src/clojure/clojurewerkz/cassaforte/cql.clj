@@ -2,10 +2,7 @@
   (:require [clojurewerkz.cassaforte.query :as query]
             [clojurewerkz.cassaforte.utils :as utils]
             [qbits.hayt.cql :as cql]
-            [clojurewerkz.cassaforte.simple.client :as simple]
-            [clojurewerkz.cassaforte.cluster.client :as cluster])
-  (:import [org.apache.cassandra.transport Client]
-           [com.datastax.driver.core Session]))
+            [clojurewerkz.cassaforte.cluster.client :as cluster]))
 
 (def ^{:dynamic true}
   *client*)
@@ -18,7 +15,6 @@
 (defn connect
   [h]
   (cond
-   (string? h) (simple/connect h)
    (vector? h) (cluster/connect h)))
 
 (defn connect!
@@ -27,7 +23,7 @@
     (alter-var-root (var *client*) (constantly c))
     c))
 
-(def ^:dynamic *debug-output* false)
+(def ^:dynamic *debug-output* true)
 
 ;; Execute could be a protocol, taht takes either string or map, converts map to string (renders query when
 ;; needed?
@@ -65,11 +61,7 @@
 
 (defn execute
   [query-params builder]
-  (let [executor (cond
-                  (= Session (type *client*))
-                  (if cql/*prepared-statement* cluster/execute-prepared cluster/execute-raw)
-                  (= Client (type *client*))
-                  (if cql/*prepared-statement* simple/execute-prepared simple/execute-raw))]
+  (let [executor (if cql/*prepared-statement* cluster/execute-prepared cluster/execute-raw)]
     (execute-common executor
                     query-params
                     builder)))

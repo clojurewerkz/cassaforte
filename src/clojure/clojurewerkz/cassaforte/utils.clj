@@ -14,6 +14,6 @@
   `(try
      (do ~@forms)
      (catch com.datastax.driver.core.exceptions.DriverException ire#
-       (println (.getMessage ire#)))
+       (println "Error came from server:" (.getMessage ire#)))
      (catch org.apache.cassandra.exceptions.CassandraException ire#
-       (println (.getMessage ire#)))))
+       (println "Error came from server:" (.getMessage ire#)))))
