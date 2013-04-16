@@ -1,6 +1,6 @@
 # Cassaforte
 
-Cassaforte is an young idiomatic Clojure client for Cassandra.
+Cassaforte is a young idiomatic Clojure client for Apache Cassandra (1.2+).
 Its API and code style closely follow other ClojureWerkz projects, namely [Monger](https://clojuremongodb.info), [Welle](https://clojureriak.info),
 [Neocons](https://clojureneo4j.info), [Elastisch](https://clojureelasticsearch.info) and [Spyglass](https://clojurememcached.info).
 
@@ -18,8 +18,9 @@ Its API and code style closely follow other ClojureWerkz projects, namely [Monge
 
 ## Project Maturity
 
-Cassaforte is *young and incomplete*.  It almost certainly is not useable enough for anyone but the author.
-When Cassaforte matures, we will update this section.
+Cassaforte is *young*. It is getting to the point where we can confidently
+recommend it to other developers, but not exactly there yet. We will update
+this document when it's ready for prime time.
 
 
 
@@ -117,4 +118,5 @@ tests pass, submit a pull request on Github.
 
 Copyright (C) 2012-2013 Michael S. Klishin, Alex Petrov
 
-Distributed under the Eclipse Public License, the same as Clojure.
+Double licensed under the [Eclipse Public License](http://www.eclipse.org/legal/epl-v10.html) (the same as Clojure) or
+the [Apache Public License 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
