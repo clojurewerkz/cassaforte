@@ -11,3 +11,9 @@ pom.xml
 tmp/
 examples/
 doc/
+.DS_Store
+.idea/
+build/
+todo*
+*~
+\#*
