@@ -1,5 +1,6 @@
 (ns clojurewerkz.cassaforte.query
   (:require [qbits.hayt :as hayt]
+            [qbits.hayt.utils :as utils]
             [qbits.hayt.cql :as cql]))
 
 ;;
@@ -42,11 +43,11 @@ Takes a table identifier and additional clause arguments:
   "http://cassandra.apache.org/doc/cql3/CQL.html#insertStmt
 
 Takes a table identifier and additional clause arguments:
-* values
 * using
 * table (optionaly using composition)"
-  [table & clauses]
-  (into {:insert table} clauses))
+  [table values & clauses]
+  (into {:insert table
+         :values values} clauses))
 
 (defn update-query
   "http://cassandra.apache.org/doc/cql3/CQL.html#updateStmt
@@ -57,10 +58,11 @@ Takes a table identifier and additional clause arguments:
 * set-columns
 * where
 * table (optionaly using composition)"
-  [table & clauses]
-  (into {:update table} clauses))
+  [table set-columns & clauses]
+  (into {:update table
+         :set-columns set-columns} clauses))
 
-(defn delete
+(defn delete-query
   "http://cassandra.apache.org/doc/cql3/CQL.html#deleteStmt
 
 Takes a table identifier and additional clause arguments:
@@ -70,7 +72,7 @@ Takes a table identifier and additional clause arguments:
 * where
 * table (optionaly using composition)"
   [table & clauses]
-  (into {:delete table :columns :*} clauses))
+  (into {:delete table :columns (keyword "")} clauses))
 
 (defn truncate-query
   "http://cassandra.apache.org/doc/cql3/CQL.html#truncateStmt
@@ -361,3 +363,11 @@ clause of a select/update/delete query"
 (def count1
   "Returns a count(1) CQL function"
   (constantly (cql/cql-fn "COUNT" 1)))
+
+;;
+;;
+;;
+
+(def map-type (comp keyword utils/map-type))
+(def list-type (comp keyword utils/list-type))
+(def set-type (comp keyword utils/set-type))

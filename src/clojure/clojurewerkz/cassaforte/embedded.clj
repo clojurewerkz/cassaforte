@@ -1,31 +1,26 @@
 (ns clojurewerkz.cassaforte.embedded
+  (:require [clojure.java.io :as io])
   (:import [org.apache.cassandra.service CassandraDaemon]
            [org.apache.cassandra.config DatabaseDescriptor]))
 
 (declare daemon)
+
 (defn start-server!
-  [config-path]
-  (System/setProperty "cassandra.config" config-path)
+  []
+  (System/setProperty "cassandra.config" (str (io/resource "cassandra.yaml")))
+  (System/setProperty "java.version" "1.7.0_15") ;; WTF
   (System/setProperty "cassandra-foreground" "yes")
   (System/setProperty "log4j.defaultInitOverride" "false")
+  (System/setProperty "log4j.appender.R.File" "/var/log/cassandra/system.log")
 
-  (if-not (bound? (var daemon))
-    (.start (Thread. ^Runnable (fn []
-                                 (let [d (CassandraDaemon.)]
-                                   (defonce daemon d)
-                                   (.init d nil)
-                                   (.start d)))))
-    (Thread/sleep 5000)))
+  (when-not (bound? (var daemon))
+    (.delete (java.io.File. "tmp"))
+    (def daemon (let [d (CassandraDaemon.)]
+                  (.init d nil)
+                  (.start d)
+                  d))))
 
-(comment
-  (defn start-server!
-    []
-    (.start (Thread. ^Runnable (fn []
-                                 (println "starting")
-                                 (defonce daemon
-                                   (doto (EmbeddedCassandraService.)
-                                     (.start))
-                                   ))))))
 
-;; (start-server! "/Users/ifesdjeen/p/clojurewerkz/cassaforte/resources/cassandra.yaml")
-;; (DatabaseDescriptor/getRpcAddress)
+(defn stop-server!
+  []
+  (.stop ^CassandraDaemon daemon))

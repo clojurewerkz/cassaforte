@@ -90,11 +90,29 @@
 
 (defn insert
   [& query-params]
-  (execute query-params query/insert-query))
+  (execute
+   query-params
+   query/insert-query))
+
+(defn update
+  [& query-params]
+  (execute
+   query-params
+   query/update-query))
+
+(defn delete
+  [& query-params]
+  (execute
+   query-params
+   query/delete-query))
 
 (defn select
   [& query-params]
   (execute query-params query/select-query))
+
+(defn truncate
+  [table]
+  (execute [table] query/truncate-query))
 
 ;; TBD, add Limit
 (defn get-one

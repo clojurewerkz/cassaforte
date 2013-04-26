@@ -4,7 +4,7 @@
            [clojurewerkz.cassaforte SerializerHelper]
            [org.apache.cassandra.db.marshal UTF8Type Int32Type IntegerType AsciiType FloatType
             DecimalType BytesType DoubleType LongType UUIDType DateType BooleanType CompositeType
-            ListType MapType]))
+            ListType MapType SetType]))
 
 (declare encode)
 (declare deserialize)
@@ -40,14 +40,15 @@
 (defn get-serializer
   [value]
   (cond
-   (not (nil? (get serializers (type value)))) (get serializers (type value))
-   (= (type value) clojure.lang.PersistentVector) (ListType/getInstance (get-serializer (first value)))
-   (map? value) (MapType/getInstance (get-serializer (first (first value)))
-                                     (get-serializer (last (first value))))
-   (:composite (meta value)) (CompositeType/getInstance
-                              (map get-serializer value))
+   (not (nil? (get serializers (type value))))     (get serializers (type value))
+   (= (type value) clojure.lang.PersistentVector)  (ListType/getInstance (get-serializer (first value)))
+   (= (type value) clojure.lang.PersistentHashSet) (SetType/getInstance (get-serializer (first value)))
+   (map? value)                                    (MapType/getInstance (get-serializer (first (first value)))
+                                                                        (get-serializer (last (first value))))
+   (:composite (meta value))                       (CompositeType/getInstance
+                                                    (map get-serializer value))
 
-   :else (throw (Exception. "Can't find matching serializer"))))
+   :else                                           (throw (Exception. "Can't find matching serializer"))))
 
 (defn ^ByteBuffer encode
   [value]
@@ -75,12 +76,14 @@
 (defn deserialize-intern
   [t bytes]
   (cond
-   (isa? MapType (type t)) (into {} (compose t bytes))
+   (isa? SetType (type t))       (into #{} (compose t bytes))
+   (isa? ListType (type t))      (into [] (compose t bytes))
+   (isa? MapType (type t))       (into {} (compose t bytes))
    (isa? CompositeType (type t)) (apply composite
                                         (map (fn [i]
                                                (compose (.get (.types t) i) (to-bytes (extract-component (ByteBuffer/wrap bytes) i))))
                                              (range 0 (count (.types t)))))
-   :else (compose t bytes)))
+   :else                         (compose t bytes)))
 
 (defn deserialize
   [type-str bytes]

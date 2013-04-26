@@ -1,10 +1,12 @@
 (ns clojurewerkz.cassaforte.cluster.conversion
   (:import [com.datastax.driver.core ResultSet]
            [clojurewerkz.cassaforte Codec])
-  (:require [clojurewerkz.cassaforte.conversion :as conv]
-            [clojurewerkz.cassaforte.bytes :as b]))
+  (:require [clojurewerkz.cassaforte.bytes :as b]))
 
-(extend-protocol conv/DefinitionToMap
+(defprotocol DefinitionToMap
+  (to-map [input] "Converts any definition to map"))
+
+(extend-protocol DefinitionToMap
   ResultSet
   (to-map [^ResultSet input]
     (into []

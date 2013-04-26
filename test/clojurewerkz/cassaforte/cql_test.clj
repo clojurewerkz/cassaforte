@@ -1,171 +1,203 @@
 (ns clojurewerkz.cassaforte.cql-test
-  (:require [clojurewerkz.cassaforte.embedded :as e])
+  (:require [clojurewerkz.cassaforte.embedded :as e]
+            [clojurewerkz.cassaforte.test-helper :as th])
   (:use clojurewerkz.cassaforte.cql
         clojure.test
-        clojurewerkz.cassaforte.query
-        clojurewerkz.cassaforte.test-helper
-        clojurewerkz.cassaforte.conversion))
+        clojurewerkz.cassaforte.query))
 
-(declare cluster-client)
+(use-fixtures :each th/initialize!)
 
-(defn run!
-  [f]
-  (create-keyspace :new_cql_keyspace
-                   (with {:replication
-                          {:class "SimpleStrategy"
-                           :replication_factor 1 }}))
-  (use-keyspace :new_cql_keyspace)
-  (f)
-  (drop-keyspace :new_cql_keyspace))
+(defmacro test-combinations [& body]
+  `(do
+     ~@body
+     (prepared ~@body)))
 
-(defn initialize!
-  [f]
-  (e/start-server! "/Users/ifesdjeen/p/clojurewerkz/cassaforte/resources/cassandra.yaml")
-  (def cluster-client (connect! ["127.0.0.1"]))
-  ;; (defonce cluster-client (connect! ["192.168.60.10" "192.168.60.11" "192.168.60.12"]))
+(deftest insert-test
+  (test-combinations
+   (let [r {:name "Alex" :age (int 19)}]
+     (insert :users r)
+     (is (= r (first (select :users))))
+     (truncate :users))))
 
-  (with-client cluster-client
-    (run! f)))
+(deftest update-test
+  (testing "Simple updates"
+    (test-combinations
+     (let [r {:name "Alex" :age (int 19)}]
+       (insert :users r)
+       (is (= r (first (select :users))))
+       (update :users
+               {:age (int 25)}
+               (where :name "Alex"))
+       (is (= {:name "Alex" :age (int 25)}
+              (first (select :users)))))))
 
-(use-fixtures :each initialize!)
+  (testing "One of many update"
+    (test-combinations
+     (dotimes [i 3]
+       (insert :user_posts {:username "user1"
+                            :post_id (str "post" i)
+                            :body (str "body" i)}))
+     (update :user_posts
+             {:body "bodynew"}
+             (where :username "user1"
+                    :post_id "post1"))
+     (is (= "bodynew"
+            (get-in
+             (select :user_posts
+                     (where :username "user1"
+                            :post_id "post1"))
+             [0 :body]))))))
 
-(deftest test-range-queries
-  (create-table :posts
-                (column-definitions {:userid :text
-                                     :posted_at :timestamp
-                                     :entry_title :text
-                                     :content :text
-                                     :primary-key [:userid :posted_at]}))
+(deftest delete-test
+  (test-combinations
+   (dotimes [i 3]
+     (insert :users {:name (str "name" i) :age (int i)}))
+   (is (= 3 (perform-count :users)))
+   (delete :users
+           (where :name "name1"))
+   (is (= 2 (perform-count :users)))
+   (truncate :users))
 
-  (doseq [i (range 1 10)]
-    (insert :posts
-            (values {:userid "user1"
-                     :posted_at (str "2012-01-0" i)
-                     :entry_title (str "title" i)
-                     :content (str "content" i)})
-            (using :timestamp (.getTime (new java.util.Date))
-                   :ttl 200000))
-    (prepared
-     (insert :posts
-             (values {:userid "user2"
-                      :posted_at (java.util.Date. 112 0 i 1 0 0)
-                      :entry_title (str "title" i)
-                      :content (str "content" i)})
-             (using :timestamp (.getTime (new java.util.Date))
-                    :ttl 200000))))
+  (test-combinations
+   (insert :users {:name "name1" :age (int 19)})
+   (delete :users
+           (columns :age)
+           (where :name "name1"))
+   (is (nil? (:age (select :users))))
+   (truncate :users)))
 
-  (is (= "content1"
-         (:content (first
-                    (select :posts
-                            (where :userid "user1"
-                                   :posted_at [> "2011-01-05"]))))))
+(deftest ttl-test
 
-  (is (= "content9"
-         (:content (first
-                    (select :posts
-                            (where :userid "user1"
-                                   :posted_at [> "2011-01-05"])
-                            (order-by [:posted_at :desc]))))))
+  )
 
-  (testing "Range queries with open end"
-    (is (= 9 (count (select :posts
-                            (where :userid "user1"
-                                   :posted_at [> "2011-01-01"])))))
-    (is (= 8 (count (select :posts
-                            (where :userid "user1"
-                                   :posted_at [> "2012-01-01"]))))))
+(deftest list-operations-test
+  (create-table :users_list
+                (column-definitions
+                 {:name :varchar
+                  :test_list (list-type :varchar)
+                  :primary-key [:name]}))
 
-  (testing "Range queries"
-    (is (= 3 (count (select :posts
-                            (where :userid "user1"
-                                   :posted_at [> "2012-01-01"]
-                                   :posted_at [< "2012-01-05"])))))
-    (is (= 5 (count (select :posts
-                            (where :userid "user1"
-                                   :posted_at [>= "2012-01-01"]
-                                   :posted_at [<= "2012-01-05"]))))))
+  (testing "Inserting"
+    (test-combinations
+     (insert :users_list
+             {:name "user1"
+              :test_list ["str1" "str2" "str3"]})
+     (is (= ["str1" "str2" "str3"] (get-in (select :users_list)
+                                           [0 :test_list])))
+     (truncate :users_list)))
 
+  (testing "Updating"
+    (test-combinations
+     (insert :users_list
+             {:name "user1"
+              :test_list []})
+     (dotimes [i 3]
+       (update :users_list
+               {:test_list [+ [(str "str" i)]]}
+               (where :name "user1")))
 
-  (testing "Range queries and IN clause"
-    (is (= 18 (perform-count :posts
-                             (where :userid [:in ["user1" "user2"]]
-                                    :posted_at [> "2011-01-01"]))))
-    (is (= 16 (perform-count :posts
-                             (where :userid [:in ["user1" "user2"]]
-                                    :posted_at [> "2012-01-01"]))))
+     (is (= ["str0" "str1" "str2"] (get-in (select :users_list)
+                                           [0 :test_list])))
+     (truncate :users_list)))
 
-    (is (= 6 (perform-count :posts
-                            (where :userid [:in ["user1" "user2"]]
-                                   :posted_at [> "2012-01-01"]
-                                   :posted_at [< "2012-01-05"]))))
-    (is (= 10 (perform-count :posts
-                             (where :userid [:in ["user1" "user2"]]
-                                    :posted_at [>= "2012-01-01"]
-                                    :posted_at [<= "2012-01-05"]))))
+  (testing "Deleting"
+    (test-combinations
+     (insert :users_list
+             {:name "user1"
+              :test_list ["str0" "str1" "str2"]})
+     (update :users_list
+             {:test_list [- ["str0" "str1"]]}
+             (where :name "user1"))
 
-    (is (= 18 (perform-count :posts
-                             (where :userid [:in ["user1" "user2"]]
-                                    :posted_at [> "2011-01-01"]))))))
+     (is (= ["str2"] (get-in (select :users_list)
+                             [0 :test_list])))))
 
-(deftest test-create-keyspace
-  (let [ksdef (describe-keyspace :new_cql_keyspace)]
-    (is (= "{\"replication_factor\":\"1\"}" (:strategy_options ksdef)))
-    (is (= "org.apache.cassandra.locator.SimpleStrategy" (:strategy_class ksdef)))
-    (is (= "new_cql_keyspace" (:keyspace_name ksdef)))))
+  (drop-table :users_list))
 
-(deftest test-alter-keyspace
-  (alter-keyspace :new_cql_keyspace
-                  (with {:durable_writes true}))
+(deftest map-operations-test
+  (create-table :users_map
+                (column-definitions
+                 {:name :varchar
+                  :test_map (map-type :varchar :varchar)
+                  :primary-key [:name]}))
 
-  (let [ksdef (describe-keyspace :new_cql_keyspace)]
-    (is (:durable_writes ksdef))))
+  (testing "Inserting"
+    (test-combinations
+     (insert :users_map
+             {:name "user1"
+              :test_map {"a" "b" "c" "d"}})
+     (is (= {"a" "b" "c" "d"} (get-in (select :users_map)
+                                      [0 :test_map])))
+     (truncate :users_map)))
 
-(deftest test-create-table
-  (create-table :posts
-                (column-definitions {:userid :text
-                                     :posted_at :timestamp
-                                     :entry_title :text
-                                     :content :text
-                                     :primary-key [:userid :posted_at]}))
+  (testing "Updating"
+    (test-combinations
+     (insert :users_map
+             {:name "user1"
+              :test_map {}})
+     (dotimes [i 3]
+       (update :users_map
+               {:test_map [+ {"a" "b" "c" "d"}]}
+               (where :name "user1")))
 
-  (let [cfdef (describe-table :new_cql_keyspace :posts)]
-    (is (= "[\"userid\"]" (:key_aliases cfdef)))
-    (is (= "[\"posted_at\"]" (:column_aliases cfdef)))
-    (is (= "posts" (:columnfamily_name cfdef))))
-
-
-  (let [cols (describe-columns :new_cql_keyspace :posts)]
-    (is (= "content" (:column_name (first cols))))
-    (is (= "entry_title" (:column_name (second cols))))))
-
-(deftest test-alter-table
-  (create-table :posts
-                (column-definitions {:userid :text
-                                     :to_be_int :text
-                                     :primary-key [:userid]}))
-
-  (let [cols (describe-columns :new_cql_keyspace :posts)]
-    (is (= "org.apache.cassandra.db.marshal.UTF8Type" (:validator (first cols)))))
-
-  (alter-table :posts
-               (alter-column :to_be_int :int))
-
-  (let [cols (describe-columns :new_cql_keyspace :posts)]
-    (is (= "org.apache.cassandra.db.marshal.Int32Type" (:validator (first cols))))))
+     (is (= {"a" "b" "c" "d"} (get-in (select :users_map)
+                                      [0 :test_map])))
+     (truncate :users_map)))
+  (drop-table :users_map))
 
 
-(deftest test-ttl
-  (create-table :posts
-                (column-definitions {:userid :text
-                                     :content :text
-                                     :primary-key [:userid]}))
+(deftest set-operations-test
+  (create-table :users_set
+                (column-definitions
+                 {:name :varchar
+                  :test_set (set-type :varchar)
+                  :primary-key [:name]}))
 
-  (insert :posts
-          (values {:userid "user1"
-                   :content "content"})
-          (using :ttl 1))
+  (testing "Inserting"
+    (test-combinations
+     (insert :users_set
+             {:name "user1"
+              :test_set #{"str1" "str2" "str3"}})
+     (is (= #{"str1" "str2" "str3"} (get-in (select :users_set)
+                                            [0 :test_set])))
+     (truncate :users_set)))
 
-  (Thread/sleep 2000)
-  (is (= 0 (perform-count :posts))))
 
-;; TODO: Cover count with query with tests
+  (testing "Updating"
+    (test-combinations
+     (insert :users_set
+             {:name "user1"
+              :test_set #{}})
+     (dotimes [i 3]
+       (dotimes [_ 2]
+         (update :users_set
+                 {:test_set [+ #{(str "str" i)}]}
+                 (where :name "user1"))))
+
+     (is (= #{"str0" "str1" "str2"} (get-in (select :users_set)
+                                            [0 :test_set])))
+     (truncate :users_set)))
+
+  (testing "Deleting"
+    (test-combinations
+     (insert :users_set
+             {:name "user1"
+              :test_set #{"str0" "str1" "str2"}})
+     (update :users_set
+             {:test_set [- #{"str0" "str1"}]}
+             (where :name "user1"))
+
+     (is (= #{"str2"} (get-in (select :users_set)
+                             [0 :test_set])))))
+
+  (drop-table :users_set))
+
+(deftest select-order-by-test)
+(deftest select-in-test)
+(deftest select-range-query-test)
+
+(deftest batch-test)
+;; think about using `cons/conj` as a syntax sugar for prepended and appended list commands
+
+
+;; test authentication
