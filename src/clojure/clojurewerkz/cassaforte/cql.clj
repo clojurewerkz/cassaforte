@@ -23,7 +23,7 @@
     (alter-var-root (var *client*) (constantly c))
     c))
 
-(def ^:dynamic *debug-output* true)
+(def ^:dynamic *debug-output* false)
 
 ;; Execute could be a protocol, taht takes either string or map, converts map to string (renders query when
 ;; needed?
