@@ -15,7 +15,7 @@
 Raise an exception if any deletion fails unless silently is true."
   [f & [silently]]
   (let [f (io/file f)]
-    (if (.isDirectory f)
+    (if (and (.isDirectory f) (.exists f))
       (doseq [child (.listFiles f)]
         (delete-file-recursively child silently)))
     (delete-file f silently)))
