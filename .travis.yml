@@ -4,6 +4,5 @@ script: lein2 test
 services:
   - cassandra
 jdk:
-  - openjdk6
   - openjdk7
   - oraclejdk7
