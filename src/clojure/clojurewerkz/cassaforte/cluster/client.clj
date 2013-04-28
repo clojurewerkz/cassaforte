@@ -7,15 +7,19 @@
   *client*)
 
 (defn build-cluster
-  [contact-points]
+  [contact-points
+   &{:keys [connections-per-host
+           max-connections-per-host]}]
   (let [builder (Cluster/builder)
         pooling-options (.poolingOptions builder)]
-    (.setCoreConnectionsPerHost pooling-options HostDistance/LOCAL 20)
-    (.setMaxConnectionsPerHost pooling-options HostDistance/LOCAL 100)
+    (when connections-per-host
+      (.setCoreConnectionsPerHost pooling-options HostDistance/LOCAL
+                                  connections-per-host))
+    (when max-connections-per-host
+      (.setMaxConnectionsPerHost pooling-options HostDistance/LOCAL
+                                 max-connections-per-host))
     (doseq [contact-point contact-points]
-      (.addContactPoint builder contact-point)
-
-      )
+      (.addContactPoint builder contact-point))
     (.build builder)))
 
 (defn ^Session connect
@@ -38,3 +42,7 @@
   (let [^Query prepared-statement (.bind (.prepare client query) (to-array values))]
     (-> (.execute client prepared-statement)
         conv/to-map)))
+
+;; Add load balancing policy
+;; add compression
+;; Add retry policy

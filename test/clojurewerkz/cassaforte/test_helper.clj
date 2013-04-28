@@ -1,5 +1,6 @@
 (ns clojurewerkz.cassaforte.test-helper
-  (:require [clojurewerkz.cassaforte.embedded :as e])
+  (:require [clojurewerkz.cassaforte.embedded :as e]
+            [clojurewerkz.cassaforte.cluster.metrics :as metrics])
   (:use clojurewerkz.cassaforte.cql
         clojurewerkz.cassaforte.query))
 
@@ -30,7 +31,8 @@
   [f]
   (e/start-server!)
   (when (not (bound? (var cluster-client)))
-    (def cluster-client (connect! ["127.0.0.1"])))
+    (def cluster-client (connect! ["127.0.0.1"]))
+    (metrics/csv-reporter cluster-client))
   ;; (when (not (bound? (var cluster-client)))
   ;;   (def cluster-client (connect ["192.168.60.15"])))
   (with-client cluster-client
