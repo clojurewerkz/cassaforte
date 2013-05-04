@@ -1,8 +1,15 @@
-## Changes between 1.0.0-beta1 and ## 1.0.0-beta2
+## Changes between 1.0.0-rc2 and 1.0.0-rc3
 
 No changes yet.
 
+## Changes between 1.0.0-beta1 and 1.0.0-rc2
 
+  * Thrift support is discontinued
+  * Use [Hayt](https://github.com/mpenet/hayt) for CQL generation
+  * Update to java-driver 1.0.0-rc2
+  * Significantly improved test coverage
+  * Major changes in CQL API, vast majority of queries won't work anymore
+  * Embedded server is used for tests and has it's own API now
 
 ## 1.0.0-beta1
 
