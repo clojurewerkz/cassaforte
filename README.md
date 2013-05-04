@@ -4,32 +4,6 @@ Cassaforte is an young idiomatic Clojure client for Cassandra.
 Its API and code style closely follow other ClojureWerkz projects, namely [Monger](https://clojuremongodb.info), [Welle](https://clojureriak.info),
 [Neocons](https://clojureneo4j.info), [Elastisch](https://clojureelasticsearch.info) and [Spyglass](https://clojurememcached.info).
 
-## Quickstart
-
-Cassaforte works with native CQL protocol, and works with Cassandra 1.2+.
-In order to enable native CQL, make sure `start_native_transport` is set to `true` in `cassandra.yaml`
-(which is usually located under `/etc/cassandra`).
-
-```
-start_native_transport: true
-```
-
-## Connecting to Cassandra Cluster
-
-```clojure
-(ns my.app
-  (:require [clojurewerkz.cassaforte.cql.client :as cql-client]))
-
-(cql-client/connect! "127.0.0.1")
-```
-
-Executing raw cql queries:
-
-
-Executing prepared cql statements:
-
-
-
 
 
 ## Project Goals
@@ -43,22 +17,29 @@ Executing prepared cql statements:
  * Support URI connections to be friendly to Heroku and other PaaS providers.
 
 
+
+
 ## Project Maturity
 
-Cassaforte is *young and incomplete*.  It almost certainly is not useable enough for anyone but the author.
-When Cassaforte matures, we will update this section.
+We use Cassaforte heavily for our monitoring solution, that processes fairly large amount of data.
+Until DataStax makes a stable, non RC release of java-driver that we use underneath, we can't make a
+final release. Project is known to behave well, it's tested and used in production.
+
 
 
 ## Supported Features
 
- * Connection to a single node
- * Create, destroy keyspace
+ * Connection to a single node and cluster
+ * _All_ CQL operations
  * CQL 3.0 queries, including queries with placeholders (?, a la JDBC)
- * Deserialization of column names and values according to response schema (not all types are supported yet)
+ * Deserialization of column names and values according to response schema
+
+
 
 ## Supported Clojure versions
 
-Cassaforte is built from the ground up for Clojure 1.3 and up.
+Cassaforte is built from the ground up for Clojure 1.4 and up.
+
 
 
 ## Supported Apache Cassandra versions
@@ -69,11 +50,9 @@ Cassaforte is built from the ground up for Cassandra 1.2 and up and is built aro
 
 ## Documentation & Examples
 
-Cassaforte is a young project and until 1.0 is released and documentation guides are written,
-it may be challenging to use for anyone except the author. For code examples, see our test
-suite.
+Please refer to our [Getting Started with Clojure and Cassandra](http://clojurecassandra.info/articles/getting_started.html) guide.
+Don't hesitate to join our [mailing list](https://groups.google.com/forum/?fromgroups#!forum/clojure-cassandra) and ask questions, too!
 
-Once the documentation site is up, we will update this section.
 
 
 ## Community
@@ -99,16 +78,20 @@ definition to your `pom.xml`:
 
 With Leiningen:
 
-    [clojurewerkz/cassaforte "1.0.0-rc1]
-
+```clojure
+[clojurewerkz/cassaforte "1.0.0-rc2"]
+```
 
 With Maven:
 
-    <dependency>
-      <groupId>clojurewerkz</groupId>
-      <artifactId>cassaforte</artifactId>
-      <version>1.0.0-rc1</version>
-    </dependency>
+```xml
+<dependency>
+  <groupId>clojurewerkz</groupId>
+  <artifactId>cassaforte</artifactId>
+  <version>1.0.0-rc1</version>
+</dependency>
+```
+
 
 
 ## Cassaforte Is a ClojureWerkz Project
@@ -131,7 +114,9 @@ CI is hosted by [travis-ci.org](http://travis-ci.org)
 Cassaforte uses [Leiningen 2](https://github.com/technomancy/leiningen/blob/master/doc/TUTORIAL.md). Make
 sure you have it installed and then run tests against all supported Clojure versions using
 
-    lein2 all test
+```
+lein2 all test
+```
 
 Then create a branch and make your changes on it. Once you are done with your changes and all
 tests pass, submit a pull request on Github.
