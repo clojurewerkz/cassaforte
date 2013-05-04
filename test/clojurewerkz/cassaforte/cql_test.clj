@@ -14,7 +14,7 @@
 
 (deftest insert-test
   (test-combinations
-   (let [r {:name "Alex" :age (int 19)}]
+   (let [r {:name "Alex" :city "Munich" :age (int 19)}]
      (insert :users r)
      (is (= r (first (select :users))))
      (truncate :users))))
@@ -22,13 +22,13 @@
 (deftest update-test
   (testing "Simple updates"
     (test-combinations
-     (let [r {:name "Alex" :age (int 19)}]
+     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
        (insert :users r)
        (is (= r (first (select :users))))
        (update :users
                {:age (int 25)}
                (where :name "Alex"))
-       (is (= {:name "Alex" :age (int 25)}
+       (is (= {:name "Alex" :city "Munich" :age (int 25)}
               (first (select :users)))))))
 
   (testing "One of many update"
@@ -192,8 +192,47 @@
 
   (drop-table :users_set))
 
-(deftest select-order-by-test)
-(deftest select-in-test)
+(deftest select-where-test
+  (test-combinations
+   (insert :users {:name "Alex"   :city "Munich"        :age (int 19)})
+   (insert :users {:name "Robert" :city "Berlin"        :age (int 25)})
+   (insert :users {:name "Sam"    :city "San Francisco" :age (int 21)})
+
+   (is (= "Munich" (get-in (select :users (where :name "Alex")) [0 :city])))))
+
+(deftest select-in-test
+  (test-combinations
+   (insert :users {:name "Alex"   :city "Munich"        :age (int 19)})
+   (insert :users {:name "Robert" :city "Berlin"        :age (int 25)})
+   (insert :users {:name "Sam"    :city "San Francisco" :age (int 21)})
+
+   (let [users (select :users
+                           (where :name [:in ["Alex" "Robert"]]))]
+     (is (= "Munich" (get-in users [0 :city])))
+     (is (= "Berlin" (get-in users [1 :city]))))))
+
+(deftest select-order-by-test
+
+  (test-combinations
+   (dotimes [i 3]
+     (insert :user_posts {:username "Alex" :post_id  (str "post" i) :body (str "body" i)}))
+
+   (is (= [{:post_id "post0"}
+           {:post_id "post1"}
+           {:post_id "post2"}]
+          (select :user_posts
+           (columns :post_id)
+           (where :username "Alex")
+           (order-by [:post_id]))))
+
+   (is (= [{:post_id "post2"}
+           {:post_id "post1"}
+           {:post_id "post0"}]
+          (select :user_posts
+           (columns :post_id)
+           (where :username "Alex")
+           (order-by [:post_id :desc]))))))
+
 (deftest select-range-query-test)
 
 (deftest batch-test)

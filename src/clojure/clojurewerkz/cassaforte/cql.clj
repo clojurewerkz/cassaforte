@@ -4,8 +4,8 @@
             [qbits.hayt.cql :as cql]
             [clojurewerkz.cassaforte.cluster.client :as cluster]))
 
-(def ^{:dynamic true}
-  *client*)
+(def ^:dynamic *client*)
+(def ^:dynamic *debug-output* false)
 
 (defmacro with-client
   [client & body]
@@ -13,17 +13,18 @@
      (do ~@body)))
 
 (defn connect
+  "Connects to the C* cluster, returns Session"
   [h]
   (cond
    (vector? h) (cluster/connect h)))
 
 (defn connect!
+  "Connects to C* cluster, sets *client* as a default client"
   [h]
   (let [c (connect h)]
     (alter-var-root (var *client*) (constantly c))
     c))
 
-(def ^:dynamic *debug-output* false)
 
 ;; Execute could be a protocol, taht takes either string or map, converts map to string (renders query when
 ;; needed?
@@ -45,14 +46,17 @@
   q)
 
 (defmacro prepared
+  "Helper macro to execute prepared statement"
   [& body]
   `(binding [cql/*prepared-statement* true
              cql/*param-stack* (atom [])]
      (do ~@body)))
 
-(defn execute-common
+(defn- execute-common
+  "Executes "
   [executor query-params builder]
-  (utils/with-native-exception-handling ;; add check for throw exceptions
+  ;; TODO: add check for throw exceptions
+  (utils/with-native-exception-handling
     (let [renderer (if cql/*prepared-statement* query/->prepared query/->raw)]
       (->> (apply builder (flatten query-params))
            renderer
@@ -65,6 +69,10 @@
     (execute-common executor
                     query-params
                     builder)))
+
+;;
+;; Schema operations
+;;
 
 (defn drop-keyspace
   [ks]
@@ -87,6 +95,18 @@
 (defn use-keyspace
   [ks]
   (execute [ks] query/use-keyspace-query))
+
+(defn alter-table
+  [& query-params]
+  (execute query-params query/alter-table-query))
+
+(defn alter-keyspace
+  [& query-params]
+  (execute query-params query/alter-keyspace-query))
+
+;;
+;; DB Operations
+;;
 
 (defn insert
   [& query-params]
@@ -114,10 +134,27 @@
   [table]
   (execute [table] query/truncate-query))
 
+;;
+;; Higher level DB functions
+;;
+
 ;; TBD, add Limit
 (defn get-one
   [& query-params]
   (execute query-params query/select-query))
+
+(defn perform-count
+  [table & query-params]
+  (:count
+   (first
+    (select table
+            (cons
+             (query/columns (query/count*))
+             query-params)))))
+
+;;
+;; Higher-level helper functions for schema
+;;
 
 (defn describe-keyspace
   [ks]
@@ -137,21 +174,3 @@
   (select :system.schema_columns
           (query/where :keyspace_name ks
                        :columnfamily_name table)))
-
-
-(defn perform-count
-  [table & query-params]
-  (:count
-   (first
-    (select table
-            (cons
-             (query/columns (query/count*))
-             query-params)))))
-
-(defn alter-table
-  [& query-params]
-  (execute query-params query/alter-table-query))
-
-(defn alter-keyspace
-  [& query-params]
-  (execute query-params query/alter-keyspace-query))

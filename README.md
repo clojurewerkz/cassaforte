@@ -6,12 +6,15 @@ Its API and code style closely follow other ClojureWerkz projects, namely [Monge
 
 ## Quickstart
 
-Cassaforte supports both Thrift and native CQL protocols. While it is possible to use CQL via Thrift, it's strongly advised (and is a default )
-to use native CQL protocol for everything related to CQL.
+Cassaforte works with native CQL protocol, and works with Cassandra 1.2+.
+In order to enable native CQL, make sure `start_native_transport` is set to `true` in `cassandra.yaml`
+(which is usually located under `/etc/cassandra`).
 
-### CQL
+```
+start_native_transport: true
+```
 
-In order to connect to CQL:
+## Connecting to Cassandra Cluster
 
 ```clojure
 (ns my.app
@@ -96,7 +99,7 @@ definition to your `pom.xml`:
 
 With Leiningen:
 
-    [clojurewerkz/cassaforte "1.0.0-beta1"]
+    [clojurewerkz/cassaforte "1.0.0-rc1]
 
 
 With Maven:
@@ -104,7 +107,7 @@ With Maven:
     <dependency>
       <groupId>clojurewerkz</groupId>
       <artifactId>cassaforte</artifactId>
-      <version>1.0.0-beta1</version>
+      <version>1.0.0-rc1</version>
     </dependency>
 
 

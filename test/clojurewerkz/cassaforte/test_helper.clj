@@ -17,6 +17,7 @@
   (create-table :users
                 (column-definitions {:name :varchar
                                      :age  :int
+                                     :city :varchar
                                      :primary-key [:name]}))
 
   (create-table :user_posts
