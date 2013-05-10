@@ -1,6 +1,6 @@
 (ns clojurewerkz.cassaforte.cluster.client
   (:require [clojurewerkz.cassaforte.cluster.conversion :as conv])
-  (:import [com.datastax.driver.core Cluster Session PreparedStatement Query
+  (:import [com.datastax.driver.core Cluster Cluster$Builder Session PreparedStatement Query
             HostDistance]))
 
 (def ^{:dynamic true :tag Session}
@@ -10,7 +10,7 @@
   [contact-points
    &{:keys [connections-per-host
            max-connections-per-host]}]
-  (let [builder (Cluster/builder)
+  (let [^Cluster$Builder builder (Cluster/builder)
         pooling-options (.poolingOptions builder)]
     (when connections-per-host
       (.setCoreConnectionsPerHost pooling-options HostDistance/LOCAL
@@ -31,17 +31,33 @@
 ;; DB Ops
 ;;
 (defn ^clojure.lang.IPersistentMap execute-raw
-  [client ^String query]
+  [^Session client ^String query]
   (-> (.execute client query)
                 conv/to-map))
 
 ;; TODO: separate prepare command from execute-prepared
 
 (defn execute-prepared
-  [client [^String query ^java.util.List values]]
+  [^Session client [^String query ^java.util.List values]]
   (let [^Query prepared-statement (.bind (.prepare client query) (to-array values))]
     (-> (.execute client prepared-statement)
         conv/to-map)))
+
+(defn get-hosts
+  "Returns all hosts for connected cluster"
+  [^Session client]
+  (map conv/to-map (-> client
+                       (.getCluster)
+                       (.getMetadata)
+                       (.getAllHosts))))
+
+(defn export-schema
+  "Exports schema as string"
+  [^Session client]
+  (-> client
+      (.getCluster)
+      (.getMetadata)
+      (.exportSchemaAsString)))
 
 ;; Add load balancing policy
 ;; add compression

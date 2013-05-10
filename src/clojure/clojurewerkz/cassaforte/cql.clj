@@ -1,4 +1,6 @@
 (ns clojurewerkz.cassaforte.cql
+  (:import [com.datastax.driver.core Session])
+  (:use clojurewerkz.cassaforte.cluster.conversion)
   (:require [clojurewerkz.cassaforte.query :as query]
             [clojurewerkz.cassaforte.utils :as utils]
             [qbits.hayt.cql :as cql]
@@ -8,7 +10,7 @@
 (def ^:dynamic *debug-output* false)
 
 (defmacro with-client
-  [client & body]
+  [^Session client & body]
   `(binding [*client* ~client]
      (do ~@body)))
 
@@ -24,7 +26,6 @@
   (let [c (connect h)]
     (alter-var-root (var *client*) (constantly c))
     c))
-
 
 ;; Execute could be a protocol, taht takes either string or map, converts map to string (renders query when
 ;; needed?

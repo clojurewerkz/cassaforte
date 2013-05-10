@@ -4,13 +4,13 @@
            [clojurewerkz.cassaforte SerializerHelper]
            [org.apache.cassandra.db.marshal UTF8Type Int32Type IntegerType AsciiType FloatType
             DecimalType BytesType DoubleType LongType UUIDType DateType BooleanType CompositeType
-            ListType MapType SetType]))
+            ListType MapType SetType AbstractType AbstractCompositeType]))
 
 (declare encode)
 (declare deserialize)
 (declare serializers)
 
-(defn to-bytes
+(defn #^bytes to-bytes
   [^ByteBuffer byte-buffer]
   (let [bytes (byte-array (.remaining byte-buffer))]
     (.get byte-buffer bytes 0 (count bytes))
@@ -41,24 +41,23 @@
   [value]
   (cond
    (not (nil? (get serializers (type value))))     (get serializers (type value))
-   (= (type value) clojure.lang.PersistentVector)  (ListType/getInstance (get-serializer (first value)))
-   (= (type value) clojure.lang.PersistentHashSet) (SetType/getInstance (get-serializer (first value)))
-   (map? value)                                    (MapType/getInstance (get-serializer (first (first value)))
-                                                                        (get-serializer (last (first value))))
-   (:composite (meta value))                       (CompositeType/getInstance
-                                                    (map get-serializer value))
+   (= (type value) clojure.lang.PersistentVector)  (ListType/getInstance ^AbstractType (get-serializer (first value)))
+   (= (type value) clojure.lang.PersistentHashSet) (SetType/getInstance ^AbstractType  (get-serializer (first value)))
+   (map? value)                                    (MapType/getInstance ^AbstractType (get-serializer (first (first value)))
+                                                                        ^AbstractType  (get-serializer (last (first value))))
+   (:composite (meta value))                       (CompositeType/getInstance (map get-serializer value))
 
    :else                                           (throw (Exception. "Can't find matching serializer"))))
 
-(defn ^ByteBuffer encode
-  [value]
+(defn encode
+  [^ByteBuffer value]
   (let [serializer (get-serializer value)]
     (if (= CompositeType (type serializer))
-      (.decompose serializer (to-array value))
-      (.decompose serializer value))))
+      (.decompose ^AbstractCompositeType serializer (to-array value))
+      (.decompose ^AbstractType serializer value))))
 
 (defn compose
-  [serializer bytes]
+  [^AbstractType serializer bytes]
   (.compose serializer (ByteBuffer/wrap bytes)))
 
 (defn composite
@@ -70,7 +69,7 @@
 ;;
 
 (defn infer-type
-  [s]
+  [^String s]
   (org.apache.cassandra.db.marshal.TypeParser/parse s))
 
 (defn deserialize-intern
@@ -79,10 +78,14 @@
    (isa? SetType (type t))       (into #{} (compose t bytes))
    (isa? ListType (type t))      (into [] (compose t bytes))
    (isa? MapType (type t))       (into {} (compose t bytes))
-   (isa? CompositeType (type t)) (apply composite
-                                        (map (fn [i]
-                                               (compose (.get (.types t) i) (to-bytes (extract-component (ByteBuffer/wrap bytes) i))))
-                                             (range 0 (count (.types t)))))
+   (isa? CompositeType (type t)) (let [^CompositeType hinted-t t]
+                                   (apply composite
+                                          (map (fn [i]
+                                                 (compose (.get (.types hinted-t) i)
+                                                          (to-bytes
+                                                           (extract-component
+                                                            (ByteBuffer/wrap bytes) i))))
+                                               (range 0 (count (.types hinted-t))))))
    :else                         (compose t bytes)))
 
 (defn deserialize
