@@ -20,7 +20,7 @@
                          :resource-paths ["resources"]
                          :dependencies [[org.xerial.snappy/snappy-java "1.0.5-SNAPSHOT"]
                                         [commons-lang/commons-lang             "2.6"]
-                                        [org.apache.cassandra/cassandra-all    "1.2.1"]
+                                        [org.apache.cassandra/cassandra-all    "1.2.4"]
                                         ]}}
   :aliases        {"all" ["with-profile" "dev:dev,1.3:dev,1.4:dev,1.6:dev,master"]}
   :test-selectors {:focus   :focus
