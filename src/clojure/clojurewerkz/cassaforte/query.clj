@@ -9,13 +9,13 @@
 ;;
 
 (defn ->raw
-  ""
+  "Execute raw query"
   [query]
   (binding [cql/*prepared-statement* false]
     (cql/emit-query query)))
 
 (defn ->prepared
-  "Compiles a hayt query into a vector composed of the prepared string
+  "Compile a query into a vector composed of the prepared string
   query and a vector of parameters."
   [query]
   (binding [cql/*prepared-statement* true
@@ -270,84 +270,107 @@ clause of a select/update/delete query"
   {:where (partition 2 args)})
 
 (defn values
-  "Clause: "
+  "Clause: Takes a map of columns to be inserted"
   [values]
   {:values values})
 
 (defn set-columns
-  "Clause: "
+  "Clause: Takes a map of columns to be updated"
   [values]
   {:set-columns values})
 
 (defn with
-  "Clause: "
+  "Clause: compiles to a CQL with clause (possibly nested maps)"
   [values]
   {:with values})
 
 (defn index-name
-  "Clause: "
+  "Clause: Takes an index identifier"
   [value]
   {:index-name value})
 
 (defn alter-column
-  "Clause: "
+  "Clause: takes a table identifier and a column type"
   [& args]
   {:alter-column args})
 
 (defn add-column
-  "Clause: "
+  "Clause: takes a table identifier and a column type"
   [& args]
   {:add-column args})
 
 (defn rename-column
-  "Clause: "
+  "Clause: rename from old-name to new-name"
   [& args]
   {:rename-column args})
 
+(defn drop-column
+  "Clause: Takes a column Identifier"
+  [id]
+  {:drop-column id})
+
 (defn allow-filtering
-  "Clause: "
-  [value]
-  {:allow-filtering value})
+  "Clause: sets ALLOW FILTERING on select queries, defaults to true is
+   used without a value"
+  ([value]
+     {:allow-filtering value})
+  ([]
+     (allow-filtering true)))
 
 (defn logged
-  "Clause: "
-  [value]
-  {:logged value})
+  "Clause: Sets LOGGED/UNLOGGED attribute on BATCH queries"
+  ([value]
+     {:logged value})
+  ([]
+     (logged true)))
 
 (defn counter
-  "Clause: "
-  [value]
-  {:counter value})
+  "Clause: Sets COUNTER attribute on BATCH queries"
+  ([value]
+     {:counter value})
+  ([]
+     (counter true)))
 
 (defn superuser
-  "Clause: "
-  [value]
-  {:superuser value})
+  "Clause: To be used with alter-user and create-user, sets superuser status"
+  ([value]
+     {:superuser value})
+  ([]
+     (superuser true)))
 
 (defn password
-  "Clause: "
+  "Clause: To be used with alter-user and create-user, sets password"
   [value]
   {:password value})
 
 (defn recursive
-  "Clause: "
-  [value]
-  {:recursive value})
+  "Clause: Sets recusivity on list-perm (LIST PERMISSION) queries"
+  ([value]
+     {:recursive value})
+  ([]
+     (recursive true)))
 
 (defn resource
-  "Clause: "
+  "Clause: Sets resource to be modified/used with grant or list-perm"
   [value]
   {:resource value})
 
 (defn user
-  "Clause: "
+  "Clause: Sets user to be modified/used with grant or list-perm"
   [value]
   {:user value})
 
 (defn perm
-  "Clause: "
+  "Clause: Sets permission to be listed with list-perm"
   [value]
   {:list-perm value})
+
+(defn custom
+  "Clause: Sets CUSTOM status on create-index query"
+  ([x]
+     {:custom x})
+  ([]
+     (custom true)))
 
 ;;
 ;;

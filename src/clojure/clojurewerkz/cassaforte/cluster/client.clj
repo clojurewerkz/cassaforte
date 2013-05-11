@@ -1,7 +1,7 @@
 (ns clojurewerkz.cassaforte.cluster.client
   (:require [clojurewerkz.cassaforte.cluster.conversion :as conv])
   (:import [com.datastax.driver.core Cluster Cluster$Builder Session PreparedStatement Query
-            HostDistance]))
+            HostDistance PoolingOptions]))
 
 (def ^{:dynamic true :tag Session}
   *client*)
@@ -10,8 +10,8 @@
   [contact-points
    &{:keys [connections-per-host
            max-connections-per-host]}]
-  (let [^Cluster$Builder builder (Cluster/builder)
-        pooling-options (.poolingOptions builder)]
+  (let [^Cluster$Builder builder        (Cluster/builder)
+        ^PoolingOptions pooling-options (.poolingOptions builder)]
     (when connections-per-host
       (.setCoreConnectionsPerHost pooling-options HostDistance/LOCAL
                                   connections-per-host))
