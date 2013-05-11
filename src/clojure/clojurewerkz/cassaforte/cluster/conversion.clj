@@ -1,5 +1,6 @@
 (ns clojurewerkz.cassaforte.cluster.conversion
-  (:import [com.datastax.driver.core ResultSet Host Row ColumnDefinitions]
+  (:import [com.datastax.driver.core ResultSet Host Row ColumnDefinitions ColumnDefinitions
+            ColumnDefinitions$Definition]
            [clojurewerkz.cassaforte Codec]
            [java.nio ByteBuffer])
   (:require [clojurewerkz.cassaforte.bytes :as b]))
@@ -13,7 +14,7 @@
     (into []
           (for [^Row row input]
             (into {}
-                  (for [^ColumnDefinitions cd (.getColumnDefinitions row)]
+                  (for [^ColumnDefinitions$Definition cd (.getColumnDefinitions row)]
                     (let [^String n         (.getName cd)
                           ^ByteBuffer bytes (.getBytesUnsafe row n)]
                       [(keyword n) (when bytes

@@ -16,7 +16,7 @@
 (defn csv-reporter
   ([^Session client]
      (csv-reporter client "tmp/measurements" 1 TimeUnit/SECONDS))
-  ([^Session client dir period time-unit]
+  ([^Session client ^String dir ^long period ^TimeUnit time-unit]
      (let [registry (-> client
                         (.getCluster)
                         (.getMetrics)

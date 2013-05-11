@@ -25,7 +25,7 @@
 (defn ^Session connect
   "Connect to a Cassandra cluster"
   [hostnames]
-  (.connect (build-cluster hostnames)))
+  (.connect ^Cluster (build-cluster hostnames)))
 
 ;;
 ;; DB Ops
