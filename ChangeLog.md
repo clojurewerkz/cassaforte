@@ -1,6 +1,11 @@
 ## Changes between 1.0.0-rc2 and 1.0.0-rc3
 
-No changes yet.
+  * Update Hayt to latest version (1.0.0)
+  * Update Cassandra to latest version (1.2.4)
+  * Update java-driver to latest version (1.0.0)
+  * Get rid of reflection warnings
+  * Add more options for inspecing cluster
+  * Improve debug output
 
 ## Changes between 1.0.0-beta1 and 1.0.0-rc2
 
