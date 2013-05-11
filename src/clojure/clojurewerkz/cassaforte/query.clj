@@ -1,7 +1,8 @@
 (ns clojurewerkz.cassaforte.query
   (:require [qbits.hayt :as hayt]
             [qbits.hayt.utils :as utils]
-            [qbits.hayt.cql :as cql]))
+            [qbits.hayt.cql :as cql]
+            [qbits.hayt.fns :as cql-fn]))
 
 ;;
 ;; Renderers
@@ -354,15 +355,15 @@ clause of a select/update/delete query"
 
 (def now
   "Returns a now() CQL function"
-  (constantly (cql/cql-fn "now")))
+  (constantly (cql-fn/cql-fn "now")))
 
 (def count*
   "Returns a count(*) CQL function"
-  (constantly (cql/cql-fn "COUNT" :*)))
+  (constantly (cql-fn/cql-fn "COUNT" :*)))
 
 (def count1
   "Returns a count(1) CQL function"
-  (constantly (cql/cql-fn "COUNT" 1)))
+  (constantly (cql-fn/cql-fn "COUNT" 1)))
 
 ;;
 ;;

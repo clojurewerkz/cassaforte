@@ -5,7 +5,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure                          "1.5.1"]
-                 [cc.qbits/hayt                                "0.4.0-beta3"]
+                 [cc.qbits/hayt                                "1.0.0"]
                  [com.datastax.cassandra/cassandra-driver-core "1.0.0"]]
   :source-paths      ["src/clojure"]
   :java-source-paths ["src/java"]
