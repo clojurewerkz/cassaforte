@@ -30,7 +30,7 @@
 ;;
 ;; DB Ops
 ;;
-(defn ^clojure.lang.IPersistentMap execute-raw
+(defn ^clojure.lang.IPersistentMap execute
   [^Session client query]
   (-> (.execute client query)
                 conv/to-map))
@@ -42,7 +42,7 @@
 (defn execute-prepared
   [^Session client [^String query ^java.util.List values]]
   (let [^Query prepared-statement (.bind (prepare client query) (to-array values))]
-    (execute-raw client prepared-statement)))
+    (execute client prepared-statement)))
 
 (defn get-hosts
   "Returns all hosts for connected cluster"

@@ -2,17 +2,23 @@
   (:import [com.datastax.driver.core Session])
   (:use clojurewerkz.cassaforte.cluster.conversion)
   (:require [clojurewerkz.cassaforte.query :as query]
-            [clojurewerkz.cassaforte.utils :as utils]
             [qbits.hayt.cql :as cql]
-            [clojurewerkz.cassaforte.cluster.client :as cluster]))
+            [clojurewerkz.cassaforte.cluster.client :as cluster]
+            [clojurewerkz.cassaforte.debug-utils :as debug-utils]))
 
 (def ^:dynamic *client*)
-(def ^:dynamic *debug-output* false)
+(def ^:dynamic *debug* false)
 
 (defmacro with-client
   [^Session client & body]
   `(binding [*client* ~client]
      (do ~@body)))
+
+(defmacro with-debug
+  "Executes query with debug output"
+  [& body]
+  `(binding [*debug* true]
+     (debug-utils/catch-exceptions ~@body)))
 
 (defn connect
   "Connects to the C* cluster, returns Session"
@@ -27,49 +33,27 @@
     (alter-var-root (var *client*) (constantly c))
     c))
 
-;; Execute could be a protocol, taht takes either string or map, converts map to string (renders query when
-;; needed?
-
 ;; Ability to turn on and off prepared statements by default? Turn on prepared statements on per-query basis
 ;; (macro+binding)
-
-;; Result of query rendering should be pushed stragiht to execute, it should figure out wether to
-;; run the prepared or regular query itself, all the time
-
-;; Add switch (as clj-http, throw exceptions)
-
-;; Maybe add with-template kind of a helper?......
-
-(defn maybe-output-debug
-  [q]
-  (when *debug-output*
-    (println "Built query: " q))
-  q)
 
 (defmacro prepared
   "Helper macro to execute prepared statement"
   [& body]
   `(binding [cql/*prepared-statement* true
-             cql/*param-stack* (atom [])]
+             cql/*param-stack*        (atom [])]
      (do ~@body)))
-
-(defn- execute-common
-  "Executes "
-  [executor query-params builder]
-  ;; TODO: add check for throw exceptions
-  (utils/with-native-exception-handling
-    (let [renderer (if cql/*prepared-statement* query/->prepared query/->raw)]
-      (->> (apply builder (flatten query-params))
-           renderer
-           maybe-output-debug
-           (executor *client*)))))
 
 (defn execute
   [query-params builder]
-  (let [executor (if cql/*prepared-statement* cluster/execute-prepared cluster/execute-raw)]
-    (execute-common executor
-                    query-params
-                    builder)))
+  (let [executor (if cql/*prepared-statement* cluster/execute-prepared cluster/execute)
+        renderer (if cql/*prepared-statement* query/->prepared query/->raw)
+        query    (->> query-params
+                      flatten
+                      (apply builder)
+                      renderer)]
+    (when *debug*
+      (debug-utils/output-debug query))
+    (executor *client* query)))
 
 ;;
 ;; Schema operations
