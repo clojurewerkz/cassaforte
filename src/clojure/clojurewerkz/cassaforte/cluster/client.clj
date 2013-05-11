@@ -31,17 +31,18 @@
 ;; DB Ops
 ;;
 (defn ^clojure.lang.IPersistentMap execute-raw
-  [^Session client ^String query]
+  [^Session client query]
   (-> (.execute client query)
                 conv/to-map))
 
-;; TODO: separate prepare command from execute-prepared
+(defn ^PreparedStatement prepare
+  [^Session client ^String query]
+  (.prepare client query))
 
 (defn execute-prepared
   [^Session client [^String query ^java.util.List values]]
-  (let [^Query prepared-statement (.bind (.prepare client query) (to-array values))]
-    (-> (.execute client prepared-statement)
-        conv/to-map)))
+  (let [^Query prepared-statement (.bind (prepare client query) (to-array values))]
+    (execute-raw client prepared-statement)))
 
 (defn get-hosts
   "Returns all hosts for connected cluster"
