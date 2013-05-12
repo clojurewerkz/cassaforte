@@ -3,6 +3,7 @@
   (:use clojurewerkz.cassaforte.cluster.conversion)
   (:require [clojurewerkz.cassaforte.query :as query]
             [qbits.hayt.cql :as cql]
+            [qbits.hayt.fns :as cql-fn]
             [clojurewerkz.cassaforte.cluster.client :as cluster]
             [clojurewerkz.cassaforte.debug-utils :as debug-utils]))
 
@@ -159,3 +160,27 @@
   (select :system.schema_columns
           (query/where :keyspace_name ks
                        :columnfamily_name table)))
+
+;;
+;; Higher-level collection manipulation
+;;
+
+(defn- get-next-chunk
+  "Returns next chunk for the lazy world iteration"
+  [table partition-key limit prev-chunk]
+  (if (empty? prev-chunk)
+    (select table
+          (query/limit limit))
+    (let [last-partition-key-value (get (last prev-chunk) partition-key)]
+      (select table
+              (query/where (cql-fn/token partition-key) [> (cql-fn/token last-partition-key-value)])
+              (query/limit limit)))))
+
+(defn iterate-world
+  "Lazily iterates through the collection, returning chunks of chunk-size."
+  ([table partition-key chunk-size]
+     (iterate-world table partition-key chunk-size []))
+  ([table partition-key chunk-size c]
+     (lazy-cat c
+               (iterate-world table partition-key chunk-size
+                              (get-next-chunk table partition-key chunk-size c)))))

@@ -38,3 +38,8 @@
   ;;   (def cluster-client (connect ["192.168.60.15"])))
   (with-client cluster-client
     (run! f)))
+
+(defmacro test-combinations [& body]
+  `(do
+     ~@body
+     (prepared ~@body)))
