@@ -165,16 +165,15 @@
 ;; Higher-level collection manipulation
 ;;
 
-(defn- get-next-chunk
+(defn- get-chunk
   "Returns next chunk for the lazy world iteration"
-  [table partition-key limit prev-chunk]
-  (if (empty? prev-chunk)
+  [table partition-key chunk-size last-pk]
+  (if (nil? last-pk)
     (select table
-          (query/limit limit))
-    (let [last-partition-key-value (get (last prev-chunk) partition-key)]
-      (select table
-              (query/where (cql-fn/token partition-key) [> (cql-fn/token last-partition-key-value)])
-              (query/limit limit)))))
+            (query/limit chunk-size))
+    (select table
+            (query/where (cql-fn/token partition-key) [> (cql-fn/token last-pk)])
+            (query/limit chunk-size))))
 
 (defn iterate-world
   "Lazily iterates through the collection, returning chunks of chunk-size."
@@ -182,5 +181,6 @@
      (iterate-world table partition-key chunk-size []))
   ([table partition-key chunk-size c]
      (lazy-cat c
-               (iterate-world table partition-key chunk-size
-                              (get-next-chunk table partition-key chunk-size c)))))
+               (let [last-pk    (get (last c) partition-key)
+                     next-chunk (get-chunk table partition-key chunk-size last-pk)]
+                 (iterate-world table partition-key chunk-size next-chunk)))))

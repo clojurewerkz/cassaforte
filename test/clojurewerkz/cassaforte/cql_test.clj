@@ -1,19 +1,13 @@
 (ns clojurewerkz.cassaforte.cql-test
-  (:require [clojurewerkz.cassaforte.embedded :as e]
-            [clojurewerkz.cassaforte.test-helper :as th])
+  (:require [clojurewerkz.cassaforte.test-helper :as th])
   (:use clojurewerkz.cassaforte.cql
         clojure.test
         clojurewerkz.cassaforte.query))
 
 (use-fixtures :each th/initialize!)
 
-(defmacro test-combinations [& body]
-  `(do
-     ~@body
-     (prepared ~@body)))
-
 (deftest insert-test
-  (test-combinations
+  (th/test-combinations
    (let [r {:name "Alex" :city "Munich" :age (int 19)}]
      (insert :users r)
      (is (= r (first (select :users))))
@@ -21,7 +15,7 @@
 
 (deftest update-test
   (testing "Simple updates"
-    (test-combinations
+    (th/test-combinations
      (let [r {:name "Alex" :city "Munich" :age (int 19)}]
        (insert :users r)
        (is (= r (first (select :users))))
@@ -32,7 +26,7 @@
               (first (select :users)))))))
 
   (testing "One of many update"
-    (test-combinations
+    (th/test-combinations
      (dotimes [i 3]
        (insert :user_posts {:username "user1"
                             :post_id (str "post" i)
@@ -49,7 +43,7 @@
              [0 :body]))))))
 
 (deftest delete-test
-  (test-combinations
+  (th/test-combinations
    (dotimes [i 3]
      (insert :users {:name (str "name" i) :age (int i)}))
    (is (= 3 (perform-count :users)))
@@ -58,7 +52,7 @@
    (is (= 2 (perform-count :users)))
    (truncate :users))
 
-  (test-combinations
+  (th/test-combinations
    (insert :users {:name "name1" :age (int 19)})
    (delete :users
            (columns :age)
@@ -78,7 +72,7 @@
                   :primary-key [:name]}))
 
   (testing "Inserting"
-    (test-combinations
+    (th/test-combinations
      (insert :users_list
              {:name "user1"
               :test_list ["str1" "str2" "str3"]})
@@ -87,7 +81,7 @@
      (truncate :users_list)))
 
   (testing "Updating"
-    (test-combinations
+    (th/test-combinations
      (insert :users_list
              {:name "user1"
               :test_list []})
@@ -101,7 +95,7 @@
      (truncate :users_list)))
 
   (testing "Deleting"
-    (test-combinations
+    (th/test-combinations
      (insert :users_list
              {:name "user1"
               :test_list ["str0" "str1" "str2"]})
@@ -122,7 +116,7 @@
                   :primary-key [:name]}))
 
   (testing "Inserting"
-    (test-combinations
+    (th/test-combinations
      (insert :users_map
              {:name "user1"
               :test_map {"a" "b" "c" "d"}})
@@ -131,7 +125,7 @@
      (truncate :users_map)))
 
   (testing "Updating"
-    (test-combinations
+    (th/test-combinations
      (insert :users_map
              {:name "user1"
               :test_map {}})
@@ -154,7 +148,7 @@
                   :primary-key [:name]}))
 
   (testing "Inserting"
-    (test-combinations
+    (th/test-combinations
      (insert :users_set
              {:name "user1"
               :test_set #{"str1" "str2" "str3"}})
@@ -164,7 +158,7 @@
 
 
   (testing "Updating"
-    (test-combinations
+    (th/test-combinations
      (insert :users_set
              {:name "user1"
               :test_set #{}})
@@ -179,7 +173,7 @@
      (truncate :users_set)))
 
   (testing "Deleting"
-    (test-combinations
+    (th/test-combinations
      (insert :users_set
              {:name "user1"
               :test_set #{"str0" "str1" "str2"}})
@@ -193,7 +187,7 @@
   (drop-table :users_set))
 
 (deftest select-where-test
-  (test-combinations
+  (th/test-combinations
    (insert :users {:name "Alex"   :city "Munich"        :age (int 19)})
    (insert :users {:name "Robert" :city "Berlin"        :age (int 25)})
    (insert :users {:name "Sam"    :city "San Francisco" :age (int 21)})
@@ -201,7 +195,7 @@
    (is (= "Munich" (get-in (select :users (where :name "Alex")) [0 :city])))))
 
 (deftest select-in-test
-  (test-combinations
+  (th/test-combinations
    (insert :users {:name "Alex"   :city "Munich"        :age (int 19)})
    (insert :users {:name "Robert" :city "Berlin"        :age (int 25)})
    (insert :users {:name "Sam"    :city "San Francisco" :age (int 21)})
@@ -212,8 +206,7 @@
      (is (= "Berlin" (get-in users [1 :city]))))))
 
 (deftest select-order-by-test
-
-  (test-combinations
+  (th/test-combinations
    (dotimes [i 3]
      (insert :user_posts {:username "Alex" :post_id  (str "post" i) :body (str "body" i)}))
 
