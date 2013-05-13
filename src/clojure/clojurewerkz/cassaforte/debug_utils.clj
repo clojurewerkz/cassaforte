@@ -14,5 +14,5 @@
   `(try
      (do ~@forms)
      (catch com.datastax.driver.core.exceptions.DriverException ire#
-       (println (print-stack-trace ire# 5))
-       (println "Error came from server:" (.getMessage ire#)))))
+       (println (.getMessage ire#))
+       (print-cause-trace ire#))))
