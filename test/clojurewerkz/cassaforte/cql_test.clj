@@ -71,11 +71,12 @@
 
   )
 
+
 (deftest list-operations-test
   (create-table :users_list
                 (column-definitions
                  {:name :varchar
-                  :test_list (list-type :varchar)
+                  :test_list (keyword (list-type :varchar))
                   :primary-key [:name]}))
 
   (testing "Inserting"
@@ -119,7 +120,7 @@
   (create-table :users_map
                 (column-definitions
                  {:name :varchar
-                  :test_map (map-type :varchar :varchar)
+                  :test_map (keyword (map-type :varchar :varchar))
                   :primary-key [:name]}))
 
   (testing "Inserting"
@@ -151,7 +152,7 @@
   (create-table :users_set
                 (column-definitions
                  {:name :varchar
-                  :test_set (set-type :varchar)
+                  :test_set (keyword (set-type :varchar))
                   :primary-key [:name]}))
 
   (testing "Inserting"

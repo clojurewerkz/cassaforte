@@ -184,20 +184,3 @@
                (let [last-pk    (get (last c) partition-key)
                      next-chunk (get-chunk table partition-key chunk-size last-pk)]
                  (iterate-world table partition-key chunk-size next-chunk)))))
-
-(defn indexes-of [f coll] (keep-indexed #(if (f %2) %1) coll))
-
-(defn- update-where
-  [query-params f]
-
-
-  )
-(defn next-page-for
-  (println (indexes-of #(= :where (ffirst %)) k))
-  (update-in
-   (vec k)
-   [(indexes-of #(= :where (ffirst %)) k)]
-   #(conj % '(:asd :bsd))
-   )
-  ;; (execute query-params query/select-query)
-  )

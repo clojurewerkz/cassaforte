@@ -1,6 +1,7 @@
 (ns clojurewerkz.cassaforte.query
   (:require
    [flatland.useful.ns :as uns]
+   [qbits.hayt.dsl.verb :as verb]
    [qbits.hayt.cql :as cql]))
 
 (def ->raw
@@ -12,40 +13,62 @@
   query and a vector of parameters."
   cql/->prepared)
 
-(doseq [module '(dsl fns utils)]
+(doseq [module '(dsl.clause fns utils)]
   (uns/alias-ns (symbol (str "qbits.hayt." module))))
 
 ;;
 ;; Cassaforte Mods
 ;;
 
-(defn insert-query
-  "http://cassandra.apache.org/doc/cql3/CQL.html#insertStmt
 
-Takes a table identifier and additional clause arguments:
-* using
-* table (optionaly using composition)"
+(def select-query verb/select)
+
+(defn insert-query
   [table values & clauses]
   (into {:insert table
          :values values} clauses))
 
 (defn update-query
-  "http://cassandra.apache.org/doc/cql3/CQL.html#updateStmt
-
-Takes a table identifier and additional clause arguments:
-
-* using
-* set-columns
-* where
-* table (optionaly using composition)"
   [table set-columns & clauses]
   (into {:update table
          :set-columns set-columns} clauses))
 
-(defn using
-  "Clause: takes keyword/value pairs for :timestamp and :ttl"
-  [& args]
-  {:using (apply hash-map args)})
+(defn delete-query
+  "http://cassandra.apache.org/doc/cql3/CQL.html#deleteStmt
+
+Takes a table identifier and additional clause arguments:
+
+* columns (defaults to *)
+* using
+* where
+* table (optionaly using composition)"
+  [table & clauses]
+  (into {:delete table :columns (keyword "")} clauses))
+
+(def truncate-query verb/truncate)
+(def drop-keyspace-query verb/drop-keyspace)
+(def drop-table-query verb/drop-table)
+(def drop-index-query verb/drop-index)
+(def create-index-query verb/create-index)
+
+(def create-keyspace-query verb/create-keyspace)
+(def create-table-query verb/create-table)
+(def create-column-family-query verb/create-table)
+(def alter-table-query verb/alter-table)
+(def alter-column-family-query verb/alter-column-family)
+(def alter-keyspace-query verb/alter-keyspace)
+
+(def batch-query verb/batch)
+
+(def use-keyspace-query verb/use-keyspace)
+
+(def grant-query verb/grant)
+(def revoke-query verb/revoke)
+(def create-user-query verb/create-user)
+(def alter-user-query verb/alter-user)
+(def drop-user-query verb/drop-user)
+(def list-users-query verb/list-users)
+(def list-perm-query verb/list-perm)
 
 (defn where
   "Clause: takes a map or a vector of pairs to compose the where
