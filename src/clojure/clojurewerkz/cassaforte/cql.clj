@@ -1,10 +1,10 @@
 (ns clojurewerkz.cassaforte.cql
   (:import [com.datastax.driver.core Session])
-  (:use clojurewerkz.cassaforte.cluster.conversion)
+  (:use clojurewerkz.cassaforte.conversion)
   (:require [clojurewerkz.cassaforte.query :as query]
             [qbits.hayt.cql :as cql]
             [qbits.hayt.fns :as cql-fn]
-            [clojurewerkz.cassaforte.cluster.client :as cluster]
+            [clojurewerkz.cassaforte.client :as client]
             [clojurewerkz.cassaforte.debug-utils :as debug-utils]))
 
 (def ^:dynamic *client*)
@@ -22,13 +22,13 @@
      (debug-utils/catch-exceptions ~@body)))
 
 (defn connect
-  "Connects to the C* cluster, returns Session"
+  "Connects to the C* client, returns Session"
   [h]
   (cond
-   (vector? h) (cluster/connect h)))
+   (vector? h) (client/connect h)))
 
 (defn connect!
-  "Connects to C* cluster, sets *client* as a default client"
+  "Connects to C* client, sets *client* as a default client"
   [h]
   (let [c (connect h)]
     (alter-var-root (var *client*) (constantly c))
@@ -46,7 +46,7 @@
 
 (defn execute
   [query-params builder]
-  (let [executor (if cql/*prepared-statement* cluster/execute-prepared cluster/execute)
+  (let [executor (if cql/*prepared-statement* client/execute-prepared client/execute)
         renderer (if cql/*prepared-statement* query/->prepared query/->raw)
         query    (->> query-params
                       flatten
@@ -184,3 +184,20 @@
                (let [last-pk    (get (last c) partition-key)
                      next-chunk (get-chunk table partition-key chunk-size last-pk)]
                  (iterate-world table partition-key chunk-size next-chunk)))))
+
+(defn indexes-of [f coll] (keep-indexed #(if (f %2) %1) coll))
+
+(defn- update-where
+  [query-params f]
+
+
+  )
+(defn next-page-for
+  (println (indexes-of #(= :where (ffirst %)) k))
+  (update-in
+   (vec k)
+   [(indexes-of #(= :where (ffirst %)) k)]
+   #(conj % '(:asd :bsd))
+   )
+  ;; (execute query-params query/select-query)
+  )

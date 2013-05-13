@@ -13,6 +13,13 @@
      (is (= r (first (select :users))))
      (truncate :users))))
 
+(deftest insert-test
+  (th/test-combinations
+   (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+     (insert :users r)
+     (is (= r (first (select :users))))
+     (truncate :users))))
+
 (deftest update-test
   (testing "Simple updates"
     (th/test-combinations
@@ -226,7 +233,10 @@
            (where :username "Alex")
            (order-by [:post_id :desc]))))))
 
-(deftest select-range-query-test)
+(deftest select-range-query-test
+
+
+  )
 
 (deftest batch-test)
 ;; think about using `cons/conj` as a syntax sugar for prepended and appended list commands

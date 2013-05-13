@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.cluster.conversion
+(ns clojurewerkz.cassaforte.conversion
   (:import [com.datastax.driver.core ResultSet Host Row ColumnDefinitions ColumnDefinitions
             ColumnDefinitions$Definition]
            [clojurewerkz.cassaforte Codec]

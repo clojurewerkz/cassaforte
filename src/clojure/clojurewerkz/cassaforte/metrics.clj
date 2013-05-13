@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.cluster.metrics
+(ns clojurewerkz.cassaforte.metrics
   (:import [com.datastax.driver.core Session]
            [com.yammer.metrics.reporting ConsoleReporter CsvReporter]
            [com.yammer.metrics.core MetricsRegistry]

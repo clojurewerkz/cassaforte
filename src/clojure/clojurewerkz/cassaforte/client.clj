@@ -1,5 +1,6 @@
-(ns clojurewerkz.cassaforte.cluster.client
-  (:require [clojurewerkz.cassaforte.cluster.conversion :as conv])
+(ns clojurewerkz.cassaforte.client
+  (:require [clojurewerkz.cassaforte.conversion :as conv]
+            )
   (:import [com.datastax.driver.core Cluster Cluster$Builder Session PreparedStatement Query
             HostDistance PoolingOptions]))
 
@@ -60,6 +61,20 @@
       (.getMetadata)
       (.exportSchemaAsString)))
 
+
+;; defn get-replicas
+;; defn get-cluster-name
+;; defn get-keyspace
+;; defn get-keyspaces
+;; defn rebuild-schema
+
 ;; Add load balancing policy
 ;; add compression
+;; DCAwareRoundRobinPolicy(String localDc) {
+;; RoundRobinPolicy() {}
+;; TokenAwarePolicy(LoadBalancingPolicy childPolicy) {
+;; Compression/NONE / Compression/SNAPPY
 ;; Add retry policy
+;; DowngradingConsistencyRetryPolicy/INSTANCE
+;; FallthroughRetryPolicy/INSTANCE
+;; LoggingRetryPolicy/INSTANCE
