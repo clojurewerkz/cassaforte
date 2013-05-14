@@ -1,5 +1,6 @@
 (ns clojurewerkz.cassaforte.test-helper
-  (:require [clojurewerkz.cassaforte.embedded :as e])
+  (:require [clojurewerkz.cassaforte.embedded :as e]
+            [clojurewerkz.cassaforte.client :as client])
   (:use clojurewerkz.cassaforte.cql
         clojurewerkz.cassaforte.query))
 
@@ -7,12 +8,17 @@
 
 (defn run!
   [f]
+  ;; clear previous broken/interupted runs
+  (try (drop-keyspace :new_cql_keyspace)
+       (catch Exception _ nil))
+
   (create-keyspace :new_cql_keyspace
                    (with {:replication
                           {:class "SimpleStrategy"
                            :replication_factor 1 }}))
 
   (use-keyspace :new_cql_keyspace)
+
   (create-table :users
                 (column-definitions {:name :varchar
                                      :age  :int
@@ -33,9 +39,12 @@
   (when (not (bound? (var cluster-client)))
     ;; (def cluster-client (connect! ["192.168.60.10" "192.168.60.11" "192.168.60.12"]))
     ;; (.getAllHosts (.getMetadata (.getCluster cluster-client)))
-    (def cluster-client (connect! ["127.0.0.1"])))
+    (def cluster (client/cluster ["127.0.0.1"]
+                                 ;; :port 19042
+                                 ))
+    (def session (client/connect cluster)))
 
-  (with-client cluster-client
+  (client/with-session session
     (run! f)))
 
 (defmacro test-combinations [& body]
