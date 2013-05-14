@@ -23,7 +23,8 @@
   "Helper macro to execute prepared statement"
   [& body]
   `(binding [cql/*prepared-statement* true
-             cql/*param-stack*        (atom [])]))
+             cql/*param-stack*        (atom [])]
+     (do ~@body)))
 
 (defn ^:private execute-
   [query-params builder]
