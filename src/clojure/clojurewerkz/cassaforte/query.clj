@@ -33,17 +33,7 @@
   (into {:update table
          :set-columns set-columns} clauses))
 
-(defn delete-query
-  "http://cassandra.apache.org/doc/cql3/CQL.html#deleteStmt
-
-Takes a table identifier and additional clause arguments:
-
-* columns (defaults to *)
-* using
-* where
-* table (optionaly using composition)"
-  [table & clauses]
-  (into {:delete table} clauses))
+(def delete-query verb/delete)
 
 (def truncate-query verb/truncate)
 (def drop-keyspace-query verb/drop-keyspace)
