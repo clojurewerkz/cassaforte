@@ -40,7 +40,7 @@
     ;; (def cluster-client (connect! ["192.168.60.10" "192.168.60.11" "192.168.60.12"]))
     ;; (.getAllHosts (.getMetadata (.getCluster cluster-client)))
     (def cluster (client/cluster ["127.0.0.1"]
-                                 ;; :port 19042
+                                 :port 19042
                                  ))
     (def session (client/connect cluster)))
 
