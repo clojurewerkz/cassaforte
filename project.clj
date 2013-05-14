@@ -8,8 +8,6 @@
                  [cc.qbits/alia                                "1.1.0"]
                  [com.datastax.cassandra/cassandra-driver-core "1.0.0"]]
   :source-paths      ["src/clojure"]
-  :java-source-paths ["src/java"]
-  :javac-options     ["-target" "1.6" "-source" "1.6"]
   :profiles       {:1.3 {:dependencies [[org.clojure/clojure "1.3.0"]]}
                    :1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
                    :1.6 {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
