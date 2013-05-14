@@ -96,12 +96,11 @@
 
 (defn insert-batch
   [table records]
-  (execute
-   (render-query
-    (query/batch-query
-     (apply
-      query/queries
-      (map #(query/insert-query table %) records))))))
+  (->> (map #(query/insert-query table %) records)
+       (apply query/queries)
+       query/batch-query
+       render-query
+       execute))
 
 (defn update
   [& query-params]
