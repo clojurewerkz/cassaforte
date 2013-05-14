@@ -24,8 +24,9 @@
   :test-selectors {:focus   :focus
                    :cql     :cql
                    :schema  :schema
+                   :stress  :stress
                    :indexes :indexes
-                   :default (constantly true)
+                   :default (fn [m] (not (:stress m)))
                    :ci      (complement :skip-ci)}
   :repositories {"sonatype" {:url "http://oss.sonatype.org/content/repositories/releases"
                              :snapshots false

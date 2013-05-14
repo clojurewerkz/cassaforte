@@ -26,18 +26,29 @@
              cql/*param-stack*        (atom [])]
      (do ~@body)))
 
+(defn render-query
+  [query-params]
+  (let [renderer (if cql/*prepared-statement* query/->prepared query/->raw)]
+    (renderer query-params)))
+
+(defn compile-query
+  [query-params builder]
+  (apply builder (flatten query-params)))
+
+(defn execute
+  [query]
+  (into []  ;; alia prefers not to return vectors
+        (if cql/*prepared-statement*
+          (client/execute (client/prepare (first query))
+                          :values (second query))
+          (client/execute query))))
+
 (defn ^:private execute-
   [query-params builder]
-  (let [query (apply builder (flatten query-params))
-        q-compiler (if cql/*prepared-statement* query/->prepared query/->raw)
-        compiled-query (q-compiler query)]
+  (let [rendered-query (render-query (compile-query query-params builder))]
     (when *debug*
-      (debug-utils/output-debug compiled-query))
-    (into []  ;; alia prefers not to return vectors
-          (if cql/*prepared-statement*
-            (client/execute (client/prepare (first compiled-query))
-                            :values (second compiled-query))
-            (client/execute compiled-query)))))
+      (debug-utils/output-debug rendered-query))
+    (execute rendered-query)))
 
 ;;
 ;; Schema operations
@@ -83,6 +94,15 @@
    query-params
    query/insert-query))
 
+(defn insert-batch
+  [table records]
+  (execute
+   (render-query
+    (query/batch-query
+     (apply
+      query/queries
+      (map #(query/insert-query table %) records))))))
+
 (defn update
   [& query-params]
   (execute-
@@ -97,7 +117,8 @@
 
 (defn select
   [& query-params]
-  (execute- query-params query/select-query))
+  (execute- query-params query/select-query)
+  )
 
 (defn truncate
   [table]
