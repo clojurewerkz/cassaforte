@@ -1,19 +1,12 @@
 (ns clojurewerkz.cassaforte.cql
   (:import [com.datastax.driver.core Session])
-  (:use clojurewerkz.cassaforte.conversion)
-  (:require [clojurewerkz.cassaforte.query :as query]
-            [qbits.hayt.cql :as cql]
-            [qbits.hayt.fns :as cql-fn]
-            [clojurewerkz.cassaforte.client :as client]
-            [clojurewerkz.cassaforte.debug-utils :as debug-utils]))
+  (:require
+   [qbits.hayt.cql :as cql]
+   [clojurewerkz.cassaforte.query :as query]
+   [clojurewerkz.cassaforte.client :as client]
+   [clojurewerkz.cassaforte.debug-utils :as debug-utils]))
 
-(def ^:dynamic *client*)
 (def ^:dynamic *debug* false)
-
-(defmacro with-client
-  [^Session client & body]
-  `(binding [*client* ~client]
-     (do ~@body)))
 
 (defmacro with-debug
   "Executes query with debug output"
@@ -21,18 +14,7 @@
   `(binding [*debug* true]
      (debug-utils/catch-exceptions ~@body)))
 
-(defn connect
-  "Connects to the C* client, returns Session"
-  [h]
-  (cond
-   (vector? h) (client/connect h)))
-
-(defn connect!
-  "Connects to C* client, sets *client* as a default client"
-  [h]
-  (let [c (connect h)]
-    (alter-var-root (var *client*) (constantly c))
-    c))
+;; connect! can be replaced by client/set-session!
 
 ;; Ability to turn on and off prepared statements by default? Turn on prepared statements on per-query basis
 ;; (macro+binding)
@@ -41,20 +23,20 @@
   "Helper macro to execute prepared statement"
   [& body]
   `(binding [cql/*prepared-statement* true
-             cql/*param-stack*        (atom [])]
-     (do ~@body)))
+             cql/*param-stack*        (atom [])]))
 
-(defn execute
+(defn ^:private execute-
   [query-params builder]
-  (let [executor (if cql/*prepared-statement* client/execute-prepared client/execute)
-        renderer (if cql/*prepared-statement* query/->prepared query/->raw)
-        query    (->> query-params
-                      flatten
-                      (apply builder)
-                      renderer)]
+  (let [query (apply builder (flatten query-params))
+        q-compiler (if cql/*prepared-statement* query/->prepared query/->raw)
+        compiled-query (q-compiler query)]
     (when *debug*
-      (debug-utils/output-debug query))
-    (executor *client* query)))
+      (debug-utils/output-debug compiled-query))
+    (into []  ;; alia prefers not to return vectors
+          (if cql/*prepared-statement*
+            (client/execute (client/prepare (first compiled-query))
+                            :values (second compiled-query))
+            (client/execute compiled-query)))))
 
 ;;
 ;; Schema operations
@@ -62,33 +44,33 @@
 
 (defn drop-keyspace
   [ks]
-  (execute [ks] query/drop-keyspace-query))
+  (execute- [ks] query/drop-keyspace-query))
 
 (defn create-keyspace
   [& query-params]
-  (execute query-params query/create-keyspace-query))
+  (execute- query-params query/create-keyspace-query))
 
 (defn create-table
   [& query-params]
-  (execute query-params query/create-table-query))
+  (execute- query-params query/create-table-query))
 
 (def create-column-family create-table)
 
 (defn drop-table
   [ks]
-  (execute [ks] query/drop-table-query))
+  (execute- [ks] query/drop-table-query))
 
 (defn use-keyspace
   [ks]
-  (execute [ks] query/use-keyspace-query))
+  (execute- [ks] query/use-keyspace-query))
 
 (defn alter-table
   [& query-params]
-  (execute query-params query/alter-table-query))
+  (execute- query-params query/alter-table-query))
 
 (defn alter-keyspace
   [& query-params]
-  (execute query-params query/alter-keyspace-query))
+  (execute- query-params query/alter-keyspace-query))
 
 ;;
 ;; DB Operations
@@ -96,29 +78,29 @@
 
 (defn insert
   [& query-params]
-  (execute
+  (execute-
    query-params
    query/insert-query))
 
 (defn update
   [& query-params]
-  (execute
+  (execute-
    query-params
    query/update-query))
 
 (defn delete
   [& query-params]
-  (execute
+  (execute-
    query-params
    query/delete-query))
 
 (defn select
   [& query-params]
-  (execute query-params query/select-query))
+  (execute- query-params query/select-query))
 
 (defn truncate
   [table]
-  (execute [table] query/truncate-query))
+  (execute- [table] query/truncate-query))
 
 ;;
 ;; Higher level DB functions
@@ -127,7 +109,7 @@
 ;; TBD, add Limit
 (defn get-one
   [& query-params]
-  (execute query-params query/select-query))
+  (execute- query-params query/select-query))
 
 (defn perform-count
   [table & query-params]
@@ -172,7 +154,7 @@
     (select table
             (query/limit chunk-size))
     (select table
-            (query/where (cql-fn/token partition-key) [> (cql-fn/token last-pk)])
+            (query/where (query/token partition-key) [> (query/token last-pk)])
             (query/limit chunk-size))))
 
 (defn iterate-world
