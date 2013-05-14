@@ -1,26 +1,29 @@
 (ns clojurewerkz.cassaforte.client
   (:require [flatland.useful.ns :as uns]
-            [qbits.alia]))
+            [qbits.alia])
+  (:import [com.datastax.driver.core Host Session]))
 
 (uns/alias-ns 'qbits.alia)
 
-(comment
-  (defn get-hosts
-    "Returns all hosts for connected cluster"
-    [^Session client]
-    (map conv/to-map (-> client
-                         (.getCluster)
-                         (.getMetadata)
-                         (.getAllHosts))))
+(defn export-schema
+  "Exports schema as string"
+  [^Session client]
+  (-> client
+      (.getCluster)
+      (.getMetadata)
+      (.exportSchemaAsString)))
 
-  (defn export-schema
-    "Exports schema as string"
-    [^Session client]
-    (-> client
-        (.getCluster)
-        (.getMetadata)
-        (.exportSchemaAsString))))
-
+(defn get-hosts
+  "Returns all hosts for connected cluster"
+  [^Session client]
+  (map (fn [^Host host]
+         {:datacenter (.getDatacenter host)
+          :address    (.getHostAddress (.getAddress host))
+          :rack       (.getRack host)})
+       (-> client
+           (.getCluster)
+           (.getMetadata)
+           (.getAllHosts))))
 
 ;; defn get-replicas
 ;; defn get-cluster-name
