@@ -43,7 +43,7 @@ Takes a table identifier and additional clause arguments:
 * where
 * table (optionaly using composition)"
   [table & clauses]
-  (into {:delete table :columns (keyword "")} clauses))
+  (into {:delete table} clauses))
 
 (def truncate-query verb/truncate)
 (def drop-keyspace-query verb/drop-keyspace)
