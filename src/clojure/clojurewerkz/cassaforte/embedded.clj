@@ -25,7 +25,9 @@ Raise an exception if any deletion fails unless silently is true."
 (defn start-server!
   []
   (System/setProperty "cassandra.config" (str (io/resource "cassandra.yaml")))
-  (System/setProperty "java.version" "1.7.0_15") ;; WTF
+  ;; If you're running Cassandra on Mac Os X on 1.7, you'll get in trouble with parsing version, because
+  ;; "1.7.0_06-ea" ea doesn't parse as int. That's a workaround
+  (System/setProperty "java.version" "1.7.0_15")
   (System/setProperty "cassandra-foreground" "yes")
   (System/setProperty "log4j.defaultInitOverride" "false")
   (System/setProperty "log4j.appender.R.File" "/var/log/cassandra/system.log")
