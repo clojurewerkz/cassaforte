@@ -1,5 +1,6 @@
 (ns clojurewerkz.cassaforte.cql-test
-  (:require [clojurewerkz.cassaforte.test-helper :as th])
+  (:require [clojurewerkz.cassaforte.test-helper :as th]
+            [clojure.tools.trace :as t])
   (:use clojurewerkz.cassaforte.cql
         clojure.test
         clojurewerkz.cassaforte.query))
@@ -235,12 +236,65 @@
            (order-by [:post_id :desc]))))))
 
 (deftest select-range-query-test
+  (create-table :tv_series
+                (column-definitions {:series_title  :varchar
+                                     :episode_id    :int
+                                     :episode_title :text
+                                     :primary-key [:series_title :episode_id]}))
+  (dotimes [i 20]
+    (insert :tv_series {:series_title "Futurama" :episode_id i :episode_title (str "Futurama Title " i)})
+    (insert :tv_series {:series_title "Simpsons" :episode_id i :episode_title (str "Simpsons Title " i)}))
+
+  (is (= (set (range 11 20))
+         (->> (select :tv_series
+                      (where :series_title "Futurama"
+                             :episode_id [> 10]))
+              (map :episode_id )
+              set)))
+
+  (is (= (set (range 11 16))
+         (->> (select :tv_series
+                      (where :series_title "Futurama"
+                             :episode_id [> 10]
+                             :episode_id [<= 15]))
+              (map :episode_id)
+              set)))
+
+  (is (= (set (range 0 15))
+         (->> (select :tv_series
+                      (where :series_title "Futurama"
+                             :episode_id [< 15]))
+              (map :episode_id)
+              set)))
+
+  (drop-table :tv_series))
 
 
-  )
+(deftest paginate-test
+  (create-table :tv_series
+                (column-definitions {:series_title  :varchar
+                                     :episode_id    :int
+                                     :episode_title :text
+                                     :primary-key [:series_title :episode_id]}))
+  (dotimes [i 20]
+    (insert :tv_series {:series_title "Futurama" :episode_id i :episode_title (str "Futurama Title " i)})
+    (insert :tv_series {:series_title "Simpsons" :episode_id i :episode_title (str "Simpsons Title " i)}))
 
-(deftest batch-test)
+  (is (= (set (range 0 10))
+         (->> (select :tv_series
+                      (paginate :key :episode_id :per-page 10 :where { :series_title "Futurama"})
+                      )
+              (map :episode_id)
+              set)))
+
+  (is (= (set (range 11 20))
+         (->> (select :tv_series
+                      (paginate :key :episode_id :per-page 10 :last-key 10 :where { :series_title "Futurama"})
+                      )
+              (map :episode_id)
+              set)))
+
+  (drop-table :tv_series))
+
 ;; think about using `cons/conj` as a syntax sugar for prepended and appended list commands
-
-
 ;; test authentication

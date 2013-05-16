@@ -65,3 +65,10 @@
 clause of a select/update/delete query"
   [& args]
   {:where (partition 2 args)})
+
+(defn paginate
+  ([& {:keys [key last-key per-page where] :or {:page 0}}]
+     {:limit per-page
+      :where (if last-key
+               (assoc where key [> last-key])
+               where)}))
