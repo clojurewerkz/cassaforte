@@ -1,6 +1,5 @@
 (ns clojurewerkz.cassaforte.cql-test
-  (:require [clojurewerkz.cassaforte.test-helper :as th]
-            [clojure.tools.trace :as t])
+  (:require [clojurewerkz.cassaforte.test-helper :as th])
   (:use clojurewerkz.cassaforte.cql
         clojure.test
         clojurewerkz.cassaforte.query))
