@@ -1,6 +1,7 @@
 (ns clojurewerkz.cassaforte.test-helper
   (:require [clojurewerkz.cassaforte.embedded :as e]
-            [clojurewerkz.cassaforte.client :as client])
+            [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.debug-utils :as debug])
   (:use clojurewerkz.cassaforte.cql
         clojurewerkz.cassaforte.query))
 
@@ -9,8 +10,9 @@
 (defn run!
   [f]
   ;; clear previous broken/interupted runs
-  (try (drop-keyspace :new_cql_keyspace)
-       (catch Exception _ nil))
+  (try
+    (drop-keyspace :new_cql_keyspace)
+    (catch Exception _ nil))
 
   (create-keyspace :new_cql_keyspace
                    (with {:replication
@@ -33,21 +35,19 @@
   (f)
   (drop-keyspace :new_cql_keyspace))
 
+(defmacro test-combinations [& body]
+  "Run given queries in both plain and prepared modes."
+  `(do
+     ~@body
+     (prepared ~@body)))
+
 (defn initialize!
   [f]
-  (e/start-server!)
+  (e/start-server! :cleanup true)
   (when (not (bound? (var cluster-client)))
-    ;; (def cluster-client (connect! ["192.168.60.10" "192.168.60.11" "192.168.60.12"]))
-    ;; (.getAllHosts (.getMetadata (.getCluster cluster-client)))
     (def cluster (client/cluster ["127.0.0.1"]
-                                 :port 19042
-                                 ))
+                                 :port 19042))
     (def session (client/connect cluster)))
 
   (client/with-session session
     (run! f)))
-
-(defmacro test-combinations [& body]
-  `(do
-     ~@body
-     (prepared ~@body)))

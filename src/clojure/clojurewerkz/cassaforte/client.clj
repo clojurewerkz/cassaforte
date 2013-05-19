@@ -1,7 +1,11 @@
 (ns clojurewerkz.cassaforte.client
   (:require [flatland.useful.ns :as uns]
             [qbits.alia])
-  (:import [com.datastax.driver.core Host Session]))
+  (:import [com.datastax.driver.core Host Session]
+           [com.datastax.driver.core.policies
+            LoadBalancingPolicy DCAwareRoundRobinPolicy RoundRobinPolicy TokenAwarePolicy
+            LoggingRetryPolicy DefaultRetryPolicy DowngradingConsistencyRetryPolicy FallthroughRetryPolicy
+            RetryPolicy]))
 
 (uns/alias-ns 'qbits.alia)
 
@@ -31,13 +35,33 @@
 ;; defn get-keyspaces
 ;; defn rebuild-schema
 
-;; Add load balancing policy
-;; add compression
-;; DCAwareRoundRobinPolicy(String localDc) {
-;; RoundRobinPolicy() {}
-;; TokenAwarePolicy(LoadBalancingPolicy childPolicy) {
-;; Compression/NONE / Compression/SNAPPY
-;; Add retry policy
-;; DowngradingConsistencyRetryPolicy/INSTANCE
-;; FallthroughRetryPolicy/INSTANCE
-;; LoggingRetryPolicy/INSTANCE
+;;
+;; Round-robin policies
+;;
+
+(defn round-robin-policy
+  "Round-robin load balancing policy. Each next query is ran on the node that was contacted
+  least recently."
+  []
+  (RoundRobinPolicy.))
+
+(defn dc-aware-round-robin-policy
+  "Datacenter aware load balancing policy. Each next query is ran on the node that was contacted
+  least recently, over the nodes located in current datacenter. Nodes from other datacenters will
+  be tried only after the local nodes."
+  [^String local-dc]
+  (DCAwareRoundRobinPolicy. local-dc))
+
+(defn token-aware-policy
+  "Wrapper to add token-awareness to the underlying policy."
+  [^LoadBalancingPolicy underlying-policy]
+  (TokenAwarePolicy. underlying-policy))
+
+(def retry-policies {:default                 DefaultRetryPolicy/INSTANCE
+                     :downgrading-consistency DowngradingConsistencyRetryPolicy/INSTANCE
+                     :fallthrough             FallthroughRetryPolicy/INSTANCE})
+
+(defn logging-retry-policy
+  "A retry policy that wraps another policy, logging the decision made by its sub-policy."
+  [^RetryPolicy policy]
+  (LoggingRetryPolicy. policy))

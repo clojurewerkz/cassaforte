@@ -16,9 +16,10 @@
                                         "-Xmx2048m"
                                         "-javaagent:lib/jamm-0.2.5.jar"]
                          :resource-paths ["resources"]
-                         :dependencies [[org.xerial.snappy/snappy-java "1.0.5-SNAPSHOT"]
-                                        [commons-lang/commons-lang             "2.6"]
-                                        [org.apache.cassandra/cassandra-all    "1.2.4"]
+                         :dependencies [[org.xerial.snappy/snappy-java      "1.0.5"]
+                                        [commons-lang/commons-lang          "2.6"]
+                                        [org.apache.cassandra/cassandra-all "1.2.4"]
+                                        [org.clojure/tools.trace            "0.7.5"]
                                         ]}}
   :aliases        {"all" ["with-profile" "dev:dev,1.3:dev,1.4:dev,1.6:dev,master"]}
   :test-selectors {:focus   :focus
