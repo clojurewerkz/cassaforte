@@ -36,12 +36,16 @@
   (apply builder (flatten query-params)))
 
 (defn execute
-  [query]
-  (into []  ;; alia prefers not to return vectors
-        (if cql/*prepared-statement*
-          (client/execute (client/prepare (first query))
-                          :values (second query))
-          (client/execute query))))
+  "Executes built query"
+  ([query]
+     (execute client/*default-session* query))
+  ([session query]
+     (client/with-session session
+       (into []  ;; alia prefers not to return vectors
+             (if cql/*prepared-statement*
+               (client/execute (client/prepare (first query))
+                               :values (second query))
+               (client/execute query))))))
 
 (defn ^:private execute-
   [query-params builder]

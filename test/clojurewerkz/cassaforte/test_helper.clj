@@ -5,7 +5,7 @@
   (:use clojurewerkz.cassaforte.cql
         clojurewerkz.cassaforte.query))
 
-(declare cluster-client)
+(declare session)
 
 (defn run!
   [f]
@@ -44,10 +44,9 @@
 (defn initialize!
   [f]
   (e/start-server! :cleanup true)
-  (when (not (bound? (var cluster-client)))
-    (def cluster (client/cluster ["127.0.0.1"]
-                                 :port 19042))
-    (def session (client/connect cluster)))
+  (when (not (bound? (var session)))
+    (def session (client/connect! ["127.0.0.1"]
+                                  :port 19042)))
 
   (client/with-session session
     (run! f)))

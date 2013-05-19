@@ -1,13 +1,30 @@
 (ns clojurewerkz.cassaforte.client
   (:require [flatland.useful.ns :as uns]
-            [qbits.alia])
-  (:import [com.datastax.driver.core Host Session]
+            [qbits.alia]
+            [qbits.alia.cluster-options :as copt])
+  (:import [com.datastax.driver.core Host Session Cluster Cluster$Builder]
            [com.datastax.driver.core.policies
             LoadBalancingPolicy DCAwareRoundRobinPolicy RoundRobinPolicy TokenAwarePolicy
             LoggingRetryPolicy DefaultRetryPolicy DowngradingConsistencyRetryPolicy FallthroughRetryPolicy
-            RetryPolicy]))
+            RetryPolicy ConstantReconnectionPolicy ExponentialReconnectionPolicy
+            ]))
+
+(def ^:dynamic *default-cluster*)
+(def ^:dynamic *default-session*)
 
 (uns/alias-ns 'qbits.alia)
+
+(defn connect!
+  "Connects and sets *default-cluster* and *default-session* for default cluster and session, that
+   cql/execute is going to use"
+  [hosts & {:as options}]
+  (let [cluster (-> (Cluster/builder)
+                    (copt/set-cluster-options! (assoc options :contact-points hosts))
+                    .build)
+        session (connect cluster)]
+    (alter-var-root (var *default-cluster*) (constantly cluster))
+    (alter-var-root (var *default-session*) (constantly session))
+    session))
 
 (defn export-schema
   "Exports schema as string"
@@ -28,6 +45,7 @@
            (.getCluster)
            (.getMetadata)
            (.getAllHosts))))
+
 
 ;; defn get-replicas
 ;; defn get-cluster-name
@@ -57,6 +75,10 @@
   [^LoadBalancingPolicy underlying-policy]
   (TokenAwarePolicy. underlying-policy))
 
+;;
+;; Retry policies
+;;
+
 (def retry-policies {:default                 DefaultRetryPolicy/INSTANCE
                      :downgrading-consistency DowngradingConsistencyRetryPolicy/INSTANCE
                      :fallthrough             FallthroughRetryPolicy/INSTANCE})
@@ -65,3 +87,21 @@
   "A retry policy that wraps another policy, logging the decision made by its sub-policy."
   [^RetryPolicy policy]
   (LoggingRetryPolicy. policy))
+
+;;
+;; Reconnection policies
+;;
+
+(defn exponential-reconnection-policy
+  "Reconnection policy that waits exponentially longer between each
+reconnection attempt (but keeps a constant delay once a maximum delay is
+reached)."
+  [base-delay-ms max-delay-ms]
+  (ExponentialReconnectionPolicy. base-delay-ms max-delay-ms))
+
+(defn constant-reconnection-policy
+  "Reconnection policy that waits constantly longer between each
+reconnection attempt (but keeps a constant delay once a maximum delay is
+reached)."
+  [delay-ms]
+  (ConstantReconnectionPolicy. delay-ms))
