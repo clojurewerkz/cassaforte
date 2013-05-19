@@ -6,8 +6,7 @@
            [com.datastax.driver.core.policies
             LoadBalancingPolicy DCAwareRoundRobinPolicy RoundRobinPolicy TokenAwarePolicy
             LoggingRetryPolicy DefaultRetryPolicy DowngradingConsistencyRetryPolicy FallthroughRetryPolicy
-            RetryPolicy ConstantReconnectionPolicy ExponentialReconnectionPolicy
-            ]))
+            RetryPolicy ConstantReconnectionPolicy ExponentialReconnectionPolicy]))
 
 (def ^:dynamic *default-cluster*)
 (def ^:dynamic *default-session*)
@@ -16,7 +15,7 @@
 
 (defn connect!
   "Connects and sets *default-cluster* and *default-session* for default cluster and session, that
-   cql/execute is going to use"
+   cql/execute is going to use."
   [hosts & {:as options}]
   (let [cluster (-> (Cluster/builder)
                     (copt/set-cluster-options! (assoc options :contact-points hosts))
@@ -36,16 +35,16 @@
 
 (defn get-hosts
   "Returns all hosts for connected cluster"
-  [^Session client]
+  [^Session session]
   (map (fn [^Host host]
          {:datacenter (.getDatacenter host)
           :address    (.getHostAddress (.getAddress host))
-          :rack       (.getRack host)})
-       (-> client
+          :rack       (.getRack host)
+          :is-up      (.isUp (.getMonitor host))})
+       (-> session
            (.getCluster)
            (.getMetadata)
            (.getAllHosts))))
-
 
 ;; defn get-replicas
 ;; defn get-cluster-name
@@ -95,13 +94,17 @@
 (defn exponential-reconnection-policy
   "Reconnection policy that waits exponentially longer between each
 reconnection attempt (but keeps a constant delay once a maximum delay is
-reached)."
+reached).
+
+   Delays should be given in milliseconds"
   [base-delay-ms max-delay-ms]
   (ExponentialReconnectionPolicy. base-delay-ms max-delay-ms))
 
 (defn constant-reconnection-policy
   "Reconnection policy that waits constantly longer between each
 reconnection attempt (but keeps a constant delay once a maximum delay is
-reached)."
+reached).
+
+   Delay should be given in milliseconds"
   [delay-ms]
   (ConstantReconnectionPolicy. delay-ms))
