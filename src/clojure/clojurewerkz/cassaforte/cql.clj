@@ -1,18 +1,28 @@
 (ns clojurewerkz.cassaforte.cql
-  (:import [com.datastax.driver.core Session])
+  (:import [com.datastax.driver.core Session Query
+            ResultSet ResultSetFuture]
+           [com.google.common.util.concurrent Futures FutureCallback])
   (:require
    [qbits.hayt.cql :as cql]
+   [qbits.alia.codec :as codec]
    [clojurewerkz.cassaforte.query :as query]
    [clojurewerkz.cassaforte.client :as client]
    [clojurewerkz.cassaforte.debug-utils :as debug-utils]))
 
 (def ^:dynamic *debug* false)
+(def ^:dynamic *async* false)
 
 (defmacro with-debug
   "Executes query with debug output"
   [& body]
   `(binding [*debug* true]
      (debug-utils/catch-exceptions ~@body)))
+
+(defmacro async
+  "Executes query with debug output"
+  [& body]
+  `(binding [*async* true]
+     ~@body))
 
 ;; connect! can be replaced by client/set-session!
 
@@ -39,13 +49,23 @@
   "Executes built query"
   ([query]
      (execute client/*default-session* query))
-  ([session query]
+  ([session query & {:keys [success failure]}]
      (client/with-session session
-       (into []  ;; alia prefers not to return vectors
-             (if cql/*prepared-statement*
-               (client/execute (client/prepare (first query))
-                               :values (second query))
-               (client/execute query))))))
+       (let [^Query statement (if cql/*prepared-statement*
+                                (client/query->statement (client/prepare (first query))
+                                                         (second query))
+                                (client/query->statement query nil))
+             ^ResultSetFuture future (.executeAsync session statement)]
+         (into []  ;; alia prefers not to return vectors
+               (if *async*
+                 (Futures/addCallback
+                  future
+                  (reify FutureCallback
+                    (onSuccess [_ result]
+                      (success (codec/result-set->maps (.get future) true)))
+                    (onFailure [_ result]
+                      (failure result))))
+                 (codec/result-set->maps  (.getUninterruptibly future) true)))))))
 
 (defn ^:private execute-
   [query-params builder]
