@@ -5,8 +5,8 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure                          "1.5.1"]
-                 [cc.qbits/alia                                "1.2.0"]]
-  :source-paths      ["src/clojure"]
+                 [cc.qbits/alia                                "1.3.0"]]
+  :source-paths ["src/clojure"]
   :profiles       {:1.3 {:dependencies [[org.clojure/clojure "1.3.0"]]}
                    :1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
                    :1.6 {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
