@@ -3,8 +3,8 @@
             ResultSet ResultSetFuture]
            [com.google.common.util.concurrent Futures FutureCallback])
   (:require
+   [clojurewerkz.cassaforte.conversion :as conv]
    [qbits.hayt.cql :as cql]
-   [qbits.alia.codec :as codec]
    [clojurewerkz.cassaforte.query :as query]
    [clojurewerkz.cassaforte.client :as client]
    [clojurewerkz.cassaforte.debug-utils :as debug-utils]))
@@ -49,23 +49,39 @@
   "Executes built query"
   ([query]
      (execute client/*default-session* query))
-  ([session query & {:keys [success failure]}]
+  ([session query]
      (client/with-session session
        (let [^Query statement (if cql/*prepared-statement*
-                                (client/query->statement (client/prepare (first query))
-                                                         (second query))
-                                (client/query->statement query nil))
+                                (client/build-statement (client/prepare (first query))
+                                                        (second query))
+                                (client/build-statement query))
              ^ResultSetFuture future (.executeAsync session statement)]
-         (into []  ;; alia prefers not to return vectors
-               (if *async*
-                 (Futures/addCallback
-                  future
-                  (reify FutureCallback
-                    (onSuccess [_ result]
-                      (success (codec/result-set->maps (.get future) true)))
-                    (onFailure [_ result]
-                      (failure result))))
-                 (codec/result-set->maps  (.getUninterruptibly future) true)))))))
+         (if *async*
+           future
+           (into [] (conv/to-map (.getUninterruptibly future))))))))
+
+(defn set-callbacks
+  [^ResultSetFuture future & {:keys [success failure]}]
+  {:pre [(not (nil? success))]}
+  (Futures/addCallback
+   future
+   (reify FutureCallback
+     (onSuccess [_ result]
+       (success
+        (into []
+              (conv/to-map (deref future)))))
+     (onFailure [_ result]
+       (failure result)))))
+
+(defn get-result
+  ([^ResultSetFuture future ^long timeout-ms]
+     (into []
+           (conv/to-map (.get future timeout-ms
+                              java.util.concurrent.TimeUnit/MILLISECONDS))))
+  ([^ResultSetFuture future]
+     (into [] (conv/to-map (deref future)))))
+
+
 
 (defn ^:private execute-
   [query-params builder]

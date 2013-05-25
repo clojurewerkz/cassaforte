@@ -1,6 +1,6 @@
 (ns clojurewerkz.cassaforte.query
   (:require
-   [flatland.useful.ns :as uns]
+   [clojurewerkz.cassaforte.ns-utils :as ns-utils]
    [qbits.hayt.dsl.verb :as verb]
    [qbits.hayt.cql :as cql]))
 
@@ -14,7 +14,7 @@
   cql/->prepared)
 
 (doseq [module '(dsl.clause fns utils)]
-  (uns/alias-ns (symbol (str "qbits.hayt." module))))
+  (ns-utils/alias-ns (symbol (str "qbits.hayt." module))))
 
 ;;
 ;; Cassaforte Mods

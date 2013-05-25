@@ -1,8 +1,6 @@
 (ns clojurewerkz.cassaforte.client
-  (:require [flatland.useful.ns :as uns]
-            [qbits.alia]
-            [qbits.alia.cluster-options :as copt])
-  (:import [com.datastax.driver.core Host Session Cluster Cluster$Builder]
+  (:import [com.datastax.driver.core Host Session Cluster Cluster$Builder
+            Session SimpleStatement PreparedStatement Query HostDistance PoolingOptions]
            [com.datastax.driver.core.policies
             LoadBalancingPolicy DCAwareRoundRobinPolicy RoundRobinPolicy TokenAwarePolicy
             LoggingRetryPolicy DefaultRetryPolicy DowngradingConsistencyRetryPolicy FallthroughRetryPolicy
@@ -11,15 +9,51 @@
 (def ^:dynamic *default-cluster*)
 (def ^:dynamic *default-session*)
 
-(uns/alias-ns 'qbits.alia)
+(defmacro with-session
+  "Executes query with given session"
+  [session & body]
+  `(binding [*default-session* ~session]
+     ~@body))
+
+(defn build-statement
+  ([^PreparedStatement query args]
+     (.bind query (to-array args)))
+  ([^String string-query]
+     (SimpleStatement. string-query)))
+
+(defn ^PreparedStatement prepare
+  [^String query]
+  (.prepare ^Session *default-session* query))
+
+(defn build-cluster
+  [{:keys [contact-points
+           port
+           connections-per-host
+           max-connections-per-host]}]
+  (let [^Cluster$Builder builder        (Cluster/builder)
+        ^PoolingOptions pooling-options (.poolingOptions builder)]
+    (when port
+      (.withPort builder port))
+    (when connections-per-host
+      (.setCoreConnectionsPerHost pooling-options HostDistance/LOCAL
+                                  connections-per-host))
+    (when max-connections-per-host
+      (.setMaxConnectionsPerHost pooling-options HostDistance/LOCAL
+                                 max-connections-per-host))
+    (doseq [contact-point contact-points]
+      (.addContactPoint builder contact-point))
+    (.build builder)))
+
+(defn ^Session connect
+  "Connect to a Cassandra cluster"
+  [cluster]
+  (.connect ^Cluster cluster))
 
 (defn connect!
   "Connects and sets *default-cluster* and *default-session* for default cluster and session, that
    cql/execute is going to use."
-  [hosts & {:as options}]
-  (let [cluster (-> (Cluster/builder)
-                    (copt/set-cluster-options! (assoc options :contact-points hosts))
-                    .build)
+  [hosts & {:keys [] :as options}]
+  (let [cluster (build-cluster (assoc options :contact-points hosts))
         session (connect cluster)]
     (alter-var-root (var *default-cluster*) (constantly cluster))
     (alter-var-root (var *default-session*) (constantly session))
