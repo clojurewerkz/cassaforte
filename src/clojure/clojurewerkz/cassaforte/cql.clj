@@ -24,11 +24,6 @@
   `(binding [*async* true]
      ~@body))
 
-;; connect! can be replaced by client/set-session!
-
-;; Ability to turn on and off prepared statements by default? Turn on prepared statements on per-query basis
-;; (macro+binding)
-
 (defmacro prepared
   "Helper macro to execute prepared statement"
   [& body]
@@ -36,12 +31,14 @@
              cql/*param-stack*        (atom [])]
      (do ~@body)))
 
-(defn render-query
+(defn- render-query
+  "Renders compiled query"
   [query-params]
   (let [renderer (if cql/*prepared-statement* query/->prepared query/->raw)]
     (renderer query-params)))
 
-(defn compile-query
+(defn- compile-query
+  "Compiles query from given `builder` and `query-params`"
   [query-params builder]
   (apply builder (flatten query-params)))
 
@@ -58,7 +55,7 @@
              ^ResultSetFuture future (.executeAsync session statement)]
          (if *async*
            future
-           (into [] (conv/to-map (.getUninterruptibly future))))))))
+           (conv/to-map (.getUninterruptibly future)))))))
 
 (defn set-callbacks
   [^ResultSetFuture future & {:keys [success failure]}]
@@ -68,18 +65,17 @@
    (reify FutureCallback
      (onSuccess [_ result]
        (success
-        (into []
-              (conv/to-map (deref future)))))
+        (conv/to-map (deref future))))
      (onFailure [_ result]
        (failure result)))))
 
 (defn get-result
+  "Get result from Future"
   ([^ResultSetFuture future ^long timeout-ms]
-     (into []
-           (conv/to-map (.get future timeout-ms
-                              java.util.concurrent.TimeUnit/MILLISECONDS))))
+     (conv/to-map (.get future timeout-ms
+                        java.util.concurrent.TimeUnit/MILLISECONDS)))
   ([^ResultSetFuture future]
-     (into [] (conv/to-map (deref future)))))
+     (conv/to-map (deref future))))
 
 
 

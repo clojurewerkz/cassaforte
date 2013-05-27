@@ -1,7 +1,6 @@
 (ns clojurewerkz.cassaforte.conversion
   (:import [com.datastax.driver.core ResultSet Host Row ColumnDefinitions ColumnDefinitions
             ColumnDefinitions$Definition]
-           [clojurewerkz.cassaforte Codec]
            [java.nio ByteBuffer])
   (:require [clojurewerkz.cassaforte.bytes :as b]))
 
@@ -18,8 +17,8 @@
                     (let [^String n         (.getName cd)
                           ^ByteBuffer bytes (.getBytesUnsafe row n)]
                       [(keyword n) (when bytes
-                                     (b/deserialize-intern (Codec/getCodec (.getType cd))
-                                                           (b/to-bytes (.getBytesUnsafe row n))))]))))))
+                                     (b/deserialize (.getType cd)
+                                                    (.getBytesUnsafe row n)))]))))))
   Host
   (to-map [^Host host]
     {:datacenter (.getDatacenter host)

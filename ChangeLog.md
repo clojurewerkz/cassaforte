@@ -6,6 +6,8 @@
   * Get rid of reflection warnings
   * Add more options for inspecing cluster
   * Improve debug output
+  * Add helpers for wide columns
+  * Simplify deserializations, remove serializaitons since they're handled by driver internally
 
 ## Changes between 1.0.0-beta1 and 1.0.0-rc2
 

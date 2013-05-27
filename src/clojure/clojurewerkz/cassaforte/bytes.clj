@@ -1,13 +1,12 @@
 (ns clojurewerkz.cassaforte.bytes
   (:import java.nio.ByteBuffer java.util.Date
            org.apache.cassandra.utils.ByteBufferUtil
-           [clojurewerkz.cassaforte SerializerHelper]
+           [com.datastax.driver.core DataType DataType$Name]
            [org.apache.cassandra.db.marshal UTF8Type Int32Type IntegerType AsciiType FloatType
-            DecimalType BytesType DoubleType LongType UUIDType DateType BooleanType CompositeType
-            ListType MapType SetType AbstractType AbstractCompositeType]))
+            DecimalType BytesType DoubleType LongType UUIDType DateType BooleanType ListType
+            MapType SetType AbstractType AbstractCompositeType InetAddressType TimeUUIDType
+            CounterColumnType]))
 
-(declare encode)
-(declare deserialize)
 (declare serializers)
 
 (defn #^bytes to-bytes
@@ -16,78 +15,40 @@
     (.get byte-buffer bytes 0 (count bytes))
     bytes))
 
-(defn extract-component
-  [bb i]
-  (SerializerHelper/extractComponent bb (int i)))
+(def ^:private deserializers
+  {DataType$Name/ASCII     (AsciiType/instance)
+   DataType$Name/BIGINT    (LongType/instance)
+   DataType$Name/BLOB      (BytesType/instance)
+   DataType$Name/BOOLEAN   (BooleanType/instance)
+   DataType$Name/COUNTER   (CounterColumnType/instance)
+   DataType$Name/DECIMAL   (DecimalType/instance)
+   DataType$Name/DOUBLE    (DoubleType/instance)
+   DataType$Name/FLOAT     (FloatType/instance)
+   DataType$Name/INET      (InetAddressType/instance)
+   DataType$Name/INT       (Int32Type/instance)
+   DataType$Name/TEXT      (UTF8Type/instance)
+   DataType$Name/TIMESTAMP (DateType/instance)
+   DataType$Name/UUID      (UUIDType/instance)
+   DataType$Name/VARCHAR   (UTF8Type/instance)
+   DataType$Name/VARINT    (IntegerType/instance)
+   DataType$Name/TIMEUUID  (TimeUUIDType/instance)})
 
-(def ^:dynamic serializers
-  {java.nio.HeapByteBuffer (BytesType/instance)
-   java.lang.Integer (Int32Type/instance)
-   java.math.BigDecimal (DecimalType/instance)
-   java.lang.Long (LongType/instance)
-   java.lang.Float (FloatType/instance)
-   java.lang.Double (DoubleType/instance)
-   java.lang.String (UTF8Type/instance)
-   java.lang.Boolean (BooleanType/instance)
-   java.math.BigInteger (IntegerType/instance)
-   java.util.Date (DateType/instance)
-   })
-
-;;
-;; Clojure Data Type -> ByteBuffer
-;;
-
-(defn get-serializer
-  [value]
-  (cond
-   (not (nil? (get serializers (type value))))     (get serializers (type value))
-   (= (type value) clojure.lang.PersistentVector)  (ListType/getInstance ^AbstractType (get-serializer (first value)))
-   (= (type value) clojure.lang.PersistentHashSet) (SetType/getInstance ^AbstractType  (get-serializer (first value)))
-   (map? value)                                    (MapType/getInstance ^AbstractType (get-serializer (first (first value)))
-                                                                        ^AbstractType  (get-serializer (last (first value))))
-   (:composite (meta value))                       (CompositeType/getInstance (map get-serializer value))
-
-   :else                                           (throw (Exception. "Can't find matching serializer"))))
-
-(defn encode
-  [^ByteBuffer value]
-  (let [serializer (get-serializer value)]
-    (if (= CompositeType (type serializer))
-      (.decompose ^AbstractCompositeType serializer (to-array value))
-      (.decompose ^AbstractType serializer value))))
+(defn get-deserializer
+  [^DataType t]
+  (let [type-name (.getName t)]
+    (if-let [deserializer (get deserializers type-name)]
+      deserializer
+      (cond
+       (= type-name (DataType$Name/LIST)) (ListType/getInstance (get-deserializer (-> t (.getTypeArguments) (.get 0))))
+       (= type-name (DataType$Name/SET))  (SetType/getInstance (get-deserializer (-> t (.getTypeArguments) (.get 0))))
+       (= type-name (DataType$Name/MAP))  (MapType/getInstance (get-deserializer (-> t (.getTypeArguments) (.get 0)))
+                                                               (get-deserializer (-> t (.getTypeArguments) (.get 1))))
+       :else (throw (Exception. (str "Can't find matching deserializer for: " t)))))))
 
 (defn compose
   [^AbstractType serializer bytes]
-  (.compose serializer (ByteBuffer/wrap bytes)))
-
-(defn composite
-  [& values]
-  (vary-meta values assoc :composite true))
-
-;;
-;; ByteBuffer -> Clojure Data Type
-;;
-
-(defn infer-type
-  [^String s]
-  (org.apache.cassandra.db.marshal.TypeParser/parse s))
-
-(defn deserialize-intern
-  [t bytes]
-  (cond
-   (isa? SetType (type t))       (into #{} (compose t bytes))
-   (isa? ListType (type t))      (into [] (compose t bytes))
-   (isa? MapType (type t))       (into {} (compose t bytes))
-   (isa? CompositeType (type t)) (let [^CompositeType hinted-t t]
-                                   (apply composite
-                                          (map (fn [i]
-                                                 (compose (.get (.types hinted-t) i)
-                                                          (to-bytes
-                                                           (extract-component
-                                                            (ByteBuffer/wrap bytes) i))))
-                                               (range 0 (count (.types hinted-t))))))
-   :else                         (compose t bytes)))
+  (.compose serializer bytes))
 
 (defn deserialize
-  [type-str bytes]
-  (deserialize-intern (infer-type type-str) bytes))
+  [^DataType dt bytes]
+  (compose (get-deserializer dt) bytes))
