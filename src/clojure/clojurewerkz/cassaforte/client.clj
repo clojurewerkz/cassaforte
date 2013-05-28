@@ -1,6 +1,9 @@
 (ns clojurewerkz.cassaforte.client
-  (:import [com.datastax.driver.core Host Session Cluster Cluster$Builder
-            Session SimpleStatement PreparedStatement Query HostDistance PoolingOptions]
+  (:require [clojurewerkz.cassaforte.debug-utils :as debug-utils]
+            [clojurewerkz.cassaforte.conversion :as conv])
+  (:import [com.datastax.driver.core Query ResultSet ResultSetFuture Host Session Cluster
+            Cluster$Builder SimpleStatement PreparedStatement Query HostDistance PoolingOptions]
+           [com.google.common.util.concurrent Futures FutureCallback]
            [com.datastax.driver.core.policies
             LoadBalancingPolicy DCAwareRoundRobinPolicy RoundRobinPolicy TokenAwarePolicy
             LoggingRetryPolicy DefaultRetryPolicy DowngradingConsistencyRetryPolicy FallthroughRetryPolicy
@@ -8,12 +11,26 @@
 
 (def ^:dynamic *default-cluster*)
 (def ^:dynamic *default-session*)
+(def ^:dynamic *async* false)
+(def ^:dynamic *debug* false)
 
 (defmacro with-session
   "Executes query with given session"
   [session & body]
   `(binding [*default-session* ~session]
      ~@body))
+
+(defmacro async
+  "Executes query with debug output"
+  [& body]
+  `(binding [*async* true]
+     ~@body))
+
+(defmacro with-debug
+  "Executes query with debug output"
+  [& body]
+  `(binding [*debug* true]
+     (debug-utils/catch-exceptions ~@body)))
 
 (defn build-statement
   ([^PreparedStatement query args]
@@ -58,6 +75,23 @@
     (alter-var-root (var *default-cluster*) (constantly cluster))
     (alter-var-root (var *default-session*) (constantly session))
     session))
+
+(defn execute
+  "Executes built query"
+  ([query prepared?]
+     (execute *default-session* query prepared?))
+  ([session query prepared?]
+     (when *debug*
+       (debug-utils/output-debug query))
+     (with-session session
+       (let [^Query statement (if prepared?
+                                (build-statement (prepare (first query))
+                                                 (second query))
+                                (build-statement query))
+             ^ResultSetFuture future (.executeAsync session statement)]
+         (if *async*
+           future
+           (conv/to-map (.getUninterruptibly future)))))))
 
 (defn export-schema
   "Exports schema as string"
@@ -142,3 +176,29 @@ reached).
    Delay should be given in milliseconds"
   [delay-ms]
   (ConstantReconnectionPolicy. delay-ms))
+
+
+;;
+;;
+;;
+
+(defn set-callbacks
+  "Set callbacks for the future"
+  [^ResultSetFuture future & {:keys [success failure]}]
+  {:pre [(not (nil? success))]}
+  (Futures/addCallback
+   future
+   (reify FutureCallback
+     (onSuccess [_ result]
+       (success
+        (conv/to-map (deref future))))
+     (onFailure [_ result]
+       (failure result)))))
+
+(defn get-result
+  "Get result from Future"
+  ([^ResultSetFuture future ^long timeout-ms]
+     (conv/to-map (.get future timeout-ms
+                        java.util.concurrent.TimeUnit/MILLISECONDS)))
+  ([^ResultSetFuture future]
+     (conv/to-map (deref future))))

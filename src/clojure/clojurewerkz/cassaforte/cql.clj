@@ -1,28 +1,8 @@
 (ns clojurewerkz.cassaforte.cql
-  (:import [com.datastax.driver.core Session Query
-            ResultSet ResultSetFuture]
-           [com.google.common.util.concurrent Futures FutureCallback])
   (:require
-   [clojurewerkz.cassaforte.conversion :as conv]
    [qbits.hayt.cql :as cql]
    [clojurewerkz.cassaforte.query :as query]
-   [clojurewerkz.cassaforte.client :as client]
-   [clojurewerkz.cassaforte.debug-utils :as debug-utils]))
-
-(def ^:dynamic *debug* false)
-(def ^:dynamic *async* false)
-
-(defmacro with-debug
-  "Executes query with debug output"
-  [& body]
-  `(binding [*debug* true]
-     (debug-utils/catch-exceptions ~@body)))
-
-(defmacro async
-  "Executes query with debug output"
-  [& body]
-  `(binding [*async* true]
-     ~@body))
+   [clojurewerkz.cassaforte.client :as client]))
 
 (defmacro prepared
   "Helper macro to execute prepared statement"
@@ -42,49 +22,10 @@
   [query-params builder]
   (apply builder (flatten query-params)))
 
-(defn execute
-  "Executes built query"
-  ([query]
-     (execute client/*default-session* query))
-  ([session query]
-     (client/with-session session
-       (let [^Query statement (if cql/*prepared-statement*
-                                (client/build-statement (client/prepare (first query))
-                                                        (second query))
-                                (client/build-statement query))
-             ^ResultSetFuture future (.executeAsync session statement)]
-         (if *async*
-           future
-           (conv/to-map (.getUninterruptibly future)))))))
-
-(defn set-callbacks
-  [^ResultSetFuture future & {:keys [success failure]}]
-  {:pre [(not (nil? success))]}
-  (Futures/addCallback
-   future
-   (reify FutureCallback
-     (onSuccess [_ result]
-       (success
-        (conv/to-map (deref future))))
-     (onFailure [_ result]
-       (failure result)))))
-
-(defn get-result
-  "Get result from Future"
-  ([^ResultSetFuture future ^long timeout-ms]
-     (conv/to-map (.get future timeout-ms
-                        java.util.concurrent.TimeUnit/MILLISECONDS)))
-  ([^ResultSetFuture future]
-     (conv/to-map (deref future))))
-
-
-
 (defn ^:private execute-
   [query-params builder]
   (let [rendered-query (render-query (compile-query query-params builder))]
-    (when *debug*
-      (debug-utils/output-debug rendered-query))
-    (execute rendered-query)))
+    (client/execute rendered-query cql/*prepared-statement*)))
 
 ;;
 ;; Schema operations
@@ -126,9 +67,7 @@
 
 (defn insert
   [& query-params]
-  (execute-
-   query-params
-   query/insert-query))
+  (execute- query-params query/insert-query))
 
 (defn insert-batch
   [table records]
@@ -136,24 +75,19 @@
        (apply query/queries)
        query/batch-query
        render-query
-       execute))
+       client/execute))
 
 (defn update
   [& query-params]
-  (execute-
-   query-params
-   query/update-query))
+  (execute- query-params query/update-query))
 
 (defn delete
   [& query-params]
-  (execute-
-   query-params
-   query/delete-query))
+  (execute- query-params query/delete-query))
 
 (defn select
   [& query-params]
-  (execute- query-params query/select-query)
-  )
+  (execute- query-params query/select-query))
 
 (defn truncate
   [table]
