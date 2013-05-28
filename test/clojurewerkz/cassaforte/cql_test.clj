@@ -92,6 +92,39 @@
   (is (= 100 (:user_count (first (select :user_counters))))))
 
 
+(deftest index-test-filtering-range
+  (create-index :users :city)
+  (create-index :users :age)
+  (th/test-combinations
+
+   (dotimes [i 10]
+     (insert :users {:name (str "name_" i) :city "Munich" :age (int i)}))
+
+   (let [res (select :users
+                     (where :city "Munich"
+                            :age [> (int 5)])
+                     (allow-filtering true))]
+     (is (= (set (range 6 10))
+            (->> res
+                (map :age)
+                set))))
+   (truncate :users)))
+
+(deftest index-exact-match
+  (create-index :users :city)
+  (th/test-combinations
+   (dotimes [i 10]
+     (insert :users {:name (str "name_" i) :city (str "city_" i) :age (int i)}))
+
+   (let [res (select :users
+                     (where :city "city_5")
+                     (allow-filtering true))]
+     (is (= 5
+            (->> res
+                 first
+                 :age))))
+   (truncate :users)))
+
 (deftest list-operations-test
   (create-table :users_list
                 (column-definitions

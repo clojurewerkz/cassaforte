@@ -39,6 +39,14 @@
   [& query-params]
   (execute- query-params query/create-keyspace-query))
 
+(defn create-index
+  [& query-params]
+  (execute- query-params query/create-index-query))
+
+(defn drop-index
+  [& query-params]
+  (execute- query-params query/drop-index-query))
+
 (defn create-table
   [& query-params]
   (execute- query-params query/create-table-query))
