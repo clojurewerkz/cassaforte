@@ -1,6 +1,7 @@
 (ns clojurewerkz.cassaforte.async-test
   (:require [clojurewerkz.cassaforte.test-helper :as th])
   (:use clojurewerkz.cassaforte.cql
+        clojurewerkz.cassaforte.client
         clojure.test
         clojurewerkz.cassaforte.query))
 

@@ -32,6 +32,12 @@
                                      :post_id  :varchar
                                      :body     :text
                                      :primary-key [:username :post_id]}))
+
+  (create-table :user_counters
+                (column-definitions {:name :varchar
+                                     :user_count  :counter
+                                     :primary-key [:name]}))
+
   (f)
   (drop-keyspace :new_cql_keyspace))
 

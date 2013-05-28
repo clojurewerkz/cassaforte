@@ -68,8 +68,28 @@
    (truncate :users)))
 
 (deftest ttl-test
+  (th/test-combinations
+   (dotimes [i 3]
+     (insert :users {:name (str "name" i) :city (str "city" i) :age (int i)}
+             (using :ttl 2)))
+   (is (= 3 (perform-count :users)))
+   (Thread/sleep 2100)
+   (is (= 0 (perform-count :users)))))
 
-  )
+(deftest counter-test
+  (update :user_counters {:user_count [+ 5]} (where :name "asd"))
+  (is (= 5 (:user_count (first (select :user_counters)))))
+  (update :user_counters {:user_count [+ 500]} (where :name "asd"))
+  (is (= 505 (:user_count (first (select :user_counters)))))
+  (update :user_counters {:user_count [+ 5000000]} (where :name "asd"))
+  (is (= 5000505 (:user_count (first (select :user_counters)))))
+  (update :user_counters {:user_count [+ 50000000000000]} (where :name "asd"))
+  (is (= 50000005000505 (:user_count (first (select :user_counters))))))
+
+(deftest counter-test-2
+  (dotimes [i 100]
+    (update :user_counters {:user_count [+ 1]} (where :name "asd")))
+  (is (= 100 (:user_count (first (select :user_counters))))))
 
 
 (deftest list-operations-test

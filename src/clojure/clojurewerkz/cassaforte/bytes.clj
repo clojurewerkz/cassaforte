@@ -20,7 +20,8 @@
    DataType$Name/BIGINT    (LongType/instance)
    DataType$Name/BLOB      (BytesType/instance)
    DataType$Name/BOOLEAN   (BooleanType/instance)
-   DataType$Name/COUNTER   (CounterColumnType/instance)
+   ;; DataType$Name/COUNTER   (CounterColumnType/instance)
+   DataType$Name/COUNTER   (LongType/instance)
    DataType$Name/DECIMAL   (DecimalType/instance)
    DataType$Name/DOUBLE    (DoubleType/instance)
    DataType$Name/FLOAT     (FloatType/instance)
@@ -51,4 +52,5 @@
 
 (defn deserialize
   [^DataType dt bytes]
-  (compose (get-deserializer dt) bytes))
+    (compose (get-deserializer dt) bytes)
+  )
