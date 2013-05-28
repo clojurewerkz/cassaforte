@@ -13,7 +13,7 @@ Its API and code style closely follow other ClojureWerkz projects, namely [Monge
  * Be well documented.
  * Be well tested.
  * Target Cassandra 1.2 and Clojure 1.4 and later from the ground up.
- * Integrate with libraries like clojure.data.json and Joda Time.
+ * Integrate with libraries like Joda Time.
  * Support URI connections to be friendly to Heroku and other PaaS providers.
 
 
