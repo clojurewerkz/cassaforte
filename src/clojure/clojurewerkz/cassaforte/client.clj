@@ -196,7 +196,7 @@ reached).
   "Executes built query"
   ([query prepared?]
      (execute *default-session* query prepared?))
-  ([session query prepared?]
+  ([^Session session query prepared?]
      (when *debug*
        (debug-utils/output-debug query))
      (with-session session
