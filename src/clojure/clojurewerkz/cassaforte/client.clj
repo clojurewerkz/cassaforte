@@ -2,17 +2,104 @@
   (:require [clojurewerkz.cassaforte.debug-utils :as debug-utils]
             [clojurewerkz.cassaforte.conversion :as conv])
   (:import [com.datastax.driver.core Query ResultSet ResultSetFuture Host Session Cluster
-            Cluster$Builder SimpleStatement PreparedStatement Query HostDistance PoolingOptions]
+            Cluster$Builder SimpleStatement PreparedStatement Query HostDistance PoolingOptions
+            ConsistencyLevel]
            [com.google.common.util.concurrent Futures FutureCallback]
            [com.datastax.driver.core.policies
             LoadBalancingPolicy DCAwareRoundRobinPolicy RoundRobinPolicy TokenAwarePolicy
             LoggingRetryPolicy DefaultRetryPolicy DowngradingConsistencyRetryPolicy FallthroughRetryPolicy
             RetryPolicy ConstantReconnectionPolicy ExponentialReconnectionPolicy]))
 
+;;
+;; Load Balancing policies
+;;
+
+(defn round-robin-policy
+  "Round-robin load balancing policy. Each next query is ran on the node that was contacted
+  least recently."
+  []
+  (RoundRobinPolicy.))
+
+(defn dc-aware-round-robin-policy
+  "Datacenter aware load balancing policy. Each next query is ran on the node that was contacted
+  least recently, over the nodes located in current datacenter. Nodes from other datacenters will
+  be tried only after the local nodes."
+  [^String local-dc]
+  (DCAwareRoundRobinPolicy. local-dc))
+
+(defn token-aware-policy
+  "Wrapper to add token-awareness to the underlying policy."
+  [^LoadBalancingPolicy underlying-policy]
+  (TokenAwarePolicy. underlying-policy))
+
+;;
+;; Retry policies
+;;
+
+(def retry-policies {:default                 (constantly DefaultRetryPolicy/INSTANCE)
+                     :downgrading-consistency (constantly DowngradingConsistencyRetryPolicy/INSTANCE)
+                     :fallthrough             (constantly FallthroughRetryPolicy/INSTANCE)})
+
+(defn retry-policy
+  [rp]
+  ((rp retry-policies)))
+
+(defn logging-retry-policy
+  "A retry policy that wraps another policy, logging the decision made by its sub-policy."
+  [^RetryPolicy policy]
+  (LoggingRetryPolicy. policy))
+
+;;
+;; Reconnection policies
+;;
+
+(defn exponential-reconnection-policy
+  "Reconnection policy that waits exponentially longer between each
+reconnection attempt (but keeps a constant delay once a maximum delay is
+reached).
+
+   Delays should be given in milliseconds"
+  [base-delay-ms max-delay-ms]
+  (ExponentialReconnectionPolicy. base-delay-ms max-delay-ms))
+
+(defn constant-reconnection-policy
+  "Reconnection policy that waits constantly longer between each
+reconnection attempt (but keeps a constant delay once a maximum delay is
+reached).
+
+   Delay should be given in milliseconds"
+  [delay-ms]
+  (ConstantReconnectionPolicy. delay-ms))
+
+;;
+;; Consistency Level
+;;
+
+(def consistency-levels
+  {:any ConsistencyLevel/ANY
+   :one ConsistencyLevel/ONE
+   :two ConsistencyLevel/TWO
+   :three ConsistencyLevel/THREE
+   :quorum ConsistencyLevel/QUORUM
+   :all ConsistencyLevel/ALL
+   :local-quorum ConsistencyLevel/LOCAL_QUORUM
+   :each-quorum ConsistencyLevel/EACH_QUORUM})
+
+(defn consistency-level
+  [kl]
+  (kl consistency-levels))
+
+;;
+;; Client-related
+;;
+
 (def ^:dynamic *default-cluster*)
 (def ^:dynamic *default-session*)
 (def ^:dynamic *async* false)
 (def ^:dynamic *debug* false)
+
+(def ^:dynamic *consistency-level* (consistency-level :one))
+(def ^:dynamic *retry-policy* (retry-policy :default))
 
 (defmacro with-session
   "Executes query with given session"
@@ -26,17 +113,37 @@
   `(binding [*async* true]
      ~@body))
 
+(defmacro with-consistency-level
+  "Executes query given consistency level"
+  [consistency-level & body]
+  `(binding [*consistency-level* consistency-level]
+     ~@body))
+
+(defmacro with-retry-policy
+  "Executes query given retry policy"
+  [retry-policy & body]
+  `(binding [*retry-policy* retry-policy]
+     ~@body))
+
 (defmacro with-debug
   "Executes query with debug output"
   [& body]
   `(binding [*debug* true]
      (debug-utils/catch-exceptions ~@body)))
 
+(defn- set-statement-options-
+  [^Query statement]
+  (when *retry-policy*
+    (.setRetryPolicy statement *retry-policy*))
+  (when *consistency-level*
+    (.setConsistencyLevel statement *consistency-level*))
+  statement)
+
 (defn build-statement
   ([^PreparedStatement query args]
-     (.bind query (to-array args)))
+     (set-statement-options- (.bind query (to-array args))))
   ([^String string-query]
-     (SimpleStatement. string-query)))
+     (set-statement-options- (SimpleStatement. string-query))))
 
 (defn ^PreparedStatement prepare
   [^String query]
@@ -46,7 +153,16 @@
   [{:keys [contact-points
            port
            connections-per-host
-           max-connections-per-host]}]
+           max-connections-per-host
+
+           consistency-level
+           retry-policy]}]
+  (when consistency-level
+    (alter-var-root (var *consistency-level*) (constantly consistency-level)))
+
+  (when retry-policy
+    (alter-var-root (var *retry-policy*) (constantly retry-policy)))
+
   (let [^Cluster$Builder builder        (Cluster/builder)
         ^PoolingOptions pooling-options (.poolingOptions builder)]
     (when port
@@ -119,64 +235,6 @@
 ;; defn get-keyspace
 ;; defn get-keyspaces
 ;; defn rebuild-schema
-
-;;
-;; Round-robin policies
-;;
-
-(defn round-robin-policy
-  "Round-robin load balancing policy. Each next query is ran on the node that was contacted
-  least recently."
-  []
-  (RoundRobinPolicy.))
-
-(defn dc-aware-round-robin-policy
-  "Datacenter aware load balancing policy. Each next query is ran on the node that was contacted
-  least recently, over the nodes located in current datacenter. Nodes from other datacenters will
-  be tried only after the local nodes."
-  [^String local-dc]
-  (DCAwareRoundRobinPolicy. local-dc))
-
-(defn token-aware-policy
-  "Wrapper to add token-awareness to the underlying policy."
-  [^LoadBalancingPolicy underlying-policy]
-  (TokenAwarePolicy. underlying-policy))
-
-;;
-;; Retry policies
-;;
-
-(def retry-policies {:default                 DefaultRetryPolicy/INSTANCE
-                     :downgrading-consistency DowngradingConsistencyRetryPolicy/INSTANCE
-                     :fallthrough             FallthroughRetryPolicy/INSTANCE})
-
-(defn logging-retry-policy
-  "A retry policy that wraps another policy, logging the decision made by its sub-policy."
-  [^RetryPolicy policy]
-  (LoggingRetryPolicy. policy))
-
-;;
-;; Reconnection policies
-;;
-
-(defn exponential-reconnection-policy
-  "Reconnection policy that waits exponentially longer between each
-reconnection attempt (but keeps a constant delay once a maximum delay is
-reached).
-
-   Delays should be given in milliseconds"
-  [base-delay-ms max-delay-ms]
-  (ExponentialReconnectionPolicy. base-delay-ms max-delay-ms))
-
-(defn constant-reconnection-policy
-  "Reconnection policy that waits constantly longer between each
-reconnection attempt (but keeps a constant delay once a maximum delay is
-reached).
-
-   Delay should be given in milliseconds"
-  [delay-ms]
-  (ConstantReconnectionPolicy. delay-ms))
-
 
 ;;
 ;;
