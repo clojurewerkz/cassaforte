@@ -1,4 +1,6 @@
 (ns clojurewerkz.cassaforte.cql
+  "Key CQL operations interface, prepared statement implementation, convenience functions
+   for key operations built on top of CQL."
   (:require
    [qbits.hayt.cql :as cql]
    [clojurewerkz.cassaforte.query :as query]
