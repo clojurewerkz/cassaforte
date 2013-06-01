@@ -1,180 +1,167 @@
 (ns clojurewerkz.cassaforte.cql
-  (:require [clojurewerkz.cassaforte.cql.client :as cc]
-            [clojurewerkz.cassaforte.bytes  :as cb]
-            [clojurewerkz.cassaforte.cql.query-builder  :as q])
-  (:use [clojure.string :only [split join]]
-        [clojurewerkz.support.string :only [maybe-append interpolate-vals]]
-        [clojurewerkz.support.fn :only [fpartial]]
-        [clojurewerkz.cassaforte.conversion :only [from-cql-prepared-result to-map to-plain-hash]])
-  (:import java.util.List
-           [org.apache.cassandra.thrift Compression ConsistencyLevel CqlResult CqlRow CqlResultType]
-           [org.apache.cassandra.transport Client]))
+  (:require
+   [qbits.hayt.cql :as cql]
+   [clojurewerkz.cassaforte.query :as query]
+   [clojurewerkz.cassaforte.client :as client]))
 
-(def ^:dynamic *default-consistency-level* org.apache.cassandra.db.ConsistencyLevel/ONE)
-;;
-;; Implementation
-;;
+(defmacro prepared
+  "Helper macro to execute prepared statement"
+  [& body]
+  `(binding [cql/*prepared-statement* true
+             cql/*param-stack*        (atom [])]
+     (do ~@body)))
 
-(defn quote-identifier
-  "Quotes the provided identifier"
-  [identifier]
-  (str "\"" (name identifier) "\""))
+(defn- render-query
+  "Renders compiled query"
+  [query-params]
+  (let [renderer (if cql/*prepared-statement* query/->prepared query/->raw)]
+    (renderer query-params)))
 
-(defn quote
-  "Quotes the provided string"
-  [identifier]
-  (str "'" (name identifier) "'"))
+(defn- compile-query
+  "Compiles query from given `builder` and `query-params`"
+  [query-params builder]
+  (apply builder (flatten query-params)))
 
-(def ^{:private true}
-  maybe-append-semicolon (fpartial maybe-append ";"))
-
-(defn- clean-up
-  "Cleans up the provided query string by trimming it and appending the semicolon if needed"
-  [^String query]
-  (-> query .trim maybe-append-semicolon))
-
-(def prepared-statements-cache (atom {}))
-
-(defn prepare-cql-query
-  "Prepares a CQL query for execution. Cassandra 1.2+ only."
-  [^String query]
-  (if-let [statement-id (get @prepared-statements-cache query)]
-    statement-id
-    (let [statement-id (.bytes (.statementId (.prepare ^Client cc/*client* query)))]
-      (swap! prepared-statements-cache assoc query statement-id)
-      statement-id)))
-
-(defn execute-prepared-query
-  "Executes a CQL query previously prepared using the prepare-cql-query function
-   by providing the actual values for placeholders"
-  [^String query ^List values]
-  (to-plain-hash (:rows
-                  (to-map (.toThriftResult
-                           (.executePrepared ^Client cc/*client*
-                                             (prepare-cql-query query)
-                                             (map cb/encode values)
-                                             *default-consistency-level*))))))
+(defn ^:private execute-
+  [query-params builder]
+  (let [rendered-query (render-query (compile-query query-params builder))]
+    (client/execute rendered-query cql/*prepared-statement*)))
 
 ;;
-;; API
+;; Schema operations
 ;;
 
-(defn ^clojure.lang.IPersistentMap
-  execute-raw
-  "Executes a CQL query given as a string. No argument replacement (a la JDBC) is performed."
-  ([^String query]
-     (execute-raw query *default-consistency-level*))
-  ([^String query compression]
-     (let [res (.execute cc/*client*
-                         (-> query clean-up)
-                         compression)]
-       (to-map (.toThriftResult res)))))
+(defn drop-keyspace
+  [ks]
+  (execute- [ks] query/drop-keyspace-query))
 
-(defn execute
-  "Executes a CQL query given as a string. Performs positional argument (?) replacement (a la JDBC)."
-  ([^String query]
-     (execute-raw query))
-  ([^String query args]
-     (execute-raw (interpolate-vals query args))))
+(defn create-keyspace
+  [& query-params]
+  (execute- query-params query/create-keyspace-query))
 
+(defn create-index
+  [& query-params]
+  (execute- query-params query/create-index-query))
 
+(defn drop-index
+  [& query-params]
+  (execute- query-params query/drop-index-query))
 
+(defn create-table
+  [& query-params]
+  (execute- query-params query/create-table-query))
 
-(defprotocol CqlStatementResult
-  (^Boolean void-result? [result] "Returns true if the provided CQL query result is of type void (carries no result set)")
-  (^Boolean int-result? [result] "Returns true if the provided CQL query result is of type int (carries a single value)")
-  (^Boolean rows-result? [result] "Returns true if the provided CQL query result is of type rows (carries result set)")
-  (^long count-value [result] "Extracts numerical value of a COUNT query"))
+(def create-column-family create-table)
 
-(extend-protocol CqlStatementResult
-  CqlResult
-  (void-result?
-    [^CqlResult result]
-    (= (.getType result) CqlResultType/VOID))
-  (int-result?
-    [^CqlResult result]
-    (= (.getType result) CqlResultType/INT))
-  (rows-result?
-    [^CqlResult result]
-    (= (.getType result) CqlResultType/ROWS))
+(defn drop-table
+  [ks]
+  (execute- [ks] query/drop-table-query))
 
-  clojure.lang.IPersistentMap
-  (void-result?
-    [m]
-    (= (:type m) CqlResultType/VOID))
-  (int-result?
-    [m]
-    (= (:type m) CqlResultType/INT))
-  (rows-result?
-    [m]
-    (= (:type m) CqlResultType/ROWS))
-  (count-value
-    [m]
-    (-> m :rows first :columns first :value)))
+(defn use-keyspace
+  [ks]
+  (execute- [ks] query/use-keyspace-query))
 
+(defn alter-table
+  [& query-params]
+  (execute- query-params query/alter-table-query))
 
-
-
-
-
+(defn alter-keyspace
+  [& query-params]
+  (execute- query-params query/alter-keyspace-query))
 
 ;;
-;; CQL commands (not related to schema)
+;; DB Operations
 ;;
-
-(defn- using-clause
-  [opts]
-  (if (or (empty? opts)
-          (nil? opts))
-    ""
-    (str "USING "
-         (join " AND " (map (fn [[k v]]
-                              (str (.toUpperCase (name k)) " " (str v)))
-                            opts)))))
-
-(defn select-raw*
-  [column-family & opts]
-  (let [query (apply q/prepare-select-query column-family (apply concat opts))]
-    (execute query)))
-
-(defn select
-  [column-family &{:keys [key-type] :or {key-type "UTF8Type"} :as opts}]
-  (let [result (apply select-raw* column-family opts)]
-    (to-plain-hash (:rows result) key-type)))
-
-(defn select-prepared
-  [column-family &{:keys [key-type] :or {key-type "UTF8Type"} :as opts}]
-  (let [[vals query] (apply q/prepare-select-query
-                            column-family (apply concat
-                                                 (assoc opts
-                                                   :as-prepared-statement true)))]
-    (execute-prepared-query query vals)))
 
 (defn insert
-  [column-family vals & opts]
-  (let [query (apply q/prepare-insert-query column-family vals opts)]
-    (execute-raw query)))
+  [& query-params]
+  (execute- query-params query/insert-query))
+
+(defn insert-batch
+  [table records]
+  (->> (map #(query/insert-query table %) records)
+       (apply query/queries)
+       query/batch-query
+       render-query
+       client/execute))
 
 (defn update
-  [column-family vals & opts]
-  (let [query (apply q/prepare-update-query column-family vals opts)]
-    (execute-raw query)))
+  [& query-params]
+  (execute- query-params query/update-query))
 
-(defn insert-prepared
-  [column-family vals & opts]
-  (let [[vals query] (apply q/prepare-insert-query
-                            column-family vals
-                            (apply concat
-                                   (assoc opts
-                                     :as-prepared-statement true)))]
-    (execute-prepared-query query vals)))
+(defn delete
+  [& query-params]
+  (execute- query-params query/delete-query))
 
-(defn update-prepared
-  [column-family vals & opts]
-  (println opts)
-  (let [[vals query] (apply q/prepare-update-query
-                            column-family vals
-                            (apply concat
-                                   (assoc (apply hash-map opts)
-                                     :as-prepared-statement true)))]
-    (execute-prepared-query query vals)))
+(defn select
+  [& query-params]
+  (execute- query-params query/select-query))
+
+(defn truncate
+  [table]
+  (execute- [table] query/truncate-query))
+
+;;
+;; Higher level DB functions
+;;
+
+;; TBD, add Limit
+(defn get-one
+  [& query-params]
+  (execute- query-params query/select-query))
+
+(defn perform-count
+  [table & query-params]
+  (:count
+   (first
+    (select table
+            (cons
+             (query/columns (query/count*))
+             query-params)))))
+
+;;
+;; Higher-level helper functions for schema
+;;
+
+(defn describe-keyspace
+  [ks]
+  (first
+   (select :system.schema_keyspaces
+           (query/where :keyspace_name ks))))
+
+(defn describe-table
+  [ks table]
+  (first
+   (select :system.schema_columnfamilies
+           (query/where :keyspace_name ks
+                        :columnfamily_name table))))
+
+(defn describe-columns
+  [ks table]
+  (select :system.schema_columns
+          (query/where :keyspace_name ks
+                       :columnfamily_name table)))
+
+;;
+;; Higher-level collection manipulation
+;;
+
+(defn- get-chunk
+  "Returns next chunk for the lazy world iteration"
+  [table partition-key chunk-size last-pk]
+  (if (nil? last-pk)
+    (select table
+            (query/limit chunk-size))
+    (select table
+            (query/where (query/token partition-key) [> (query/token last-pk)])
+            (query/limit chunk-size))))
+
+(defn iterate-world
+  "Lazily iterates through the collection, returning chunks of chunk-size."
+  ([table partition-key chunk-size]
+     (iterate-world table partition-key chunk-size []))
+  ([table partition-key chunk-size c]
+     (lazy-cat c
+               (let [last-pk    (get (last c) partition-key)
+                     next-chunk (get-chunk table partition-key chunk-size last-pk)]
+                 (iterate-world table partition-key chunk-size next-chunk)))))

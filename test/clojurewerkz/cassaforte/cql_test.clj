@@ -1,305 +1,352 @@
 (ns clojurewerkz.cassaforte.cql-test
-  (:require [clojurewerkz.cassaforte.cql.client :as cc]
-            [clojurewerkz.cassaforte.cql.schema :as cql-schema]
-            [clojurewerkz.cassaforte.cql    :as cql])
-  (:use clojure.test
-        clojurewerkz.cassaforte.test-helper
-        clojurewerkz.cassaforte.conversion
-        clojurewerkz.cassaforte.utils)
-  (:import java.util.UUID))
-
-(use-fixtures :each initialize-cql)
-
-;;
-;; CREATE KEYSPACE, DROP KEYSPACE
-;;
-
-(deftest ^{:cql true} test-create-and-drop-keyspace-using-raw-cql
-  (with-native-exception-handling
-    (cql/execute-raw "DROP KEYSPACE \"amazeballs\";"))
-  (let [query "CREATE KEYSPACE amazeballs WITH replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 }"]
-    (is (cql/void-result? (cql/execute-raw query)))
-    (cql/execute-raw "DROP KEYSPACE \"amazeballs\";")))
-
-
-;;
-;; CREATE CF, DROP CF
-;;
-
-(deftest ^{:cql true} test-create-and-drop-column-family-using-cql
-  (with-native-exception-handling
-    (cql-schema/drop-column-family "libraries"))
-
-  (let [result (cql-schema/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)]
-    (is (cql/void-result? result))
-    (is (empty? (:rows result)))
-    (cql-schema/drop-column-family "libraries")))
-
-(deftest ^{:cql true} test-create-truncate-and-drop-column-family-using-cql
-  (with-native-exception-handling
-    (let [result (cql-schema/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)]
-      (is (cql/void-result? result))
-      (is (cql/void-result? (cql-schema/truncate "libraries")))
-    (cql-schema/drop-column-family "libraries"))))
-
-
-;;
-;; BATCH
-;;
-
-;; TBD
-
-
-;;
-;; INSERT with placeholders
-;;
-
-(deftest ^{:cql true} test-insert-and-select-count-using-raw-cql
-  (with-native-exception-handling
-    (cql-schema/drop-column-family "libraries"))
-  (cql-schema/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
-  (is (cql/void-result? (cql/execute-raw "INSERT INTO libraries (name, language) VALUES ('Cassaforte', 'Clojure') USING TTL 86400")))
-    (cql-schema/truncate "libraries")
-    (cql-schema/drop-column-family "libraries"))
-
-(deftest ^{:cql true} test-insert-and-select-count-using-prepared-cql-statement
-  (with-native-exception-handling
-    (cql-schema/drop-column-family "libraries"))
-  (cql-schema/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
-
-  (is (cql/void-result? (cql/execute "INSERT INTO libraries (name, language) VALUES ('?', '?') USING TTL 86400" ["Cassaforte", "Clojure"])))
-  (let [res (cql/execute "SELECT COUNT(*) FROM libraries")]
-    (is (cql/rows-result? res)))
-
-  (cql-schema/truncate "libraries")
-  (cql-schema/drop-column-family "libraries"))
-
-;;
-;; INSERT with a map
-;;
-
-(deftest ^{:cql true} test-insert-and-select-count-using-convenience-function
-  (with-native-exception-handling
-    (cql-schema/drop-column-family "libraries"))
-  (cql-schema/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
-
-  (is (cql/void-result? (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} :ttl 86400)))
-
-  (let [res (cql/execute "SELECT COUNT(*) FROM libraries")]
-    (is (= 1 (count (:rows res)))))
-
-  (cql-schema/truncate "libraries")
-  (cql-schema/drop-column-family "libraries"))
-
-
-;;
-;; UPDATE with placeholders
-;;
-
-;; TBD
-
-
-;;
-;; DELETE with placeholders
-;;
-
-(deftest ^{:cql true} test-delete-with-prepared-cql-statement
-  (with-native-exception-handling
-    (cql-schema/drop-column-family "libraries"))
-  (cql-schema/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
-
-  (is (cql/void-result? (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} :ttl 86400)))
-  (is (cql/void-result? (cql/execute "DELETE FROM libraries WHERE name = '?'" ["Cassaforte"])))
-  (cql-schema/drop-column-family "libraries"))
-
-
-;;
-;; DELETE with convenience function
-;;
-
-;; TBD
-
-
-;;
-;; Raw SELECT COUNT(*)
-;;
-
-(deftest ^{:cql true} test-select-count-with-raw-cql
-  (with-native-exception-handling
-    (cql-schema/drop-column-family "libraries"))
-  (cql-schema/create-column-family "libraries" {:name "varchar" :language "varchar"} :primary-key :name)
-
-  (cql/insert "libraries" {:name "Cassaforte" :language "Clojure"} :ttl 86400)
-  (cql/insert "libraries" {:name "Welle" :language "Clojure"}  :ttl 86400)
-
-  (let [res (cql/execute-raw "SELECT COUNT(*) FROM libraries")
-        n   (cql/count-value res)]
-    (is (= 2 n)))
-  (cql/execute "DELETE FROM libraries WHERE name = '?'" ["Cassaforte"])
-  (let [res (cql/execute-raw "SELECT COUNT(*) FROM libraries")
-        n   (cql/count-value res)]
-    (is (= 1 n)))
-  (cql-schema/drop-column-family "libraries"))
-
-
-;;
-;; Raw SELECT
-;;
-
-(deftest ^{:cql true} test-select-with-raw-cql-and-utf8-named-columns
-  (with-native-exception-handling
-    (cql-schema/drop-column-family "libraries"))
-
-  (cql-schema/create-column-family "libraries"
-                            {:name      "varchar"
-                             :language  "varchar"
-                             :rating    "double"
-                             :votes     "int"
-                             :year      "bigint"
-                             :released  "boolean"}
-                            :primary-key :name)
-
-  (cql-schema/create-index "libraries" "language")
-
-  (cql/insert "libraries" {:name "Cassaforte" :language "Clojure" :rating 4.0 :year 2012})
-  (cql/insert "libraries" {:name "Riak" :language "Erlang" :rating 5.0 :year 2009})
-
-  (let [res (to-plain-hash (:rows (cql/execute-raw "SELECT * FROM libraries")))]
-    (is (= {:name "Riak" :language "Erlang" :rating 5.0 :released nil :votes nil :year 2009}
-           (first res)))
-    (is (= {:name "Cassaforte" :language "Clojure" :rating 4.0 :released nil :votes nil :year 2012}
-           (second res))))
-
-  (let [res (to-plain-hash (:rows (cql/execute-raw "SELECT * FROM libraries WHERE language='Erlang'")))]
-    (is (= {:name "Riak" :language "Erlang" :rating 5.0 :released nil :votes nil :year 2009}
-           (first res))))
-
-  (cql-schema/drop-column-family "libraries"))
-
-;;
-;; SELECT with generated query
-;;
-
-(deftest ^{:cql true} test-select-with-generated-query
-  (with-native-exception-handling
-    (cql-schema/drop-column-family "time_series"))
-
-  (cql-schema/create-column-family "time_series"
-                            {:tstamp "timestamp"
-                             :description "varchar"}
-                            :primary-key :tstamp)
-
-  (cql/insert "time_series" {:tstamp "2011-02-03" :description "Description 1"})
-  (cql/insert "time_series" {:tstamp "2011-02-04" :description "Description 2"})
-  (cql/insert "time_series" {:tstamp "2011-02-05" :description "Description 3"})
-  (cql/insert "time_series" {:tstamp "2011-02-06" :description "Description 4"})
-  (cql/insert "time_series" {:tstamp "2011-02-07" :description "Description 5"})
-  (cql/insert "time_series" {:tstamp "2011-02-08" :description "Description 6"})
-
-  (is (= 1 (count (cql/select "time_series" :where { :tstamp "2011-02-03" } :key-type "DateType"))))
-
-  (cql-schema/drop-column-family "time_series"))
-
-(deftest ^{:cql true} test-composite-keys
-  (with-native-exception-handling
-    (cql-schema/drop-column-family "posts"))
-
-  (cql-schema/create-column-family "posts"
-                            {:userid :text
-                             :posted_at :timestamp
-                             :entry_title :text
-                             :content :text}
-                            :primary-key [:userid :posted_at])
-
-
-  (doseq [i (range 1 10)]
-    (cql/insert "posts" {:userid "user1" :posted_at (str "2012-01-0" i) :entry_title (str "title" i) :content (str "content" i)})
-    (cql/insert-prepared "posts" {:userid "user2" :posted_at (java.util.Date. 112 0 i 1 0 0) :entry_title (str "title" i) :content (str "content" i)}))
-
-  (testing "Ordering by key part with exact match"
-    (is (= "content1"
-           (:content (first
-                      (cql/select "posts" :where {:userid "user1" :posted_at [> "2011-01-05"]}
-                                  :order [:posted_at :asc])))))
-
-    (is (= "content9"
-           (:content (first
-                      (cql/select "posts" :where {:userid "user1" :posted_at [> "2011-01-05"]}
-                                  :order [:posted_at :desc]))))))
-
-  (testing "Range queries with open end"
-    (is (= 9 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2011-01-01"]}))))
-    (is (= 8 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2012-01-01"]})))))
-
-  (testing "Range queries"
-    (is (= 3 (count (cql/select "posts" :where {:userid "user1" :posted_at [> "2012-01-01" < "2012-01-05"]}))))
-    (is (= 5 (count (cql/select "posts" :where {:userid "user1" :posted_at [>= "2012-01-01" <= "2012-01-05"]})))))
-
-  (testing "Range queries and IN clause"
-    (is (= 18 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2011-01-01"]}))))
-    (is (= 16 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2012-01-01"]}))))
-    (is (= 6 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2012-01-01" < "2012-01-05"]}))))
-    (is (= 10 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [>= "2012-01-01" <= "2012-01-05"]}))))
-
-    (is (= 10 (count (cql/select "posts" :where {:userid [:in ["user1" "user2"]] :posted_at [> "2011-01-01"]} :limit 10)))))
-
-  (testing "With a prepared query"
-    (is (= 4 (count (cql/select-prepared "posts" :where {:userid "user1" :posted_at [> (java.util.Date. 112 0 5 1 0 0)]}))))
-    (is (= 2 (count (cql/select-prepared "posts" :where {:userid "user1" :posted_at [> (java.util.Date. 112 0 5 1 0 0) < (java.util.Date. 112 0 8 1 0 0)]}))))
-    (is (= 4 (count (cql/execute-prepared-query "select * from posts where userid = ? and posted_at > ? limit 10" ["user1" (java.util.Date. 112 0 5 1 0 0)]))))))
-
-(deftest list-type-test
-  (with-native-exception-handling
-    (cql-schema/drop-column-family "posts"))
-
-  (cql-schema/create-column-family "posts"
-                            {:userid :varchar
-                             :modified_lines "list<int>"}
-                            :primary-key :userid)
-
-  (cql/insert-prepared "posts" {:userid "user1" :modified_lines [(int 1) (int 2) (int 3)]})
-
-  (is (= [(int 1) (int 2) (int 3)] (:modified_lines (first (cql/select "posts"))))))
-
-
-(deftest map-type-test
-  (with-native-exception-handling
-    (cql-schema/drop-column-family "posts"))
-
-  (cql-schema/create-column-family "posts"
-                                   {:userid :varchar
-                                    :pairs "map<varchar,varchar>"}
-                                   :primary-key :userid)
-
-  (cql/insert-prepared "posts" {:userid "user1" :pairs {"a" "b"}})
-
-  (is (= {"a" "b"} (:pairs (first (cql/select "posts"))))))
+  (:require [clojurewerkz.cassaforte.test-helper :as th])
+  (:use clojurewerkz.cassaforte.cql
+        clojure.test
+        clojurewerkz.cassaforte.query))
+
+(use-fixtures :each th/initialize!)
+
+(deftest insert-test
+  (th/test-combinations
+   (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+     (insert :users r)
+     (is (= r (first (select :users))))
+     (truncate :users))))
+
+(deftest insert-test
+  (th/test-combinations
+   (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+     (insert :users r)
+     (is (= r (first (select :users))))
+     (truncate :users))))
 
 (deftest update-test
-  (with-native-exception-handling
-    (cql-schema/drop-column-family "people"))
+  (testing "Simple updates"
+    (th/test-combinations
+     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+       (insert :users r)
+       (is (= r (first (select :users))))
+       (update :users
+               {:age (int 25)}
+               (where :name "Alex"))
+       (is (= {:name "Alex" :city "Munich" :age (int 25)}
+              (first (select :users)))))))
 
-  (cql-schema/create-column-family "people"
-                                   {:username :varchar
-                                    :full_name "varchar"}
-                                   :primary-key :username)
+  (testing "One of many update"
+    (th/test-combinations
+     (dotimes [i 3]
+       (insert :user_posts {:username "user1"
+                            :post_id (str "post" i)
+                            :body (str "body" i)}))
+     (update :user_posts
+             {:body "bodynew"}
+             (where :username "user1"
+                    :post_id "post1"))
+     (is (= "bodynew"
+            (get-in
+             (select :user_posts
+                     (where :username "user1"
+                            :post_id "post1"))
+             [0 :body]))))))
+
+(deftest delete-test
+  (th/test-combinations
+   (dotimes [i 3]
+     (insert :users {:name (str "name" i) :age (int i)}))
+   (is (= 3 (perform-count :users)))
+   (delete :users
+           (where :name "name1"))
+   (is (= 2 (perform-count :users)))
+   (truncate :users))
+
+  (th/test-combinations
+   (insert :users {:name "name1" :age (int 19)})
+   (delete :users
+           (columns :age)
+           (where :name "name1"))
+   (is (nil? (:age (select :users))))
+   (truncate :users)))
+
+(deftest ttl-test
+  (th/test-combinations
+   (dotimes [i 3]
+     (insert :users {:name (str "name" i) :city (str "city" i) :age (int i)}
+             (using :ttl 2)))
+   (is (= 3 (perform-count :users)))
+   (Thread/sleep 2100)
+   (is (= 0 (perform-count :users)))))
+
+(deftest counter-test
+  (update :user_counters {:user_count [+ 5]} (where :name "asd"))
+  (is (= 5 (:user_count (first (select :user_counters)))))
+  (update :user_counters {:user_count [+ 500]} (where :name "asd"))
+  (is (= 505 (:user_count (first (select :user_counters)))))
+  (update :user_counters {:user_count [+ 5000000]} (where :name "asd"))
+  (is (= 5000505 (:user_count (first (select :user_counters)))))
+  (update :user_counters {:user_count [+ 50000000000000]} (where :name "asd"))
+  (is (= 50000005000505 (:user_count (first (select :user_counters))))))
+
+(deftest counter-test-2
+  (dotimes [i 100]
+    (update :user_counters {:user_count [+ 1]} (where :name "asd")))
+  (is (= 100 (:user_count (first (select :user_counters))))))
 
 
-  (cql/insert-prepared "people" {:username "user1" :full_name "Alex P"})
-  (is (= {:username "user1," :full_name "Alex P"} (first (cql/select "people"))))
-  (cql/update-prepared "people" {:full_name "Alex D"} :where {:username "user1"})
-  (is (= {:username "user1," :full_name "Alex D"} (first (cql/select "people")))))
+(deftest index-test-filtering-range
+  (create-index :users :city)
+  (create-index :users :age)
+  (th/test-combinations
 
-;;
-;; TRUNCATE
-;;
+   (dotimes [i 10]
+     (insert :users {:name (str "name_" i) :city "Munich" :age (int i)}))
 
-;; TBD
+   (let [res (select :users
+                     (where :city "Munich"
+                            :age [> (int 5)])
+                     (allow-filtering true))]
+     (is (= (set (range 6 10))
+            (->> res
+                (map :age)
+                set))))
+   (truncate :users)))
 
-;;
-;; Conversion to CQL values, escaping
-;;
+(deftest index-exact-match
+  (create-index :users :city)
+  (th/test-combinations
+   (dotimes [i 10]
+     (insert :users {:name (str "name_" i) :city (str "city_" i) :age (int i)}))
 
-(deftest ^{:cql true} test-keyspace-name-quoting
-  (are [unquoted quoted] (is (= quoted (cql/quote-identifier unquoted)))
-       "accounts" "\"accounts\""))
+   (let [res (select :users
+                     (where :city "city_5")
+                     (allow-filtering true))]
+     (is (= 5
+            (->> res
+                 first
+                 :age))))
+   (truncate :users)))
+
+(deftest list-operations-test
+  (create-table :users_list
+                (column-definitions
+                 {:name :varchar
+                  :test_list (list-type :varchar)
+                  :primary-key [:name]}))
+
+  (testing "Inserting"
+    (th/test-combinations
+     (insert :users_list
+             {:name "user1"
+              :test_list ["str1" "str2" "str3"]})
+     (is (= ["str1" "str2" "str3"] (get-in (select :users_list)
+                                           [0 :test_list])))
+     (truncate :users_list)))
+
+  (testing "Updating"
+    (th/test-combinations
+     (insert :users_list
+             {:name "user1"
+              :test_list []})
+     (dotimes [i 3]
+       (update :users_list
+               {:test_list [+ [(str "str" i)]]}
+               (where :name "user1")))
+
+     (is (= ["str0" "str1" "str2"] (get-in (select :users_list)
+                                           [0 :test_list])))
+     (truncate :users_list)))
+
+  (testing "Deleting"
+    (th/test-combinations
+     (insert :users_list
+             {:name "user1"
+              :test_list ["str0" "str1" "str2"]})
+     (update :users_list
+             {:test_list [- ["str0" "str1"]]}
+             (where :name "user1"))
+
+     (is (= ["str2"] (get-in (select :users_list)
+                             [0 :test_list])))))
+
+  (drop-table :users_list))
+
+(deftest map-operations-test
+  (create-table :users_map
+                (column-definitions
+                 {:name :varchar
+                  :test_map (map-type :varchar :varchar)
+                  :primary-key [:name]}))
+
+  (testing "Inserting"
+    (th/test-combinations
+     (insert :users_map
+             {:name "user1"
+              :test_map {"a" "b" "c" "d"}})
+     (is (= {"a" "b" "c" "d"} (get-in (select :users_map)
+                                      [0 :test_map])))
+     (truncate :users_map)))
+
+  (testing "Updating"
+    (th/test-combinations
+     (insert :users_map
+             {:name "user1"
+              :test_map {}})
+     (dotimes [i 3]
+       (update :users_map
+               {:test_map [+ {"a" "b" "c" "d"}]}
+               (where :name "user1")))
+
+     (is (= {"a" "b" "c" "d"} (get-in (select :users_map)
+                                      [0 :test_map])))
+     (truncate :users_map)))
+  (drop-table :users_map))
+
+
+(deftest set-operations-test
+  (create-table :users_set
+                (column-definitions
+                 {:name :varchar
+                  :test_set (set-type :varchar)
+                  :primary-key [:name]}))
+
+  (testing "Inserting"
+    (th/test-combinations
+     (insert :users_set
+             {:name "user1"
+              :test_set #{"str1" "str2" "str3"}})
+     (is (= #{"str1" "str2" "str3"} (get-in (select :users_set)
+                                            [0 :test_set])))
+     (truncate :users_set)))
+
+
+  (testing "Updating"
+    (th/test-combinations
+     (insert :users_set
+             {:name "user1"
+              :test_set #{}})
+     (dotimes [i 3]
+       (dotimes [_ 2]
+         (update :users_set
+                 {:test_set [+ #{(str "str" i)}]}
+                 (where :name "user1"))))
+
+     (is (= #{"str0" "str1" "str2"} (get-in (select :users_set)
+                                            [0 :test_set])))
+     (truncate :users_set)))
+
+  (testing "Deleting"
+    (th/test-combinations
+     (insert :users_set
+             {:name "user1"
+              :test_set #{"str0" "str1" "str2"}})
+     (update :users_set
+             {:test_set [- #{"str0" "str1"}]}
+             (where :name "user1"))
+
+     (is (= #{"str2"} (get-in (select :users_set)
+                             [0 :test_set])))))
+
+  (drop-table :users_set))
+
+(deftest select-where-test
+  (th/test-combinations
+   (insert :users {:name "Alex"   :city "Munich"        :age (int 19)})
+   (insert :users {:name "Robert" :city "Berlin"        :age (int 25)})
+   (insert :users {:name "Sam"    :city "San Francisco" :age (int 21)})
+
+   (is (= "Munich" (get-in (select :users (where :name "Alex")) [0 :city])))))
+
+(deftest select-in-test
+  (th/test-combinations
+   (insert :users {:name "Alex"   :city "Munich"        :age (int 19)})
+   (insert :users {:name "Robert" :city "Berlin"        :age (int 25)})
+   (insert :users {:name "Sam"    :city "San Francisco" :age (int 21)})
+
+   (let [users (select :users
+                           (where :name [:in ["Alex" "Robert"]]))]
+     (is (= "Munich" (get-in users [0 :city])))
+     (is (= "Berlin" (get-in users [1 :city]))))))
+
+(deftest select-order-by-test
+  (th/test-combinations
+   (dotimes [i 3]
+     (insert :user_posts {:username "Alex" :post_id  (str "post" i) :body (str "body" i)}))
+
+   (is (= [{:post_id "post0"}
+           {:post_id "post1"}
+           {:post_id "post2"}]
+          (select :user_posts
+           (columns :post_id)
+           (where :username "Alex")
+           (order-by [:post_id]))))
+
+   (is (= [{:post_id "post2"}
+           {:post_id "post1"}
+           {:post_id "post0"}]
+          (select :user_posts
+           (columns :post_id)
+           (where :username "Alex")
+           (order-by [:post_id :desc]))))))
+
+(deftest select-range-query-test
+  (create-table :tv_series
+                (column-definitions {:series_title  :varchar
+                                     :episode_id    :int
+                                     :episode_title :text
+                                     :primary-key [:series_title :episode_id]}))
+  (dotimes [i 20]
+    (insert :tv_series {:series_title "Futurama" :episode_id i :episode_title (str "Futurama Title " i)})
+    (insert :tv_series {:series_title "Simpsons" :episode_id i :episode_title (str "Simpsons Title " i)}))
+
+  (is (= (set (range 11 20))
+         (->> (select :tv_series
+                      (where :series_title "Futurama"
+                             :episode_id [> 10]))
+              (map :episode_id )
+              set)))
+
+  (is (= (set (range 11 16))
+         (->> (select :tv_series
+                      (where :series_title "Futurama"
+                             :episode_id [> 10]
+                             :episode_id [<= 15]))
+              (map :episode_id)
+              set)))
+
+  (is (= (set (range 0 15))
+         (->> (select :tv_series
+                      (where :series_title "Futurama"
+                             :episode_id [< 15]))
+              (map :episode_id)
+              set)))
+
+  (drop-table :tv_series))
+
+
+(deftest paginate-test
+  (create-table :tv_series
+                (column-definitions {:series_title  :varchar
+                                     :episode_id    :int
+                                     :episode_title :text
+                                     :primary-key [:series_title :episode_id]}))
+  (dotimes [i 20]
+    (insert :tv_series {:series_title "Futurama" :episode_id i :episode_title (str "Futurama Title " i)})
+    (insert :tv_series {:series_title "Simpsons" :episode_id i :episode_title (str "Simpsons Title " i)}))
+
+  (is (= (set (range 0 10))
+         (->> (select :tv_series
+                      (paginate :key :episode_id :per-page 10 :where { :series_title "Futurama"})
+                      )
+              (map :episode_id)
+              set)))
+
+  (is (= (set (range 11 20))
+         (->> (select :tv_series
+                      (paginate :key :episode_id :per-page 10 :last-key 10 :where { :series_title "Futurama"})
+                      )
+              (map :episode_id)
+              set)))
+
+  (drop-table :tv_series))
+
+;; think about using `cons/conj` as a syntax sugar for prepended and appended list commands
+;; test authentication

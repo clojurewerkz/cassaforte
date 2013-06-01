@@ -5,6 +5,7 @@ Its API and code style closely follow other ClojureWerkz projects, namely [Monge
 [Neocons](https://clojureneo4j.info), [Elastisch](https://clojureelasticsearch.info) and [Spyglass](https://clojurememcached.info).
 
 
+
 ## Project Goals
 
  * Provide a Clojure-friendly, easy to use API that reflects Cassandra's data model well. Dealing with the Cassandra Thrift API quirks is counterproductive.
@@ -12,50 +13,43 @@ Its API and code style closely follow other ClojureWerkz projects, namely [Monge
  * Be well documented.
  * Be well tested.
  * Target Cassandra 1.2 and Clojure 1.4 and later from the ground up.
- * Integrate with libraries like clojure.data.json and Joda Time.
+ * Integrate with libraries like Joda Time.
  * Support URI connections to be friendly to Heroku and other PaaS providers.
+
+
 
 
 ## Project Maturity
 
-Cassaforte is *young*. It is getting to the point where we can confidently
-recommend it to other developers, but not exactly there yet. We will update
-this document when it's ready for prime time.
+Cassaforte is a young project that took about a year to reach RC quality releases. It is used heavily in a
+monitoring and event collection solution that processes fairly large
+amount of data.
 
+It is based on the now stable new [DataStax Java driver for
+Cassandra](https://github.com/datastax/java-driver) and
+[Hayt](https://github.com/mpenet/hayt), a fairly battle tested CQL
+generation DSL library.
 
 
 ## Supported Features
 
- * Connection to a single node
- * Create, destroy keyspace
+ * Connection to a single node or a cluster
+ * _All_ CQL operations
  * CQL 3.0 queries, including queries with placeholders (?, a la JDBC)
- * Deserialization of column names and values according to response schema (not all types are supported yet)
-
-
-## Supported Clojure versions
-
-Cassaforte is built from the ground up for Clojure 1.3 and up.
-
-
-## Supported Apache Cassandra versions
-
-Cassaforte is built from the ground up for Cassandra 1.2 and up and is built around CQL 3.
+ * Nice CQL query DSL for Clojure
+ * Automatic deserialization of column names and values according to the schema
 
 
 
-## Documentation & Examples
+## Supported Clojure Versions
 
-Cassaforte is a young project and until 1.0 is released and documentation guides are written,
-it may be challenging to use for anyone except the author. For code examples, see our test
-suite.
-
-Once the documentation site is up, we will update this section.
+Cassaforte is built from the ground up for Clojure 1.4 and up.
 
 
-## Community
 
-To subscribe for announcements of releases, important changes and so on, please follow
-[@ClojureWerkz](https://twitter.com/#!/clojurewerkz) on Twitter.
+## Supported Apache Cassandra Versions
+
+Cassaforte is built from the ground up for CQL 3 Cassandra 1.2+.
 
 
 
@@ -71,20 +65,43 @@ definition to your `pom.xml`:
 </repository>
 ```
 
-### Most recent pre-release version
+### The Most Recent Version
 
 With Leiningen:
 
-    [clojurewerkz/cassaforte "1.0.0-beta1"]
-
+``` clojure
+[clojurewerkz/cassaforte "1.0.0-rc3"]
+```
 
 With Maven:
 
-    <dependency>
-      <groupId>clojurewerkz</groupId>
-      <artifactId>cassaforte</artifactId>
-      <version>1.0.0-beta1</version>
-    </dependency>
+``` xml
+<dependency>
+  <groupId>clojurewerkz</groupId>
+  <artifactId>cassaforte</artifactId>
+  <version>1.0.0-rc3</version>
+</dependency>
+```
+
+
+## Documentation & Examples
+
+Please refer to our [Getting Started with Clojure and
+Cassandra](http://clojurecassandra.info/articles/getting_started.html)
+guide.  [Documentation guides](http://clojurecassandra.info) are not
+finished and will be improved over time.
+
+
+Don't hesitate to join our [mailing
+list](https://groups.google.com/forum/?fromgroups#!forum/clojure-cassandra)
+and ask questions, too!
+
+
+
+## Community
+
+To subscribe for announcements of releases, important changes and so on, please follow
+[@ClojureWerkz](https://twitter.com/#!/clojurewerkz) on Twitter.
 
 
 ## Cassaforte Is a ClojureWerkz Project
@@ -107,7 +124,9 @@ CI is hosted by [travis-ci.org](http://travis-ci.org)
 Cassaforte uses [Leiningen 2](https://github.com/technomancy/leiningen/blob/master/doc/TUTORIAL.md). Make
 sure you have it installed and then run tests against all supported Clojure versions using
 
-    lein2 all test
+```
+lein2 all test
+```
 
 Then create a branch and make your changes on it. Once you are done with your changes and all
 tests pass, submit a pull request on Github.

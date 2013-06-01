@@ -1,23 +1,58 @@
 (ns clojurewerkz.cassaforte.test-helper
-  (:use     clojurewerkz.cassaforte.utils)
-  (:require [clojurewerkz.cassaforte.thrift.client :as thrift-client]
-            [clojurewerkz.cassaforte.thrift.schema :as thrift-schema]
-            [clojurewerkz.cassaforte.cql.client :as cql-client]
-            [clojurewerkz.cassaforte.cql.schema :as cql-schema]
-            [clojurewerkz.cassaforte.thrift.core :as thrift]))
+  (:require [clojurewerkz.cassaforte.embedded :as e]
+            [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.debug-utils :as debug])
+  (:use clojurewerkz.cassaforte.cql
+        clojurewerkz.cassaforte.query))
 
-(defn initialize-thrift
-  [f]
-  (when (not (bound? (var thrift-client/*cassandra-client*)))
-    (thrift-client/connect! "127.0.0.1")
-    (with-thrift-exception-handling
-      (thrift-schema/set-keyspace "cassaforte_test_1")))
-  (f))
+(declare session)
 
-(defn initialize-cql
+(defn run!
   [f]
-  (when (not (bound? (var cql-client/*client*)))
-    (cql-client/connect! "127.0.0.1")
-    (with-native-exception-handling
-      (cql-schema/set-keyspace "cassaforte_test_1")))
-  (f))
+  ;; clear previous broken/interupted runs
+  (try
+    (drop-keyspace :new_cql_keyspace)
+    (catch Exception _ nil))
+
+  (create-keyspace :new_cql_keyspace
+                   (with {:replication
+                          {:class "SimpleStrategy"
+                           :replication_factor 1 }}))
+
+  (use-keyspace :new_cql_keyspace)
+
+  (create-table :users
+                (column-definitions {:name :varchar
+                                     :age  :int
+                                     :city :varchar
+                                     :primary-key [:name]}))
+
+  (create-table :user_posts
+                (column-definitions {:username :varchar
+                                     :post_id  :varchar
+                                     :body     :text
+                                     :primary-key [:username :post_id]}))
+
+  (create-table :user_counters
+                (column-definitions {:name :varchar
+                                     :user_count  :counter
+                                     :primary-key [:name]}))
+
+  (f)
+  (drop-keyspace :new_cql_keyspace))
+
+(defmacro test-combinations [& body]
+  "Run given queries in both plain and prepared modes."
+  `(do
+     ~@body
+     (prepared ~@body)))
+
+(defn initialize!
+  [f]
+  (e/start-server! :cleanup true)
+  (when (not (bound? (var session)))
+    (def session (client/connect! ["127.0.0.1"]
+                                  :port 19042)))
+
+  (client/with-session session
+    (run! f)))
