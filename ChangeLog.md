@@ -1,3 +1,8 @@
+## Changes between 1.0.0-rc4 and 1.0.0-rc5
+
+No changes yet.
+
+
 ## Changes between 1.0.0-rc3 and 1.0.0-rc4
 
 `1.0.0-rc4` has **breaking API changes**

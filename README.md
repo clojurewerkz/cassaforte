@@ -49,7 +49,7 @@ Cassaforte is built from the ground up for Clojure 1.4 and up.
 
 ## Supported Apache Cassandra Versions
 
-Cassaforte is built from the ground up for CQL 3 Cassandra 1.2+.
+Cassaforte is built from the ground up for CQL 3 and Cassandra 1.2+.
 
 
 
@@ -70,7 +70,7 @@ definition to your `pom.xml`:
 With Leiningen:
 
 ``` clojure
-[clojurewerkz/cassaforte "1.0.0-rc3"]
+[clojurewerkz/cassaforte "1.0.0-rc4"]
 ```
 
 With Maven:
@@ -79,7 +79,7 @@ With Maven:
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>1.0.0-rc3</version>
+  <version>1.0.0-rc4</version>
 </dependency>
 ```
 
