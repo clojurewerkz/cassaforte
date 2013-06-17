@@ -39,4 +39,6 @@
                                        :snapshots true
                                        :releases {:checksum :fail :update :always}}}
   :warn-on-reflection true
-  :pedantic :warn)
+  :pedantic :warn
+  :codox {:sources ["src"]
+          :output-dir "doc/api"})
