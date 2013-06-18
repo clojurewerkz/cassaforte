@@ -189,15 +189,19 @@ reached).
 
 (defn ^Session connect
   "Connects to a Cassandra cluster"
-  [cluster]
-  (.connect ^Cluster cluster))
+  ([^Cluster cluster]
+     (.connect cluster))
+  ([^Cluster cluster keyspace]
+     (.connect cluster (name keyspace))))
 
 (defn connect!
   "Connects and sets *default-cluster* and *default-session* for default cluster and session, that
    cql/execute is going to use."
-  [hosts & {:keys [] :as options}]
+  [hosts & {:keys [keyspace] :as options}]
   (let [cluster (build-cluster (assoc options :contact-points hosts))
-        session (connect cluster)]
+        session (if keyspace
+                  (connect cluster keyspace)
+                  (connect cluster))]
     (alter-var-root (var *default-cluster*) (constantly cluster))
     (alter-var-root (var *default-session*) (constantly session))
     session))
