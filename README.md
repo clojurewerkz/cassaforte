@@ -1,6 +1,6 @@
 # Cassaforte
 
-Cassaforte is an young idiomatic Clojure client for Cassandra.
+Cassaforte is a young idiomatic Clojure client for Apache Cassandra (1.2+).
 Its API and code style closely follow other ClojureWerkz projects, namely [Monger](https://clojuremongodb.info), [Welle](https://clojureriak.info),
 [Neocons](https://clojureneo4j.info), [Elastisch](https://clojureelasticsearch.info) and [Spyglass](https://clojurememcached.info).
 
@@ -21,44 +21,35 @@ Its API and code style closely follow other ClojureWerkz projects, namely [Monge
 
 ## Project Maturity
 
-We use Cassaforte heavily for our monitoring solution, that processes fairly large amount of data.
-Until DataStax makes a stable, non RC release of java-driver that we use underneath, we can't make a
-final release. Project is known to behave well, it's tested and used in production.
+Cassaforte is a young project that took about a year to reach RC quality releases. It is used heavily in a
+monitoring and event collection solution that processes fairly large
+amount of data.
 
+It is based on the now stable new [DataStax Java driver for
+Cassandra](https://github.com/datastax/java-driver) and
+[Hayt](https://github.com/mpenet/hayt), a fairly battle tested CQL
+generation DSL library.
 
 
 ## Supported Features
 
- * Connection to a single node and cluster
+ * Connection to a single node or a cluster
  * _All_ CQL operations
  * CQL 3.0 queries, including queries with placeholders (?, a la JDBC)
- * Deserialization of column names and values according to response schema
+ * Nice CQL query DSL for Clojure
+ * Automatic deserialization of column names and values according to the schema
 
 
 
-## Supported Clojure versions
+## Supported Clojure Versions
 
 Cassaforte is built from the ground up for Clojure 1.4 and up.
 
 
 
-## Supported Apache Cassandra versions
+## Supported Apache Cassandra Versions
 
-Cassaforte is built from the ground up for Cassandra 1.2 and up and is built around CQL 3.
-
-
-
-## Documentation & Examples
-
-Please refer to our [Getting Started with Clojure and Cassandra](http://clojurecassandra.info/articles/getting_started.html) guide.
-Don't hesitate to join our [mailing list](https://groups.google.com/forum/?fromgroups#!forum/clojure-cassandra) and ask questions, too!
-
-
-
-## Community
-
-To subscribe for announcements of releases, important changes and so on, please follow
-[@ClojureWerkz](https://twitter.com/#!/clojurewerkz) on Twitter.
+Cassaforte is built from the ground up for CQL 3 and Cassandra 1.2+.
 
 
 
@@ -74,24 +65,43 @@ definition to your `pom.xml`:
 </repository>
 ```
 
-### Most recent pre-release version
+### The Most Recent Version
 
 With Leiningen:
 
-```clojure
-[clojurewerkz/cassaforte "1.0.0-rc3"]
+``` clojure
+[clojurewerkz/cassaforte "1.0.0-rc4"]
 ```
 
 With Maven:
 
-```xml
+``` xml
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>1.0.0-rc3</version>
+  <version>1.0.0-rc4</version>
 </dependency>
 ```
 
+
+## Documentation & Examples
+
+Please refer to our [Getting Started with Clojure and
+Cassandra](http://clojurecassandra.info/articles/getting_started.html)
+guide.  [Documentation guides](http://clojurecassandra.info) are not
+finished and will be improved over time.
+
+
+Don't hesitate to join our [mailing
+list](https://groups.google.com/forum/?fromgroups#!forum/clojure-cassandra)
+and ask questions, too!
+
+
+
+## Community
+
+To subscribe for announcements of releases, important changes and so on, please follow
+[@ClojureWerkz](https://twitter.com/#!/clojurewerkz) on Twitter.
 
 
 ## Cassaforte Is a ClojureWerkz Project
@@ -127,4 +137,5 @@ tests pass, submit a pull request on Github.
 
 Copyright (C) 2012-2013 Michael S. Klishin, Alex Petrov
 
-Distributed under the Eclipse Public License, the same as Clojure.
+Double licensed under the [Eclipse Public License](http://www.eclipse.org/legal/epl-v10.html) (the same as Clojure) or
+the [Apache Public License 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).

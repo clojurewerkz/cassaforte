@@ -1,4 +1,5 @@
 (ns clojurewerkz.cassaforte.client
+  "Connection to Cassandra nodes and clusters, reconnection and retry policies, various defaults"
   (:require [clojurewerkz.cassaforte.debug-utils :as debug-utils]
             [clojurewerkz.cassaforte.conversion :as conv])
   (:import [com.datastax.driver.core Query ResultSet ResultSetFuture Host Session Cluster
@@ -114,19 +115,19 @@ reached).
      ~@body))
 
 (defmacro with-consistency-level
-  "Executes query given consistency level"
+  "Executes a query with the given consistency level"
   [consistency-level & body]
   `(binding [*consistency-level* ~consistency-level]
      ~@body))
 
 (defmacro with-retry-policy
-  "Executes query given retry policy"
+  "Executes a query with the given retry policy"
   [retry-policy & body]
   `(binding [*retry-policy* ~retry-policy]
      ~@body))
 
 (defmacro with-debug
-  "Executes query with debug output"
+  "Executes a query with *debug* bound to true"
   [& body]
   `(binding [*debug* true]
      (debug-utils/catch-exceptions ~@body)))
@@ -178,7 +179,7 @@ reached).
     (.build builder)))
 
 (defn ^Session connect
-  "Connect to a Cassandra cluster"
+  "Connects to a Cassandra cluster"
   [cluster]
   (.connect ^Cluster cluster))
 
@@ -209,8 +210,8 @@ reached).
            future
            (conv/to-map (.getUninterruptibly future)))))))
 
-(defn export-schema
-  "Exports schema as string"
+(defn ^String export-schema
+  "Exports the schema as a string"
   [^Session client]
   (-> client
       (.getCluster)
@@ -218,7 +219,7 @@ reached).
       (.exportSchemaAsString)))
 
 (defn get-hosts
-  "Returns all hosts for connected cluster"
+  "Returns all nodes in the cluster"
   [^Session session]
   (map (fn [^Host host]
          {:datacenter (.getDatacenter host)

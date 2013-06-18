@@ -1,3 +1,29 @@
+## Changes between 1.0.0-rc4 and 1.0.0-rc5
+
+No changes yet.
+
+
+## Changes between 1.0.0-rc3 and 1.0.0-rc4
+
+`1.0.0-rc4` has **breaking API changes**
+
+### Dependency Alia is Dropped
+
+Cassaforte no longer depends on Alia.
+
+### Per-Statement Retry Policy and Consistency Level Settings
+
+`clojurewerkz.cassaforte.client/prepare` now accepts two more options:
+
+ * `consistency-level`
+ * `retry-policy`
+
+### Namespace Reshuffling
+
+`clojurewerkz.cassaforte.cql/execute` is now `clojurewerkz.cassaforte.client/execute`,
+a few less frequently used functions were also moved between namespaces.
+ 
+
 ## Changes between 1.0.0-rc2 and 1.0.0-rc3
 
   * Update Hayt to latest version (1.0.0)
