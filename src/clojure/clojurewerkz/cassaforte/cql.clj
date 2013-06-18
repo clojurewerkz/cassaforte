@@ -6,27 +6,9 @@
    [clojurewerkz.cassaforte.query :as query]
    [clojurewerkz.cassaforte.client :as client]))
 
-(defmacro prepared
-  "Helper macro to execute prepared statement"
-  [& body]
-  `(binding [cql/*prepared-statement* true
-             cql/*param-stack*        (atom [])]
-     (do ~@body)))
-
-(defn- render-query
-  "Renders compiled query"
-  [query-params]
-  (let [renderer (if cql/*prepared-statement* query/->prepared query/->raw)]
-    (renderer query-params)))
-
-(defn- compile-query
-  "Compiles query from given `builder` and `query-params`"
-  [query-params builder]
-  (apply builder (flatten query-params)))
-
 (defn ^:private execute-
   [query-params builder]
-  (let [rendered-query (render-query (compile-query query-params builder))]
+  (let [rendered-query (client/render-query (client/compile-query query-params builder))]
     (client/execute rendered-query cql/*prepared-statement*)))
 
 ;;
@@ -84,7 +66,7 @@
   (->> (map #(query/insert-query table %) records)
        (apply query/queries)
        query/batch-query
-       render-query
+       client/render-query
        client/execute))
 
 (defn update

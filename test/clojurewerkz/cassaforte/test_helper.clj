@@ -45,7 +45,7 @@
   "Run given queries in both plain and prepared modes."
   `(do
      ~@body
-     (prepared ~@body)))
+     (client/prepared ~@body)))
 
 (defn initialize!
   [f]

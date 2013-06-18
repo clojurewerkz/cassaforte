@@ -1,17 +1,11 @@
 (ns clojurewerkz.cassaforte.cql-test
-  (:require [clojurewerkz.cassaforte.test-helper :as th])
+  (:require [clojurewerkz.cassaforte.test-helper :as th]
+            [clojurewerkz.cassaforte.client :as client])
   (:use clojurewerkz.cassaforte.cql
         clojure.test
         clojurewerkz.cassaforte.query))
 
 (use-fixtures :each th/initialize!)
-
-(deftest insert-test
-  (th/test-combinations
-   (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-     (insert :users r)
-     (is (= r (first (select :users))))
-     (truncate :users))))
 
 (deftest insert-test
   (th/test-combinations
@@ -67,6 +61,14 @@
    (is (nil? (:age (select :users))))
    (truncate :users)))
 
+(deftest insert-with-timestamp-test
+  (th/test-combinations
+   (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+     (insert :users r
+             (using :timestamp (.getTime (java.util.Date.))))
+     (is (= r (first (select :users))))
+     (truncate :users))))
+
 (deftest ttl-test
   (th/test-combinations
    (dotimes [i 3]
@@ -115,6 +117,7 @@
   (th/test-combinations
    (dotimes [i 10]
      (insert :users {:name (str "name_" i) :city (str "city_" i) :age (int i)}))
+
 
    (let [res (select :users
                      (where :city "city_5")
@@ -347,6 +350,14 @@
               set)))
 
   (drop-table :tv_series))
+
+(deftest insert-with-consistency-level-test
+  (th/test-combinations
+   (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+     (client/with-consistency-level (client/consistency-level :quorum)
+       (insert :users r))
+     (is (= r (first (select :users))))
+     (truncate :users))))
 
 ;; think about using `cons/conj` as a syntax sugar for prepended and appended list commands
 ;; test authentication

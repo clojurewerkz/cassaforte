@@ -1,7 +1,9 @@
 (ns clojurewerkz.cassaforte.client
   "Connection to Cassandra nodes and clusters, reconnection and retry policies, various defaults"
   (:require [clojurewerkz.cassaforte.debug-utils :as debug-utils]
-            [clojurewerkz.cassaforte.conversion :as conv])
+            [clojurewerkz.cassaforte.conversion :as conv]
+            [qbits.hayt.cql :as cql]
+            [clojurewerkz.cassaforte.query :as query])
   (:import [com.datastax.driver.core Query ResultSet ResultSetFuture Host Session Cluster
             Cluster$Builder SimpleStatement PreparedStatement Query HostDistance PoolingOptions
             ConsistencyLevel]
@@ -114,6 +116,13 @@ reached).
   `(binding [*async* true]
      ~@body))
 
+(defmacro prepared
+  "Helper macro to execute prepared statement"
+  [& body]
+  `(binding [cql/*prepared-statement* true
+             cql/*param-stack*        (atom [])]
+     (do ~@body)))
+
 (defmacro with-consistency-level
   "Executes a query with the given consistency level"
   [consistency-level & body]
@@ -192,6 +201,17 @@ reached).
     (alter-var-root (var *default-cluster*) (constantly cluster))
     (alter-var-root (var *default-session*) (constantly session))
     session))
+
+(defn render-query
+  "Renders compiled query"
+  [query-params]
+  (let [renderer (if cql/*prepared-statement* query/->prepared query/->raw)]
+    (renderer query-params)))
+
+(defn compile-query
+  "Compiles query from given `builder` and `query-params`"
+  [query-params builder]
+  (apply builder (flatten query-params)))
 
 (defn execute
   "Executes built query"
