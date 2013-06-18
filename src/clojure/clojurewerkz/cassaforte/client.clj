@@ -108,7 +108,7 @@ reached).
      ~@body))
 
 (defmacro async
-  "Executes query with debug output"
+  "Executes query asyncronously"
   [& body]
   `(binding [*async* true]
      ~@body))
@@ -116,13 +116,13 @@ reached).
 (defmacro with-consistency-level
   "Executes query given consistency level"
   [consistency-level & body]
-  `(binding [*consistency-level* consistency-level]
+  `(binding [*consistency-level* ~consistency-level]
      ~@body))
 
 (defmacro with-retry-policy
   "Executes query given retry policy"
   [retry-policy & body]
-  `(binding [*retry-policy* retry-policy]
+  `(binding [*retry-policy* ~retry-policy]
      ~@body))
 
 (defmacro with-debug
