@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.cql-multi
+(ns clojurewerkz.cassaforte.multi.cql
   "Key CQL operations interface, prepared statement implementation, convenience functions
    for key operations built on top of CQL. Includes versions of cassaforte.cql functions that
    take database as an explicit argument.
