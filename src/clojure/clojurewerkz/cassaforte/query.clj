@@ -1,7 +1,7 @@
 (ns clojurewerkz.cassaforte.query
   (:require
    [clojurewerkz.cassaforte.ns-utils :as ns-utils]
-   [qbits.hayt.dsl.verb :as verb]
+   [qbits.hayt.dsl.statement :as statement]
    [qbits.hayt.cql :as cql]))
 
 (def ->raw
@@ -21,7 +21,7 @@
 ;;
 
 
-(def select-query verb/select)
+(def select-query statement/select)
 
 (defn insert-query
   [table values & clauses]
@@ -33,32 +33,32 @@
   (into {:update table
          :set-columns set-columns} clauses))
 
-(def delete-query verb/delete)
+(def delete-query statement/delete)
 
-(def truncate-query verb/truncate)
-(def drop-keyspace-query verb/drop-keyspace)
-(def drop-table-query verb/drop-table)
-(def drop-index-query verb/drop-index)
-(def create-index-query verb/create-index)
+(def truncate-query statement/truncate)
+(def drop-keyspace-query statement/drop-keyspace)
+(def drop-table-query statement/drop-table)
+(def drop-index-query statement/drop-index)
+(def create-index-query statement/create-index)
 
-(def create-keyspace-query verb/create-keyspace)
-(def create-table-query verb/create-table)
-(def create-column-family-query verb/create-table)
-(def alter-table-query verb/alter-table)
-(def alter-column-family-query verb/alter-column-family)
-(def alter-keyspace-query verb/alter-keyspace)
+(def create-keyspace-query statement/create-keyspace)
+(def create-table-query statement/create-table)
+(def create-column-family-query statement/create-table)
+(def alter-table-query statement/alter-table)
+(def alter-column-family-query statement/alter-column-family)
+(def alter-keyspace-query statement/alter-keyspace)
 
-(def batch-query verb/batch)
+(def batch-query statement/batch)
 
-(def use-keyspace-query verb/use-keyspace)
+(def use-keyspace-query statement/use-keyspace)
 
-(def grant-query verb/grant)
-(def revoke-query verb/revoke)
-(def create-user-query verb/create-user)
-(def alter-user-query verb/alter-user)
-(def drop-user-query verb/drop-user)
-(def list-users-query verb/list-users)
-(def list-perm-query verb/list-perm)
+(def grant-query statement/grant)
+(def revoke-query statement/revoke)
+(def create-user-query statement/create-user)
+(def alter-user-query statement/alter-user)
+(def drop-user-query statement/drop-user)
+(def list-users-query statement/list-users)
+(def list-perm-query statement/list-perm)
 
 (defn where
   "Clause: takes a map or a vector of pairs to compose the where
