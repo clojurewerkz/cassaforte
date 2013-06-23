@@ -1,6 +1,16 @@
-## Changes between 1.0.0-rc4 and 1.0.0-rc5
+## Changes between 1.0.0-rc5 and 1.0.0-rc6
 
 No changes yet.
+
+
+
+## Changes between 1.0.0-rc4 and 1.0.0-rc5
+
+`cassaforte.multi.cql` is a new namespace with functions that are very similar to those
+in the `cassaforte.cqll` namespace but always take a database reference as an explicit argument.
+
+They are supposed to be used in cases when Cassaforte's "main" API that uses an implicit var is not
+enough.
 
 
 ## Changes between 1.0.0-rc3 and 1.0.0-rc4
@@ -22,7 +32,7 @@ Cassaforte no longer depends on Alia.
 
 `clojurewerkz.cassaforte.cql/execute` is now `clojurewerkz.cassaforte.client/execute`,
 a few less frequently used functions were also moved between namespaces.
- 
+
 
 ## Changes between 1.0.0-rc2 and 1.0.0-rc3
 
