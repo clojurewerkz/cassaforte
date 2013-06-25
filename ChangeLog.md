@@ -3,6 +3,10 @@
 Raw (string) query execution is now easier to do. Low-level ops are now more explicit and easy to
 use.
 
+`render-query` is renamed to `render`.
+
+`compile-query` is renamed to `compile`.
+
 ## Changes between 1.0.0-rc4 and 1.0.0-rc5
 
 `cassaforte.multi.cql` is a new namespace with functions that are very similar to those
