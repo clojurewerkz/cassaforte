@@ -360,3 +360,10 @@
 
 ;; think about using `cons/conj` as a syntax sugar for prepended and appended list commands
 ;; test authentication
+
+(deftest insert-test-raw
+  (testing "With default session"
+    (client/execute "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
+    (is (= {:name "Alex" :city "Munich" :age (int 19)}
+           (first (client/execute "SELECT * FROM users;"))))
+    (client/execute "TRUNCATE users;")))

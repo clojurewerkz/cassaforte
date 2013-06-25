@@ -9,7 +9,7 @@
 (defn ^:private execute-
   [query-params builder]
   (let [rendered-query (client/render-query (client/compile-query query-params builder))]
-    (client/execute rendered-query cql/*prepared-statement*)))
+    (client/execute client/*default-session* rendered-query :prepared cql/*prepared-statement*)))
 
 ;;
 ;; Schema operations

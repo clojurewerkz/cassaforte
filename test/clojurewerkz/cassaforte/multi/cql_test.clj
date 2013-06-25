@@ -368,3 +368,10 @@
       (insert session :users r)
       (is (= r (first (select session :users))))
       (truncate session :users))))
+
+(deftest insert-test-raw
+  (testing "With default session"
+    (client/execute th/session "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
+    (is (= {:name "Alex" :city "Munich" :age (int 19)}
+           (first (client/execute th/session "SELECT * FROM users;"))))
+    (client/execute th/session "TRUNCATE users;")))

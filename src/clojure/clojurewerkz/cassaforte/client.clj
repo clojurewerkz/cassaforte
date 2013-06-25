@@ -149,13 +149,16 @@ reached).
     (.setConsistencyLevel statement *consistency-level*))
   statement)
 
-(defn build-statement
+(defn- build-statement
   ([^PreparedStatement query args]
      (set-statement-options- (.bind query (to-array args))))
   ([^String string-query]
      (set-statement-options- (SimpleStatement. string-query))))
 
 (defn ^PreparedStatement prepare
+  "Prepares the provided query on C* server for futher execution.
+
+   This assumes that query is valid. Returns the prepared statement corresponding to the query."
   [^String query]
   (.prepare ^Session *default-session* query))
 
@@ -219,20 +222,20 @@ reached).
 
 (defn execute
   "Executes built query"
-  ([query prepared?]
-     (execute *default-session* query prepared?))
-  ([^Session session query prepared?]
-     (when *debug*
-       (debug-utils/output-debug query))
-     (with-session session
-       (let [^Query statement (if prepared?
-                                (build-statement (prepare (first query))
-                                                 (second query))
-                                (build-statement query))
-             ^ResultSetFuture future (.executeAsync session statement)]
-         (if *async*
-           future
-           (conv/to-map (.getUninterruptibly future)))))))
+  [& args]
+  (let [[^Session session query & {:keys [prepared]}] (if (= (type (first args)) Session)
+                                                      args
+                                                      (cons *default-session* args))
+        ^Query statement (if prepared
+                           (build-statement (prepare (first query))
+                                            (second query))
+                           (build-statement query))
+        ^ResultSetFuture future (.executeAsync session statement)]
+    (when *debug*
+      (debug-utils/output-debug query))
+    (if *async*
+      future
+      (conv/to-map (.getUninterruptibly future)))))
 
 (defn ^String export-schema
   "Exports the schema as a string"
