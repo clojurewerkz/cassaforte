@@ -1,8 +1,7 @@
 ## Changes between 1.0.0-rc5 and 1.0.0-rc6
 
-No changes yet.
-
-
+Raw (string) query execution is now easier to do. Low-level ops are now more explicit and easy to
+use.
 
 ## Changes between 1.0.0-rc4 and 1.0.0-rc5
 
