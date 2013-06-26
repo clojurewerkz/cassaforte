@@ -1,17 +1,10 @@
 (ns clojurewerkz.cassaforte.query
+  "Functions for building dynamic CQL queries, in case you feel
+   that `cql` namespace is too limiting for you."
   (:require
    [clojurewerkz.cassaforte.ns-utils :as ns-utils]
    [qbits.hayt.dsl.statement :as statement]
    [qbits.hayt.cql :as cql]))
-
-(def ->raw
-  "Compiles a hayt query into its raw string value"
-  cql/->raw)
-
-(def ->prepared
-  "Compiles a hayt query into a vector composed of the prepared string
-  query and a vector of parameters."
-  cql/->prepared)
 
 (doseq [module '(dsl.clause fns utils)]
   (ns-utils/alias-ns (symbol (str "qbits.hayt." module))))
@@ -67,6 +60,13 @@ clause of a select/update/delete query"
   {:where (partition 2 args)})
 
 (defn paginate
+  "Paginate through the collection of results
+
+   Params:
+     * `where` - where query to lock a partition key
+     * `key` - key to paginate on
+     * `last-key` - last seen value of the key, next chunk of results will contain all keys that follow that value
+     * `per-page` - how many results per page"
   ([& {:keys [key last-key per-page where] :or {:page 0}}]
      {:limit per-page
       :where (if last-key

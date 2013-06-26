@@ -1,5 +1,7 @@
 (ns clojurewerkz.cassaforte.client
-  "Connection to Cassandra nodes and clusters, reconnection and retry policies, various defaults"
+  "Base namespace for connecting to Cassandra clusters, configuring your cluster connection, tuning
+   things like Load Balancing, Retries, consistency and reconnection, rendering queries generated
+   using the DSL, preparing them, working with asyncronous results."
   (:require [clojurewerkz.cassaforte.debug-utils :as debug-utils]
             [clojurewerkz.cassaforte.conversion :as conv]
             [qbits.hayt.cql :as cql]
@@ -212,7 +214,7 @@ reached).
 (defn render
   "Renders compiled query"
   [query-params]
-  (let [renderer (if cql/*prepared-statement* query/->prepared query/->raw)]
+  (let [renderer (if cql/*prepared-statement* cql/->prepared cql/->raw)]
     (renderer query-params)))
 
 (defn compile

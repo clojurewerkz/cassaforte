@@ -1,4 +1,6 @@
 (ns clojurewerkz.cassaforte.bytes
+  "Facility functions to use with serialization, handle deserialization of all the data types
+   supported by Cassandra."
   (:import java.nio.ByteBuffer java.util.Date
            org.apache.cassandra.utils.ByteBufferUtil
            [com.datastax.driver.core DataType DataType$Name]

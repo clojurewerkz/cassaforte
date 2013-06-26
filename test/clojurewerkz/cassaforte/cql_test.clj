@@ -336,8 +336,7 @@
 
   (is (= (set (range 0 10))
          (->> (select :tv_series
-                      (paginate :key :episode_id :per-page 10 :where { :series_title "Futurama"})
-                      )
+                      (paginate :key :episode_id :per-page 10 :where { :series_title "Futurama"}))
               (map :episode_id)
               set)))
 

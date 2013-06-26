@@ -1,4 +1,5 @@
 (ns clojurewerkz.cassaforte.debug-utils
+  "Debug utilities"
   (:use clojure.stacktrace))
 
 (defmacro output-debug

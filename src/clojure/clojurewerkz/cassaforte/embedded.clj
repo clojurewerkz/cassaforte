@@ -1,4 +1,7 @@
 (ns clojurewerkz.cassaforte.embedded
+  "Provides facility functions for working with an embedded Cassandra server, which is very useful
+   for testing your application without having a C* cluster running and for cases when application
+   requires Standalone Cassandra without additional installation."
   (:require [clojure.java.io :as io])
   (:import [org.apache.cassandra.service CassandraDaemon]
            [org.apache.cassandra.config DatabaseDescriptor]))

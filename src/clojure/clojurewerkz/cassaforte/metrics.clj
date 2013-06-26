@@ -1,4 +1,5 @@
 (ns clojurewerkz.cassaforte.metrics
+  "Helper functions to work with metrics reporting built into the driver"
   (:import [com.datastax.driver.core Session]
            [com.yammer.metrics.reporting ConsoleReporter CsvReporter]
            [com.yammer.metrics.core MetricsRegistry]
@@ -25,5 +26,4 @@
            _        (when (not (.exists f)) (.mkdir f))
            reporter (CsvReporter. registry f)]
        (.start reporter period time-unit)
-       (.run reporter)
-       )))
+       (.run reporter))))
