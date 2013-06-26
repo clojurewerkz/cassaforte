@@ -72,3 +72,12 @@ clause of a select/update/delete query"
       :where (if last-key
                (assoc where key [> last-key])
                where)}))
+
+
+(defn increment-by
+  [num]
+  [+ num])
+
+(defn decrement-by
+  [num]
+  [- num])

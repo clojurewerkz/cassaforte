@@ -78,19 +78,22 @@
    (Thread/sleep 2100)
    (is (= 0 (perform-count :users)))))
 
+
 (deftest counter-test
-  (update :user_counters {:user_count [+ 5]} (where :name "asd"))
+  (update :user_counters {:user_count (increment-by 5)} (where :name "user1"))
   (is (= 5 (:user_count (first (select :user_counters)))))
-  (update :user_counters {:user_count [+ 500]} (where :name "asd"))
-  (is (= 505 (:user_count (first (select :user_counters)))))
-  (update :user_counters {:user_count [+ 5000000]} (where :name "asd"))
-  (is (= 5000505 (:user_count (first (select :user_counters)))))
-  (update :user_counters {:user_count [+ 50000000000000]} (where :name "asd"))
-  (is (= 50000005000505 (:user_count (first (select :user_counters))))))
+  (update :user_counters {:user_count (decrement-by 5)} (where :name "user1"))
+  (is (= 0 (:user_count (first (select :user_counters)))))
+  (update :user_counters {:user_count [+ 500]} (where :name "user1"))
+  (is (= 500 (:user_count (first (select :user_counters)))))
+  (update :user_counters {:user_count [+ 5000000]} (where :name "user1"))
+  (is (= 5000500 (:user_count (first (select :user_counters)))))
+  (update :user_counters {:user_count [+ 50000000000000]} (where :name "user1"))
+  (is (= 50000005000500 (:user_count (first (select :user_counters))))))
 
 (deftest counter-test-2
   (dotimes [i 100]
-    (update :user_counters {:user_count [+ 1]} (where :name "asd")))
+    (update :user_counters {:user_count [+ 1]} (where :name "user1")))
   (is (= 100 (:user_count (first (select :user_counters))))))
 
 (deftest index-test-filtering-range
@@ -363,6 +366,13 @@
 (deftest insert-test-raw
   (testing "With default session"
     (client/execute "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
+    (is (= {:name "Alex" :city "Munich" :age (int 19)}
+           (first (client/execute "SELECT * FROM users;"))))
+    (client/execute "TRUNCATE users;"))
+  (testing "Prepared statement"
+    (client/execute (client/as-prepared "INSERT INTO users (name, city, age) VALUES (?, ?, ?);"
+                                        "Alex" "Munich" (int 19))
+                    :prepared true)
     (is (= {:name "Alex" :city "Munich" :age (int 19)}
            (first (client/execute "SELECT * FROM users;"))))
     (client/execute "TRUNCATE users;")))

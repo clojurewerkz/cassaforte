@@ -151,7 +151,7 @@ reached).
     (.setConsistencyLevel statement *consistency-level*))
   statement)
 
-(defn- build-statement
+(defn build-statement
   ([^PreparedStatement query args]
      (set-statement-options- (.bind query (to-array args))))
   ([^String string-query]
@@ -171,7 +171,11 @@ reached).
            max-connections-per-host
 
            consistency-level
-           retry-policy]}]
+           retry-policy
+           force-prepared-queries]}]
+  (when force-prepared-queries
+    (alter-var-root (var cql/*prepared-statement*) (constantly true)))
+
   (when consistency-level
     (alter-var-root (var *consistency-level*) (constantly consistency-level)))
 
@@ -222,6 +226,10 @@ reached).
   [query-params builder]
   (apply builder (flatten query-params)))
 
+(defn as-prepared
+  [query & values]
+  (vector query values))
+
 (defn execute
   "Executes built query"
   [& args]
@@ -229,8 +237,10 @@ reached).
                                                       args
                                                       (cons *default-session* args))
         ^Query statement (if prepared
-                           (build-statement (prepare (first query))
-                                            (second query))
+                           (if (coll? query )
+                             (build-statement (prepare (first query))
+                                              (second query))
+                             (throw (Exception. "Query is meant to be executed as prepared, but no values were supplied.")))
                            (build-statement query))
         ^ResultSetFuture future (.executeAsync session statement)]
     (when *debug*
