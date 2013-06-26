@@ -1,11 +1,17 @@
 ## Changes between 1.0.0-rc5 and 1.0.0-rc6
 
+### Raw Query Execution Improvements
+
 Raw (string) query execution is now easier to do. Low-level ops are now more explicit and easy to
 use.
 
-`render-query` is renamed to `render`.
+### Functions Renamed
 
-`compile-query` is renamed to `compile`.
+`clojurewerkz.cassaforte.client/render-query` is renamed to `clojurewerkz.cassaforte.client/render`.
+
+`clojurewerkz.cassaforte.client/compile-query` is renamed to `clojurewerkz.cassaforte.client/compile`.
+
+
 
 ## Changes between 1.0.0-rc4 and 1.0.0-rc5
 
