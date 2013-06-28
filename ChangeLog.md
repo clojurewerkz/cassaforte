@@ -5,6 +5,8 @@
 Raw (string) query execution is now easier to do. Low-level ops are now more explicit and easy to
 use.
 
+Update Hayt to latest version (1.1.2), allow depending on Clojure starting with 1.4.
+
 ### Functions Renamed
 
 `clojurewerkz.cassaforte.client/render-query` is renamed to `clojurewerkz.cassaforte.client/render`.

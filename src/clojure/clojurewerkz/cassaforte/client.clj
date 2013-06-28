@@ -289,7 +289,7 @@ reached).
    (reify FutureCallback
      (onSuccess [_ result]
        (success
-        (conv/to-map (deref future))))
+        (conv/to-map (.get future))))
      (onFailure [_ result]
        (failure result)))))
 
@@ -299,4 +299,4 @@ reached).
      (conv/to-map (.get future timeout-ms
                         java.util.concurrent.TimeUnit/MILLISECONDS)))
   ([^ResultSetFuture future]
-     (conv/to-map (deref future))))
+     (conv/to-map (.get future))))
