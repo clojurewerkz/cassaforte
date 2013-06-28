@@ -5,10 +5,10 @@
 Raw (string) query execution is now easier to do. Low-level ops are now more explicit and easy to
 use.
 
-### Support of Clojure starting with 1.4 added
+### Support of Clojure 1.4+
 
 Hayt was been updated to [latest version (1.1.2)](https://github.com/mpenet/hayt/commit/c4ec6d8bea49843aaf0afa22a2cc09eff6fbc866),
-which allowed depending on Clojure starting with 1.4.
+which allows Cassaforte support Clojure 1.4.
 
 ### Functions Renamed
 
