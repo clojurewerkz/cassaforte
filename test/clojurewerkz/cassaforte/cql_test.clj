@@ -110,8 +110,8 @@
                      (allow-filtering true))]
      (is (= (set (range 6 10))
             (->> res
-                (map :age)
-                set))))
+                 (map :age)
+                 set))))
    (truncate :users)))
 
 (deftest index-exact-match
@@ -248,7 +248,7 @@
              (where :name "user1"))
 
      (is (= #{"str2"} (get-in (select :users_set)
-                             [0 :test_set])))))
+                              [0 :test_set])))))
 
   (drop-table :users_set))
 
@@ -267,7 +267,7 @@
    (insert :users {:name "Sam"    :city "San Francisco" :age (int 21)})
 
    (let [users (select :users
-                           (where :name [:in ["Alex" "Robert"]]))]
+                       (where :name [:in ["Alex" "Robert"]]))]
      (is (= "Munich" (get-in users [0 :city])))
      (is (= "Berlin" (get-in users [1 :city]))))))
 
@@ -280,17 +280,17 @@
            {:post_id "post1"}
            {:post_id "post2"}]
           (select :user_posts
-           (columns :post_id)
-           (where :username "Alex")
-           (order-by [:post_id]))))
+                  (columns :post_id)
+                  (where :username "Alex")
+                  (order-by [:post_id]))))
 
    (is (= [{:post_id "post2"}
            {:post_id "post1"}
            {:post_id "post0"}]
           (select :user_posts
-           (columns :post_id)
-           (where :username "Alex")
-           (order-by [:post_id :desc]))))))
+                  (columns :post_id)
+                  (where :username "Alex")
+                  (order-by [:post_id :desc]))))))
 
 (deftest select-range-query-test
   (create-table :tv_series
