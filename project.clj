@@ -45,5 +45,6 @@
           :exclude [clojurewerkz.cassaforte.conversion
                     clojurewerkz.cassaforte.ns-utils
                     clojurewerkz.cassaforte.metrics
-                    clojurewerkz.cassaforte.debug-utils]
+                    clojurewerkz.cassaforte.debug-utils
+                    clojurewerkz.cassaforte.bytes]
           :output-dir "doc/api"})
