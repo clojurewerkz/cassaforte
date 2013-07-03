@@ -39,5 +39,11 @@
                                        :releases {:checksum :fail :update :always}}}
   :warn-on-reflection true
   :pedantic :warn
-  :codox {:sources ["src"]
+  :codox {:src-dir-uri "https://github.com/clojurewerkz/cassaforte/blob/master"
+          :sources ["src"]
+          :src-linenum-anchor-prefix "L"
+          :exclude [clojurewerkz.cassaforte.conversion
+                    clojurewerkz.cassaforte.ns-utils
+                    clojurewerkz.cassaforte.metrics
+                    clojurewerkz.cassaforte.debug-utils]
           :output-dir "doc/api"})
