@@ -5,7 +5,7 @@ Its API and code style closely follow other ClojureWerkz projects, namely [Monge
 [Neocons](https://clojureneo4j.info), [Elastisch](https://clojureelasticsearch.info) and [Spyglass](https://clojurememcached.info).
 
 For quickstart, please refer to our [Getting Started with Clojure and Cassandra](http://clojurecassandra.info/articles/getting_started.html)
-guide. You can find our API documentation [here](http://clojurecassandra.info/api/index.html).
+guide.
 
 ## Project Goals
 
@@ -91,6 +91,8 @@ Please refer to our [Getting Started with Clojure and
 Cassandra](http://clojurecassandra.info/articles/getting_started.html)
 guide.  [Documentation guides](http://clojurecassandra.info) are not
 finished and will be improved over time.
+
+[API reference](http://reference.clojurecassandra.info/) is also available.
 
 
 Don't hesitate to join our [mailing
