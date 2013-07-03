@@ -5,6 +5,10 @@
 Raw (string) query execution is now easier to do. Low-level ops are now more explicit and easy to
 use.
 
+### Underlying Java Driver update
+
+[Java Driver](https://github.com/datastax/java-driver) was updated to latest stable version, 1.0.1.
+
 ### Support of Clojure 1.4+
 
 Hayt was been updated to [latest version (1.1.2)](https://github.com/mpenet/hayt/commit/c4ec6d8bea49843aaf0afa22a2cc09eff6fbc866),
