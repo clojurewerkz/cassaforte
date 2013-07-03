@@ -151,9 +151,15 @@ reached).
     (.setConsistencyLevel statement *consistency-level*))
   statement)
 
-(defn build-statement
-  ([^PreparedStatement query args]
-     (set-statement-options- (.bind query (to-array args))))
+(defn- build-statement
+  "Builds a Prepare or Simple statement out of given params.
+
+   Arities:
+     * query + args - for building prepared statements, `query` is a string with placeholders, `values`
+       are values to be bound to the built statement for execution.
+     * query - for building simple, not prepared statements."
+  ([^PreparedStatement query values]
+     (set-statement-options- (.bind query (to-array values))))
   ([^String string-query]
      (set-statement-options- (SimpleStatement. string-query))))
 
@@ -165,6 +171,19 @@ reached).
   (.prepare ^Session *default-session* query))
 
 (defn build-cluster
+  "Builds an instance of Cluster you can connect to.
+
+   Options:
+     * contact-points - cluster hosts to connect to
+     * port - port, listening to incoming binary CQL connections (make sure you have `start_native_transport` set
+       to true).
+     * connections-per-host - specifies core number of connections per host.
+     * max-connections-per-host - maximum number of connections per host.
+     * retry-policy - configures the retry policy to use for the new cluster.
+     * load-balancing-policy - configures the load balancing policy to use for the new cluster.
+     * force-prepared-queries - forces all queries to be executed as prepared by default
+     * consistency-level - sets the default consistency level for all queires to be executed against this cluster,
+       use `with-consistency-level` to specify consistency level on a per-query basis"
   [{:keys [contact-points
            port
            connections-per-host
@@ -172,6 +191,8 @@ reached).
 
            consistency-level
            retry-policy
+           reconnection-policy
+           load-balancing-policy
            force-prepared-queries]}]
   (when force-prepared-queries
     (alter-var-root (var cql/*prepared-statement*) (constantly true)))
@@ -179,13 +200,11 @@ reached).
   (when consistency-level
     (alter-var-root (var *consistency-level*) (constantly consistency-level)))
 
-  (when retry-policy
-    (alter-var-root (var *retry-policy*) (constantly retry-policy)))
-
   (let [^Cluster$Builder builder        (Cluster/builder)
         ^PoolingOptions pooling-options (.poolingOptions builder)]
     (when port
       (.withPort builder port))
+
     (when connections-per-host
       (.setCoreConnectionsPerHost pooling-options HostDistance/LOCAL
                                   connections-per-host))
@@ -194,10 +213,19 @@ reached).
                                  max-connections-per-host))
     (doseq [contact-point contact-points]
       (.addContactPoint builder contact-point))
+
+    (when retry-policy
+      (.withRetryPolicy builder retry-policy))
+
+    (when reconnection-policy
+      (.withReconnectionPolicy builder reconnection-policy))
+
+    (when load-balancing-policy
+      (.withLoadBalancingPolicy builder load-balancing-policy))
     (.build builder)))
 
 (defn ^Session connect
-  "Connects to a Cassandra cluster"
+  "Connects to the Cassandra cluster. Use `build` function to build cluster with all required options."
   ([^Cluster cluster]
      (.connect cluster))
   ([^Cluster cluster keyspace]
@@ -227,11 +255,17 @@ reached).
   (apply builder (flatten query-params)))
 
 (defn as-prepared
+  "Helper method to create prepared query from `query` string with `?` placeholders and values
+   to be bound to the query."
   [query & values]
   (vector query values))
 
 (defn execute
-  "Executes built query"
+  "Executes built query
+
+   Options
+     * prepared - wether the query should or should not be executed as prepared, always passed
+       explicitly, because `execute` is considered to be a low-level function."
   [& args]
   (let [[^Session session query & {:keys [prepared]}] (if (= (type (first args)) Session)
                                                       args
@@ -294,7 +328,7 @@ reached).
        (failure result)))))
 
 (defn get-result
-  "Get result from Future"
+  "Get result from Future. Optional `timeout-ms` should be specified in milliseconds."
   ([^ResultSetFuture future ^long timeout-ms]
      (conv/to-map (.get future timeout-ms
                         java.util.concurrent.TimeUnit/MILLISECONDS)))

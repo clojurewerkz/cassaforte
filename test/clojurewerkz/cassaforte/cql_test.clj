@@ -357,7 +357,7 @@
    (let [r {:name "Alex" :city "Munich" :age (int 19)}]
      (client/with-consistency-level (client/consistency-level :quorum)
        (insert :users r))
-     (is (= r (first (select :users))))
+     (is (= r (get-one :users)))
      (truncate :users))))
 
 ;; think about using `cons/conj` as a syntax sugar for prepended and appended list commands
