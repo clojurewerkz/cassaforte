@@ -290,9 +290,9 @@ reached.
   "Exports the schema as a string"
   [^Session client]
   (-> client
-      (.getCluster)
-      (.getMetadata)
-      (.exportSchemaAsString)))
+      .getCluster
+      .getMetadata
+      .exportSchemaAsString))
 
 (defn get-hosts
   "Returns all nodes in the cluster"
@@ -303,9 +303,9 @@ reached.
           :rack       (.getRack host)
           :is-up      (.isUp (.getMonitor host))})
        (-> session
-           (.getCluster)
-           (.getMetadata)
-           (.getAllHosts))))
+           .getCluster
+           .getMetadata
+           .getAllHosts)))
 
 ;; defn get-replicas
 ;; defn get-cluster-name
@@ -314,11 +314,11 @@ reached.
 ;; defn rebuild-schema
 
 ;;
-;;
+;; Result Handling
 ;;
 
 (defn set-callbacks
-  "Set callbacks for the future"
+  "Set callbacks on a result future"
   [^ResultSetFuture future & {:keys [success failure]}]
   {:pre [(not (nil? success))]}
   (Futures/addCallback
