@@ -1,5 +1,5 @@
 (ns clojurewerkz.cassaforte.cql
-  "Key CQL operations interface, prepared statement implementation, convenience functions
+  "Main namespace for working with CQL, prepared statements. Convenience functions
    for key operations built on top of CQL."
   (:require
    [qbits.hayt.cql :as cql]
