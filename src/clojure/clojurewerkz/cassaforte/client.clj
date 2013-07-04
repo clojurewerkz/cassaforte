@@ -1,7 +1,11 @@
 (ns clojurewerkz.cassaforte.client
-  "Base namespace for connecting to Cassandra clusters, configuring your cluster connection, tuning
-   things like Load Balancing, Retries, consistency and reconnection, rendering queries generated
-   using the DSL, preparing them, working with asyncronous results."
+  "Provides fundamental functions for
+
+   * connecting to Cassandra nodes and clusters
+   * configuring connections
+   * tuning load balancing, retries, reconnection strategies and consistency settings
+   * preparing and executing queries constructed via DSL
+   * working with executing results"
   (:require [clojurewerkz.cassaforte.debug-utils :as debug-utils]
             [clojurewerkz.cassaforte.conversion :as conv]
             [qbits.hayt.cql :as cql]
