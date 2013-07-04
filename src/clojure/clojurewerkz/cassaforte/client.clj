@@ -24,20 +24,20 @@
 ;;
 
 (defn round-robin-policy
-  "Round-robin load balancing policy. Each next query is ran on the node that was contacted
-  least recently."
+  "Round-robin load balancing policy. Picks nodes to execute requests on in order."
   []
   (RoundRobinPolicy.))
 
 (defn dc-aware-round-robin-policy
-  "Datacenter aware load balancing policy. Each next query is ran on the node that was contacted
-  least recently, over the nodes located in current datacenter. Nodes from other datacenters will
-  be tried only after the local nodes."
+  "Datacenter aware load balancing policy.
+
+   Like round-robin but over the nodes located in the same datacenter.
+   Nodes from other datacenters will be tried only if all requests to local nodes fail."
   [^String local-dc]
   (DCAwareRoundRobinPolicy. local-dc))
 
 (defn token-aware-policy
-  "Wrapper to add token-awareness to the underlying policy."
+  "Takes a load balancing policy and makes it token-aware"
   [^LoadBalancingPolicy underlying-policy]
   (TokenAwarePolicy. underlying-policy))
 
@@ -64,8 +64,7 @@
 
 (defn exponential-reconnection-policy
   "Reconnection policy that waits exponentially longer between each
-reconnection attempt (but keeps a constant delay once a maximum delay is
-reached).
+reconnection attempt but keeps a constant delay once a maximum delay is reached.
 
    Delays should be given in milliseconds"
   [base-delay-ms max-delay-ms]
@@ -73,8 +72,8 @@ reached).
 
 (defn constant-reconnection-policy
   "Reconnection policy that waits constantly longer between each
-reconnection attempt (but keeps a constant delay once a maximum delay is
-reached).
+reconnection attempt but keeps a constant delay once a maximum delay is
+reached.
 
    Delay should be given in milliseconds"
   [delay-ms]
@@ -111,19 +110,19 @@ reached).
 (def ^:dynamic *retry-policy* (retry-policy :default))
 
 (defmacro with-session
-  "Executes query with given session"
+  "Executes a query with the given session"
   [session & body]
   `(binding [*default-session* ~session]
      ~@body))
 
 (defmacro async
-  "Executes query asyncronously"
+  "Executes a query asyncronously"
   [& body]
   `(binding [*async* true]
      ~@body))
 
 (defmacro prepared
-  "Helper macro to execute prepared statement"
+  "Executes a prepared statement"
   [& body]
   `(binding [cql/*prepared-statement* true
              cql/*param-stack*        (atom [])]
