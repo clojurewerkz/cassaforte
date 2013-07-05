@@ -1,5 +1,5 @@
 (ns clojurewerkz.cassaforte.metrics
-  "Helper functions to work with metrics reporting built into the driver"
+  "Access to metrics (console, CSV, etc) for the driver"
   (:import [com.datastax.driver.core Session]
            [com.yammer.metrics.reporting ConsoleReporter CsvReporter]
            [com.yammer.metrics.core MetricsRegistry]
