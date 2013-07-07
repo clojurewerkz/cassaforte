@@ -6,7 +6,7 @@
    * tuning load balancing, retries, reconnection strategies and consistency settings
    * preparing and executing queries constructed via DSL
    * working with executing results"
-  (:require [clojurewerkz.cassaforte.debug-utils :as debug-utils]
+  (:require [clojurewerkz.cassaforte.debug :as dbg]
             [clojurewerkz.cassaforte.conversion :as conv]
             [qbits.hayt.cql :as cql]
             [clojurewerkz.cassaforte.query :as query])
@@ -144,7 +144,7 @@ reached.
   "Executes a query with *debug* bound to true"
   [& body]
   `(binding [*debug* true]
-     (debug-utils/catch-exceptions ~@body)))
+     (dbg/catch-exceptions ~@body)))
 
 (defn- set-statement-options-
   [^Query statement]
@@ -281,7 +281,7 @@ reached.
                            (build-statement query))
         ^ResultSetFuture future (.executeAsync session statement)]
     (when *debug*
-      (debug-utils/output-debug query))
+      (dbg/output-debug query))
     (if *async*
       future
       (conv/to-map (.getUninterruptibly future)))))

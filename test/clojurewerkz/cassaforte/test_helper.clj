@@ -1,7 +1,6 @@
 (ns clojurewerkz.cassaforte.test-helper
   (:require [clojurewerkz.cassaforte.embedded :as e]
-            [clojurewerkz.cassaforte.client :as client]
-            [clojurewerkz.cassaforte.debug-utils :as debug])
+            [clojurewerkz.cassaforte.client :as client])
   (:use clojurewerkz.cassaforte.cql
         clojurewerkz.cassaforte.query))
 

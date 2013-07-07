@@ -1,10 +1,9 @@
 (ns clojurewerkz.cassaforte.query
   "Functions for building dynamic CQL queries, in case you feel
    that `cql` namespace is too limiting for you."
-  (:use [clojurewerkz.cassaforte.ns-utils])
-  (:require
-   [qbits.hayt.dsl.statement :as statement]
-   [qbits.hayt.cql :as cql]))
+  (:require [qbits.hayt.dsl.statement :as statement]
+            [qbits.hayt.cql :as cql]
+            [clojurewerkz.cassaforte.aliases :refer :all]))
 
 (doseq [module '(dsl.clause fns utils)]
   (alias-ns (symbol (str "qbits.hayt." module))))
