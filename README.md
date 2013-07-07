@@ -44,7 +44,7 @@ generation DSL library.
 
 ## Supported Clojure Versions
 
-Cassaforte is built from the ground up for Clojure 1.4 and up.
+Cassaforte supports Clojure 1.4+.
 
 
 
@@ -71,7 +71,7 @@ definition to your `pom.xml`:
 With Leiningen:
 
 ``` clojure
-[clojurewerkz/cassaforte "1.0.0-rc4"]
+[clojurewerkz/cassaforte "1.0.0"]
 ```
 
 With Maven:
@@ -80,7 +80,7 @@ With Maven:
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>1.0.0-rc4</version>
+  <version>1.0.0</version>
 </dependency>
 ```
 
