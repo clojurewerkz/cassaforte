@@ -19,42 +19,20 @@ guide.
 
 
 
-
 ## Project Maturity
 
-Cassaforte is a young project that took about a year to reach RC quality releases. It is used heavily in a
+Cassaforte is a relatively young project. It took about a year to reach `1.0`. It is used heavily in a
 monitoring and event collection solution that processes fairly large
 amount of data.
 
-It is based on the now stable new [DataStax Java driver for
+Cassaforte is based on the now stable new [DataStax Java driver for
 Cassandra](https://github.com/datastax/java-driver) and
 [Hayt](https://github.com/mpenet/hayt), a fairly battle tested CQL
 generation DSL library.
 
 
-## Supported Features
 
- * Connection to a single node or a cluster
- * _All_ CQL operations
- * CQL 3.0 queries, including queries with placeholders (?, a la JDBC)
- * Nice CQL query DSL for Clojure
- * Automatic deserialization of column names and values according to the schema
-
-
-
-## Supported Clojure Versions
-
-Cassaforte supports Clojure 1.4+.
-
-
-
-## Supported Apache Cassandra Versions
-
-Cassaforte is built from the ground up for CQL 3 and Cassandra 1.2+.
-
-
-
-## Maven Artifacts
+## Dependency Information (Artifacts)
 
 Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/cassaforte). If you are using Maven, add the following repository
 definition to your `pom.xml`:
@@ -83,6 +61,28 @@ With Maven:
   <version>1.0.0</version>
 </dependency>
 ```
+
+
+## Supported Features
+
+ * Connection to a single node or a cluster
+ * _All_ CQL operations
+ * CQL 3.0 queries, including queries with placeholders (?, a la JDBC)
+ * Nice CQL query DSL for Clojure
+ * Automatic deserialization of column names and values according to the schema
+
+
+
+## Supported Clojure Versions
+
+Cassaforte supports Clojure 1.4+.
+
+
+
+## Supported Apache Cassandra Versions
+
+Cassaforte is built from the ground up for CQL 3 and Cassandra 1.2+.
+
 
 
 ## Documentation & Examples
