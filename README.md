@@ -1,8 +1,7 @@
-# Cassaforte
+# Cassaforte, a Clojure Cassandra Client
 
-Cassaforte is a young idiomatic Clojure client for Apache Cassandra (1.2+).
-Its API and code style closely follow other ClojureWerkz projects, namely [Monger](https://clojuremongodb.info), [Welle](https://clojureriak.info),
-[Neocons](https://clojureneo4j.info), [Elastisch](https://clojureelasticsearch.info) and [Spyglass](https://clojurememcached.info).
+Cassaforte is a small, easy to use Clojure client for Apache Cassandra
+(1.2+), part of the [ClojureWerkz libraries](http://clojurewerkz.org).
 
 For quickstart, please refer to our [Getting Started with Clojure and Cassandra](http://clojurecassandra.info/articles/getting_started.html)
 guide.
