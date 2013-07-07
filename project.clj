@@ -43,8 +43,8 @@
           :sources ["src"]
           :src-linenum-anchor-prefix "L"
           :exclude [clojurewerkz.cassaforte.conversion
-                    clojurewerkz.cassaforte.ns-utils
+                    clojurewerkz.cassaforte.aliases
                     clojurewerkz.cassaforte.metrics
-                    clojurewerkz.cassaforte.debug-utils
+                    clojurewerkz.cassaforte.debug
                     clojurewerkz.cassaforte.bytes]
           :output-dir "doc/api"})
