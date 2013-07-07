@@ -110,8 +110,8 @@ To subscribe for announcements of releases, important changes and so on, please 
 ## Cassaforte Is a ClojureWerkz Project
 
 Cassaforte is part of the [group of libraries known as ClojureWerkz](http://clojurewerkz.org), together with
-[Monger](https://clojuremongodb.info), [Welle](https://clojureriak.info), [Neocons](https://clojureneo4j.info),
-[Elastisch](https://clojureelasticsearch.info) and several others.
+[Monger](http://clojuremongodb.info), [Elastisch](http://clojureelasticsearch.info), [Langohr](http://clojurerabbitmq.info),
+[Welle](http://clojureriak.info), [Titanium](http://titanium.clojurewerkz.org) and several others.
 
 
 
