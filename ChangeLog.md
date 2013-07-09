@@ -1,6 +1,9 @@
 ## Changes between 1.0.0 and 1.1.0
 
-No changes yet.
+### Fixes for AOT Compilation
+
+Cassaforte now can be AOT compiled: `clojurewerkz.cassaforte.client/compile`
+is renamed back to `clojurewerkz.cassaforte.client/compile-query`.
 
 
 ## Changes between 1.0.0-rc5 and 1.0.0-rc6
