@@ -19,13 +19,6 @@ use.
 Hayt was been updated to [latest version (1.1.2)](https://github.com/mpenet/hayt/commit/c4ec6d8bea49843aaf0afa22a2cc09eff6fbc866),
 which allows Cassaforte support Clojure 1.4.
 
-### Functions Renamed
-
-`clojurewerkz.cassaforte.client/render-query` is renamed to `clojurewerkz.cassaforte.client/render`.
-
-`clojurewerkz.cassaforte.client/compile-query` is renamed to `clojurewerkz.cassaforte.client/compile`.
-
-
 
 ## Changes between 1.0.0-rc4 and 1.0.0-rc5
 

@@ -246,13 +246,13 @@ reached.
     (alter-var-root (var *default-session*) (constantly session))
     session))
 
-(defn render
+(defn render-query
   "Renders compiled query"
   [query-params]
   (let [renderer (if cql/*prepared-statement* cql/->prepared cql/->raw)]
     (renderer query-params)))
 
-(defn compile
+(defn compile-query
   "Compiles query from given `builder` and `query-params`"
   [query-params builder]
   (apply builder (flatten query-params)))

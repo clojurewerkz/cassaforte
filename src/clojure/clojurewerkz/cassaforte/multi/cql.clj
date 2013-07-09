@@ -13,7 +13,7 @@
 
 (defn ^:private execute-
   [^Session session query-params builder]
-  (let [rendered-query (client/render (client/compile query-params builder))]
+  (let [rendered-query (client/render-query (client/compile-query query-params builder))]
     (client/execute session rendered-query :prepared cql/*prepared-statement*)))
 
 ;;
@@ -137,7 +137,7 @@
   (->> (map #(query/insert-query table %) records)
        (apply query/queries)
        query/batch-query
-       client/render
+       client/render-query
        client/execute))
 
 (defn update
