@@ -252,7 +252,7 @@ reached.
   (let [renderer (if cql/*prepared-statement* cql/->prepared cql/->raw)]
     (renderer query-params)))
 
-(defn compile
+(defn qcompile
   "Compiles query from given `builder` and `query-params`"
   [query-params builder]
   (apply builder (flatten query-params)))
