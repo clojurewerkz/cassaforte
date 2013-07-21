@@ -244,16 +244,16 @@
              (where :name "user1"))
 
      (is (= #{"str2"} (get-in (select th/session :users_set)
-                             [0 :test_set])))))
+                              [0 :test_set])))))
 
   (drop-table th/session :users_set))
 
 (deftest select-where-test
   (th/test-combinations
    (doto th/session
-       (insert :users {:name "Alex"   :city "Munich"        :age (int 19)})
-       (insert :users {:name "Robert" :city "Berlin"        :age (int 25)})
-       (insert :users {:name "Sam"    :city "San Francisco" :age (int 21)}))
+     (insert :users {:name "Alex"   :city "Munich"        :age (int 19)})
+     (insert :users {:name "Robert" :city "Berlin"        :age (int 25)})
+     (insert :users {:name "Sam"    :city "San Francisco" :age (int 21)}))
 
    (is (= "Munich" (get-in (select th/session :users
                                    (where :name "Alex"))
@@ -262,9 +262,9 @@
 (deftest select-in-test
   (th/test-combinations
    (doto th/session
-       (insert :users {:name "Alex"   :city "Munich"        :age (int 19)})
-       (insert :users {:name "Robert" :city "Berlin"        :age (int 25)})
-       (insert :users {:name "Sam"    :city "San Francisco" :age (int 21)}))
+     (insert :users {:name "Alex"   :city "Munich"        :age (int 19)})
+     (insert :users {:name "Robert" :city "Berlin"        :age (int 25)})
+     (insert :users {:name "Sam"    :city "San Francisco" :age (int 21)}))
 
    (let [users (select th/session :users
                        (where :name [:in ["Alex" "Robert"]]))]
@@ -280,17 +280,17 @@
            {:post_id "post1"}
            {:post_id "post2"}]
           (select th/session :user_posts
-           (columns :post_id)
-           (where :username "Alex")
-           (order-by [:post_id]))))
+                  (columns :post_id)
+                  (where :username "Alex")
+                  (order-by [:post_id]))))
 
    (is (= [{:post_id "post2"}
            {:post_id "post1"}
            {:post_id "post0"}]
           (select th/session :user_posts
-           (columns :post_id)
-           (where :username "Alex")
-           (order-by [:post_id :desc]))))))
+                  (columns :post_id)
+                  (where :username "Alex")
+                  (order-by [:post_id :desc]))))))
 
 (deftest select-range-query-test
   (create-table th/session :tv_series
