@@ -170,8 +170,10 @@ reached.
   "Prepares the provided query on C* server for futher execution.
 
    This assumes that query is valid. Returns the prepared statement corresponding to the query."
-  [^String query]
-  (.prepare ^Session *default-session* query))
+  ([^String query]
+     (prepare *default-session* query))
+  ([^Session session ^String query]
+     (.prepare ^Session session query)))
 
 (defn build-cluster
   "Builds an instance of Cluster you can connect to.
@@ -275,7 +277,7 @@ reached.
                                                       (cons *default-session* args))
         ^Query statement (if prepared
                            (if (coll? query )
-                             (build-statement (prepare (first query))
+                             (build-statement (prepare session (first query))
                                               (second query))
                              (throw (Exception. "Query is meant to be executed as prepared, but no values were supplied.")))
                            (build-statement query))
