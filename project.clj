@@ -1,4 +1,4 @@
-(defproject clojurewerkz/cassaforte "1.1.0-SNAPSHOT"
+(defproject clojurewerkz/cassaforte "1.1.0"
   :min-lein-version "2.0.0"
   :description "A Clojure client for Apache Cassandra"
   :url "http://clojurecassandra.info"

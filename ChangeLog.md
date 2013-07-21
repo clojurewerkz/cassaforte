@@ -1,5 +1,15 @@
 ## Changes between 1.0.0 and 1.1.0
 
+### Fixes for prepared queries with multi-cql
+
+Multi-cql didn't work with unforced prepared statements, now it's possible to use
+`client/prepared` with multi-cql as well.
+
+### Fixes for compound keys in iterate-world queries
+
+Iterate world didn't work fro tables with compound primary keys. Now it's possible
+to iterate over collections that have compound keys.
+
 ### Fixes for AOT Compilation
 
 Cassaforte now can be AOT compiled: `clojurewerkz.cassaforte.client/compile`
