@@ -219,19 +219,22 @@
 (defn- get-chunk
   "Returns next chunk for the lazy world iteration"
   [table partition-key chunk-size last-pk]
-  (if (nil? last-pk)
+  (if (nil? (first last-pk))
     (select table
             (query/limit chunk-size))
     (select table
-            (query/where (query/token partition-key) [> (query/token last-pk)])
+            (query/where (apply query/cql-fn "token" partition-key) [> (apply query/cql-fn "token" last-pk)])
             (query/limit chunk-size))))
 
 (defn iterate-world
   "Lazily iterates through the collection, returning chunks of chunk-size."
   ([table partition-key chunk-size]
-     (iterate-world table partition-key chunk-size []))
+     (iterate-world table (if (sequential? partition-key)
+                            partition-key
+                            [partition-key])
+                    chunk-size []))
   ([table partition-key chunk-size c]
      (lazy-cat c
-               (let [last-pk    (get (last c) partition-key)
+               (let [last-pk    (map #(get (last c) %) partition-key)
                      next-chunk (get-chunk table partition-key chunk-size last-pk)]
                  (iterate-world table partition-key chunk-size next-chunk)))))
