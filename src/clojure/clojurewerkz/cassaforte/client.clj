@@ -182,6 +182,7 @@ reached.
      * contact-points - cluster hosts to connect to
      * port - port, listening to incoming binary CQL connections (make sure you have `start_native_transport` set
        to true).
+     * credentials - connection credentials in the form {:username username :password password}
      * connections-per-host - specifies core number of connections per host.
      * max-connections-per-host - maximum number of connections per host.
      * retry-policy - configures the retry policy to use for the new cluster.
@@ -191,6 +192,7 @@ reached.
        use `with-consistency-level` to specify consistency level on a per-query basis"
   [{:keys [contact-points
            port
+           credentials
            connections-per-host
            max-connections-per-host
 
@@ -209,6 +211,9 @@ reached.
         ^PoolingOptions pooling-options (.poolingOptions builder)]
     (when port
       (.withPort builder port))
+
+    (when credentials
+      (.withCredentials builder (:username credentials) (:password credentials)))
 
     (when connections-per-host
       (.setCoreConnectionsPerHost pooling-options HostDistance/LOCAL
