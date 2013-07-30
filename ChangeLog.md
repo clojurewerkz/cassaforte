@@ -1,3 +1,9 @@
+## Changes between 1.1.0 and 1.2.0
+
+### Password authentication supported
+
+Password authentication is now supported via the `:credentials` option to `client/build-cluster`.
+
 ## Changes between 1.0.0 and 1.1.0
 
 ### Fixes for prepared queries with multi-cql
