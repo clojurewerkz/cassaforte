@@ -1,3 +1,16 @@
+## Changes between 1.1.0 and 1.2.0
+
+### Password authentication supported
+
+Password authentication is now supported via the `:credentials` option to `client/build-cluster`.
+Give it a map with username and password:
+
+```clojure
+(client/build-cluster {:contact-points ["127.0.0.1"]
+                       :credentials {:username "ceilingcat" :password "ohai"}
+                       ;; ...
+```
+
 ## Changes between 1.0.0 and 1.1.0
 
 ### Fixes for prepared queries with multi-cql
