@@ -162,6 +162,34 @@
   [table]
   (execute- [table] query/truncate-query))
 
+(defn create-user
+  [& query-params]
+  (execute- query-params query/create-user-query))
+
+(defn alter-user
+  [& query-params]
+  (execute- query-params query/alter-user-query))
+
+(defn drop-user
+  [& query-params]
+  (execute- query-params query/drop-user-query))
+
+(defn grant
+  [& query-params]
+  (execute- query-params query/grant-query))
+
+(defn revoke
+  [& query-params]
+  (execute- query-params query/revoke-query))
+
+(defn list-users
+  [& query-params]
+  (execute- query-params query/list-users-query))
+
+(defn list-permissions
+  [& query-params]
+  (execute- query-params query/list-perm-query))
+
 ;;
 ;; Higher level DB functions
 ;;

@@ -192,6 +192,35 @@
              (query/columns (query/count*))
              query-params)))))
 
+(defn create-user
+  [session & query-params]
+  (println session query-params query/create-user-query)
+  (execute- session query-params query/create-user-query))
+
+(defn alter-user
+  [session & query-params]
+  (execute- session query-params query/alter-user-query))
+
+(defn drop-user
+  [session & query-params]
+  (execute- session query-params query/drop-user-query))
+
+(defn grant
+  [session & query-params]
+  (execute- session query-params query/grant-query))
+
+(defn revoke
+  [session & query-params]
+  (execute- session query-params query/revoke-query))
+
+(defn list-users
+  [session & query-params]
+  (execute- session query-params query/list-users-query))
+
+(defn list-permissions
+  [session & query-params]
+  (execute- session query-params query/list-perm-query))
+
 ;;
 ;; Higher-level helper functions for schema
 ;;

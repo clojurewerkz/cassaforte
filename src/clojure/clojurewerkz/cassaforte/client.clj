@@ -278,8 +278,8 @@ reached.
        explicitly, because `execute` is considered to be a low-level function."
   [& args]
   (let [[^Session session query & {:keys [prepared]}] (if (= (type (first args)) Session)
-                                                      args
-                                                      (cons *default-session* args))
+                                                        args
+                                                        (cons *default-session* args))
         ^Query statement (if prepared
                            (if (coll? query )
                              (build-statement (prepare session (first query))
