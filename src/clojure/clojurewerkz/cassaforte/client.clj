@@ -93,10 +93,6 @@ reached.
    :local-quorum ConsistencyLevel/LOCAL_QUORUM
    :each-quorum ConsistencyLevel/EACH_QUORUM})
 
-(defn consistency-level
-  [kl]
-  (kl consistency-levels))
-
 ;;
 ;; Client-related
 ;;
@@ -106,7 +102,7 @@ reached.
 (def ^:dynamic *async* false)
 (def ^:dynamic *debug* false)
 
-(def ^:dynamic *consistency-level* (consistency-level :one))
+(def ^:dynamic *consistency-level* :one)
 (def ^:dynamic *retry-policy* (retry-policy :default))
 
 (defmacro with-session
@@ -151,7 +147,7 @@ reached.
   (when *retry-policy*
     (.setRetryPolicy statement *retry-policy*))
   (when *consistency-level*
-    (.setConsistencyLevel statement *consistency-level*))
+    (.setConsistencyLevel statement (*consistency-level* consistency-levels)))
   statement)
 
 (defn- build-statement
@@ -205,7 +201,7 @@ reached.
     (alter-var-root (var cql/*prepared-statement*) (constantly true)))
 
   (when consistency-level
-    (alter-var-root (var *consistency-level*) (constantly consistency-level)))
+    (alter-var-root (var *consistency-level*) (constantly (consistency-level consistency-levels))))
 
   (let [^Cluster$Builder builder        (Cluster/builder)
         ^PoolingOptions pooling-options (.poolingOptions builder)]

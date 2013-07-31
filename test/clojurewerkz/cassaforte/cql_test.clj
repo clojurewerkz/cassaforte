@@ -355,7 +355,7 @@
 (deftest insert-with-consistency-level-test
   (th/test-combinations
    (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-     (client/with-consistency-level (client/consistency-level :quorum)
+     (client/with-consistency-level :quorum
        (insert :users r))
      (is (= r (get-one :users)))
      (truncate :users))))
