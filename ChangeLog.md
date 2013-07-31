@@ -1,5 +1,14 @@
 ## Changes between 1.1.0 and 1.2.0
 
+### Consistency level DSL changed
+
+Consistency level can now be passed as a symbol, without resolving it to ConsistencyLevel instance:
+
+```clojure
+(client/with-consistency-level :quorum
+       (insert :users r))
+```
+
 ### Password authentication supported
 
 Password authentication is now supported via the `:credentials` option to `client/build-cluster`.
@@ -10,6 +19,9 @@ Give it a map with username and password:
                        :credentials {:username "ceilingcat" :password "ohai"}
                        ;; ...
 ```
+
+Query DSL added for managing users `create-user`, `alter-user`, `drop-user`, `grant`, `revoke`,
+`list-users`, `list-permissions` for both multi and regular sessions.
 
 ## Changes between 1.0.0 and 1.1.0
 
