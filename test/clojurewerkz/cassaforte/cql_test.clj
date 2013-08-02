@@ -353,12 +353,20 @@
   (drop-table :tv_series))
 
 (deftest insert-with-consistency-level-test
-  (th/test-combinations
-   (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-     (client/with-consistency-level :quorum
-       (insert :users r))
-     (is (= r (get-one :users)))
-     (truncate :users))))
+  (testing "New DSL"
+    (th/test-combinations
+     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+       (client/with-consistency-level :quorum
+         (insert :users r))
+       (is (= r (get-one :users)))
+       (truncate :users))))
+  (testing "Old DSL"
+    (th/test-combinations
+     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+       (client/with-consistency-level (client/consistency-level :quorum)
+         (insert :users r))
+       (is (= r (get-one :users)))
+       (truncate :users)))))
 
 ;; think about using `cons/conj` as a syntax sugar for prepended and appended list commands
 ;; test authentication

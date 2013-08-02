@@ -353,12 +353,20 @@
   (drop-table th/session :tv_series))
 
 (deftest insert-with-consistency-level-test
-  (th/test-combinations
-   (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-     (client/with-consistency-level :quorum
-       (insert th/session :users r))
-     (is (= r (first (select th/session :users))))
-     (truncate th/session :users))))
+  (testing "New DSL"
+    (th/test-combinations
+     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+       (client/with-consistency-level :quorum
+         (insert th/session :users r))
+       (is (= r (first (select th/session :users))))
+       (truncate th/session :users))))
+  (testing "Old DSL"
+    (th/test-combinations
+     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+       (client/with-consistency-level (client/consistency-level :quorum)
+         (insert th/session :users r))
+       (is (= r (first (select th/session :users))))
+       (truncate th/session :users)))))
 
 (deftest multi-connect
   (let [session (-> (client/build-cluster {:contact-points ["127.0.0.1"]

@@ -93,6 +93,15 @@ reached.
    :local-quorum ConsistencyLevel/LOCAL_QUORUM
    :each-quorum ConsistencyLevel/EACH_QUORUM})
 
+(defn consistency-level
+  [cl]
+  (get consistency-levels cl))
+
+(defn resolve-consistency-level
+  [cl]
+  (if (= (type cl) ConsistencyLevel)
+    cl
+    (consistency-level cl)))
 ;;
 ;; Client-related
 ;;
@@ -147,7 +156,7 @@ reached.
   (when *retry-policy*
     (.setRetryPolicy statement *retry-policy*))
   (when *consistency-level*
-    (.setConsistencyLevel statement (*consistency-level* consistency-levels)))
+    (.setConsistencyLevel statement (resolve-consistency-level *consistency-level*)))
   statement)
 
 (defn- build-statement
@@ -201,7 +210,7 @@ reached.
     (alter-var-root (var cql/*prepared-statement*) (constantly true)))
 
   (when consistency-level
-    (alter-var-root (var *consistency-level*) (constantly (consistency-level consistency-levels))))
+    (alter-var-root (var *consistency-level*) (constantly (resolve-consistency-level consistency-level))))
 
   (let [^Cluster$Builder builder        (Cluster/builder)
         ^PoolingOptions pooling-options (.poolingOptions builder)]
