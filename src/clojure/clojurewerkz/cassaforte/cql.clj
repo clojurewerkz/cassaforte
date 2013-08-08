@@ -146,9 +146,15 @@
   "Deletes columns and rows. If the `columns` clause is provided,
    only those columns are deleted from the row indicated by the `where` clause, please refer to
    KV guide (http://clojurecassandra.info/articles/kv.html) for more details. Otherwise whole rows
-   are removed. The `where` allows to specify the key for the row(s) to delete."
-  [& query-params]
-  (execute- query-params query/delete-query))
+   are removed. The `where` allows to specify the key for the row(s) to delete. First argument
+   for this function should always be table name.
+
+   Example:
+
+       (delete :users
+               (where :name \"username\"))"
+  [table & query-params]
+  (execute- (cons table query-params) query/delete-query))
 
 (defn select
   "Retrieves one or more columns for one or more rows in a table.
@@ -251,7 +257,7 @@
     (select table
             (query/limit chunk-size))
     (select table
-            (query/where (apply query/cql-fn "token" partition-key) [> (apply query/cql-fn "token" last-pk)])
+            (query/where (apply query/token partition-key) [> (apply query/token last-pk)])
             (query/limit chunk-size))))
 
 (defn iterate-world

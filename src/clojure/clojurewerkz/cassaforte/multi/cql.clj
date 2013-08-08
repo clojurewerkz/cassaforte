@@ -151,7 +151,13 @@
   "Deletes columns and rows. If the `columns` clause is provided,
    only those columns are deleted from the row indicated by the `where` clause, please refer to
    KV guide (http://clojurecassandra.info/articles/kv.html) for more details. Otherwise whole rows
-   are removed. The `where` allows to specify the key for the row(s) to delete."
+   are removed. The `where` allows to specify the key for the row(s) to delete. Second argument
+   for this function should always be table name.
+
+   Example:
+
+       (delete session :users
+               (where :name \"username\"))"
   [^Session session & query-params]
   (execute- session query-params query/delete-query))
 
