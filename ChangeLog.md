@@ -1,5 +1,10 @@
 ## Changes between 1.1.0 and 1.2.0
 
+### Hayt query generator update
+
+Hayt is updated to 1.1.3 version, which contains fixes for token function and some internal improvements
+that do not influence any APIs.
+
 ### Added new Consistency level DSL
 
 Consistency level can now be (also) passed as a symbol, without resolving it to ConsistencyLevel instance:
