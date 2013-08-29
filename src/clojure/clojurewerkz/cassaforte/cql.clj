@@ -129,11 +129,11 @@
 (defn insert-batch
   "Performs a batch insert (inserts multiple records into a table at the same time)"
   [table records]
-  (->> (map #(query/insert-query table %) records)
-       (apply query/queries)
-       query/batch-query
-       client/render-query
-       client/execute))
+  (let [query (->> (map #(query/insert-query table %) records)
+                   (apply query/queries)
+                   query/batch-query
+                   client/render-query)]
+    (client/execute client/*default-session* query :prepared cql/*prepared-statement*)))
 
 (defn update
   "Updates one or more columns for a given row in a table. The `where` clause
