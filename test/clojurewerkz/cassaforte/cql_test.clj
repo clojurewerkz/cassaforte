@@ -383,3 +383,9 @@
     (is (= {:name "Alex" :city "Munich" :age (int 19)}
            (first (client/execute "SELECT * FROM users;"))))
     (client/execute "TRUNCATE users;")))
+
+(deftest insert-nils-test
+  (client/prepared
+   (let [r {:name "Alex" :city "Munich" :age nil}]
+     (insert :users r)
+     (is (= r (first (select :users)))))))
