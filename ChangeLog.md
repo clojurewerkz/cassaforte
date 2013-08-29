@@ -1,5 +1,10 @@
 ## Changes between 1.1.0 and 1.2.0
 
+### Fix problem with batched prepared statements
+
+`insert-batch` didn't play well with prepared statements, problem fixed now. You can use `insert-batch`
+normally with prepared statements.
+
 ### Hayt query generator update
 
 Hayt is updated to 1.1.3 version, which contains fixes for token function and some internal improvements
