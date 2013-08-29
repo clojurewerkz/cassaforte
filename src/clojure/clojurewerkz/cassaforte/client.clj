@@ -286,7 +286,7 @@ reached.
                                                         args
                                                         (cons *default-session* args))
         ^Query statement (if prepared
-                           (if (coll? query )
+                           (if (coll? query)
                              (build-statement (prepare session (first query))
                                               (second query))
                              (throw (Exception. "Query is meant to be executed as prepared, but no values were supplied.")))
