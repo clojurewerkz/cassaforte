@@ -20,7 +20,7 @@
                          :resource-paths ["resources"]
                          :dependencies [[org.xerial.snappy/snappy-java      "1.0.5"]
                                         [commons-lang/commons-lang          "2.6"]
-                                        [org.apache.cassandra/cassandra-all "1.2.8"]
+                                        [org.apache.cassandra/cassandra-all "1.2.9"]
                                         [org.clojure/tools.trace            "0.7.5"]
                                         ]}}
   :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.6:dev,master"]}
