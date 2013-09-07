@@ -16,7 +16,7 @@
                   (for [^ColumnDefinitions$Definition cd (.getColumnDefinitions row)]
                     (let [^String n         (.getName cd)
                           ^ByteBuffer bytes (.getBytesUnsafe row n)]
-                      [(keyword n) (when bytes
+                      [(keyword n) (when (and bytes (> (.capacity bytes) 0))
                                      (b/deserialize (.getType cd)
                                                     (.getBytesUnsafe row n)))]))))))
   Host

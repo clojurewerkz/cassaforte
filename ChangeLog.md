@@ -1,13 +1,25 @@
 ## Changes between 1.1.0 and 1.2.0
 
-### Consistency level DSL changed
+### Fix problem with batched prepared statements
 
-Consistency level can now be passed as a symbol, without resolving it to ConsistencyLevel instance:
+`insert-batch` didn't play well with prepared statements, problem fixed now. You can use `insert-batch`
+normally with prepared statements.
+
+### Hayt query generator update
+
+Hayt is updated to 1.1.3 version, which contains fixes for token function and some internal improvements
+that do not influence any APIs.
+
+### Added new Consistency level DSL
+
+Consistency level can now be (also) passed as a symbol, without resolving it to ConsistencyLevel instance:
 
 ```clojure
 (client/with-consistency-level :quorum
        (insert :users r))
 ```
+
+Please note that old DSL still works and is supported.
 
 ### Password authentication supported
 

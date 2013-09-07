@@ -134,11 +134,11 @@
 (defn insert-batch
   "Performs a batch insert (inserts multiple records into a table at the same time)"
   [^Session session table records]
-  (->> (map #(query/insert-query table %) records)
-       (apply query/queries)
-       query/batch-query
-       client/render-query
-       client/execute))
+  (let [query (->> (map #(query/insert-query table %) records)
+                   (apply query/queries)
+                   query/batch-query
+                   client/render-query)]
+    (client/execute session query :prepared cql/*prepared-statement*)))
 
 (defn update
   "Updates one or more columns for a given row in a table. The `where` clause
@@ -151,7 +151,13 @@
   "Deletes columns and rows. If the `columns` clause is provided,
    only those columns are deleted from the row indicated by the `where` clause, please refer to
    KV guide (http://clojurecassandra.info/articles/kv.html) for more details. Otherwise whole rows
-   are removed. The `where` allows to specify the key for the row(s) to delete."
+   are removed. The `where` allows to specify the key for the row(s) to delete. Second argument
+   for this function should always be table name.
+
+   Example:
+
+       (delete session :users
+               (where :name \"username\"))"
   [^Session session & query-params]
   (execute- session query-params query/delete-query))
 
