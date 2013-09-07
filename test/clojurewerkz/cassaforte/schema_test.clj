@@ -75,7 +75,7 @@
   (changes-from-to
    #(alter-table :peopletmp
                  (rename-column :naome :name))
-   #(:key_aliases (describe-table "new_cql_keyspace" "people"))
+   #(:key_aliases (describe-table "new_cql_keyspace" "peopletmp"))
    "[\"naome\"]"
    "[\"name\"]"))
 
