@@ -1,4 +1,4 @@
-## Changes between 1.2.0 and 1.2.1
+## Changes between 1.2.0 and 1.3.0
 
 No changes yet.
 
