@@ -13,7 +13,7 @@
   :profiles       {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
                    :1.6 {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
                    :master {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
-                   :provided {:dependencies [[org.apache.cassandra/cassandra-all "1.2.4"]]}
+                   :provided {:dependencies [[org.apache.cassandra/cassandra-all "1.2.9"]]}
                    :dev {:jvm-opts     ["-Dlog4j.configuration=log4j.properties.unit"
                                         "-Xmx2048m"
                                         "-javaagent:lib/jamm-0.2.5.jar"]
@@ -21,8 +21,8 @@
                          :dependencies [[org.xerial.snappy/snappy-java      "1.0.5"]
                                         [commons-lang/commons-lang          "2.6"]
                                         [org.apache.cassandra/cassandra-all "1.2.9"]
-                                        [org.clojure/tools.trace            "0.7.5"]
-                                        ]}}
+                                        [org.clojure/tools.trace            "0.7.5"]]}
+                   :cassandra20 {:dependencies [[org.apache.cassandra/cassandra-all "2.0.0"]]}}
   :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.6:dev,master"]}
   :test-selectors {:focus   :focus
                    :cql     :cql
