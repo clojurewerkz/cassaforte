@@ -1,5 +1,10 @@
 ## Changes between 1.1.0 and 1.2.0
 
+### Cassandra Java Driver Update
+
+Cassandra Java driver has been updated to `1.0.3` which should
+support Cassandra 2.0.
+
 ### Fix problem with batched prepared statements
 
 `insert-batch` didn't play well with prepared statements, problem fixed now. You can use `insert-batch`
