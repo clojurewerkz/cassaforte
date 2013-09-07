@@ -8,8 +8,8 @@ No changes yet.
 
 ### Cassandra Java Driver Update
 
-Cassandra Java driver has been updated to `1.0.3` which should
-support Cassandra 2.0.
+Cassandra Java driver has been updated to `1.0.3` which
+supports Cassandra 2.0.
 
 ### Fix problem with batched prepared statements
 
