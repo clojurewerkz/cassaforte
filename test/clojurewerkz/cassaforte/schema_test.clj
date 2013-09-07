@@ -1,9 +1,9 @@
 (ns clojurewerkz.cassaforte.schema-test
   (:require [clojurewerkz.cassaforte.embedded :as e]
-            [clojurewerkz.cassaforte.test-helper :as th])
-  (:use clojurewerkz.cassaforte.cql
-        clojure.test
-        clojurewerkz.cassaforte.query))
+            [clojurewerkz.cassaforte.test-helper :as th]
+            [clojurewerkz.cassaforte.cql :refer :all]
+            [clojure.test :refer :all]
+            [clojurewerkz.cassaforte.query :refer :all]))
 
 
 (use-fixtures :each th/initialize!)
@@ -55,38 +55,25 @@
   (is (= to (f2))))
 
 (deftest create-alter-table-add-column-test
-  (create-table :users
+  (create-table :userstmp
                 (column-definitions {:name        :varchar
                                      :title       :varchar
                                      :primary-key [:name]}))
   (changes-by
-   #(alter-table :users
+   #(alter-table :userstmp
                  (add-column :birth_date :timestamp))
-   #(count (describe-columns "new_cql_keyspace" "users"))
-   1))
-
-(deftest create-alter-table-add-column-test
-  (create-table :people
-                (column-definitions {:name        :varchar
-                                     :title       :timestamp
-                                     :primary-key [:name]}))
-
-  (changes-from-to
-   #(alter-table :people
-                 (alter-column :title :varchar))
-   #(get-in (describe-columns "new_cql_keyspace" "people")
-            [0 :validator])
-   "org.apache.cassandra.db.marshal.DateType"
-   "org.apache.cassandra.db.marshal.UTF8Type"))
+   #(count (describe-columns "new_cql_keyspace" "userstmp"))
+   1)
+  (drop-table :userstmp))
 
 (deftest create-alter-table-rename
-  (create-table :people
+  (create-table :peopletmp
                 (column-definitions {:naome       :varchar
                                      :title       :varchar
                                      :primary-key [:naome]}))
 
   (changes-from-to
-   #(alter-table :people
+   #(alter-table :peopletmp
                  (rename-column :naome :name))
    #(:key_aliases (describe-table "new_cql_keyspace" "people"))
    "[\"naome\"]"
