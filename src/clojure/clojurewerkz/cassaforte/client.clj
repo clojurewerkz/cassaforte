@@ -258,6 +258,10 @@ reached.
     (alter-var-root (var *default-session*) (constantly session))
     session))
 
+(defn disconnect!
+  []
+  (.shutdown *default-cluster*))
+
 (defn render-query
   "Renders compiled query"
   [query-params]
