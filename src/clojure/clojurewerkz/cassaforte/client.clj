@@ -260,6 +260,7 @@ reached.
 
 (defn disconnect!
   []
+  (.shutdown *default-session*)
   (.shutdown *default-cluster*))
 
 (defn render-query
