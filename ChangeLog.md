@@ -1,6 +1,9 @@
 ## Changes between 1.2.0 and 1.3.0
 
-No changes yet.
+### Cassandra Java Driver Update
+
+Cassandra Java driver has been updated to `1.0.3` which
+contains a [bunch of bug fixes](https://raw.github.com/datastax/java-driver/1.0/driver-core/CHANGELOG.rst).
 
 
 
