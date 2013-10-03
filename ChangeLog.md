@@ -2,7 +2,7 @@
 
 ### Cassandra Java Driver Update
 
-Cassandra Java driver has been updated to `1.0.3` which
+Cassandra Java driver has been updated to `1.0.4` which
 contains a [bunch of bug fixes](https://raw.github.com/datastax/java-driver/1.0/driver-core/CHANGELOG.rst).
 
 
