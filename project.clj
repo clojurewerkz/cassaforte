@@ -7,7 +7,7 @@
   :dependencies [[org.clojure/clojure                          "1.5.1"]
                  [cc.qbits/hayt                                "1.1.3"
                   :exclusions [org.flatland/useful]]
-                 [com.datastax.cassandra/cassandra-driver-core "1.0.3"]]
+                 [com.datastax.cassandra/cassandra-driver-core "1.0.4"]]
   :source-paths      ["src/clojure"]
   :java-source-paths ["src/java"]
   :profiles       {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
