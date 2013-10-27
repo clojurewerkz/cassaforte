@@ -14,6 +14,22 @@
      (is (= r (first (select :users))))
      (truncate :users))))
 
+(deftest insert-batch-test
+  (th/test-combinations
+   (let [input [[{:name "Alex" :city "Munich" :age (int 19)} (using :ttl 350)]
+                [{:name "Alex" :city "Munich" :age (int 19)} (using :ttl 350)]]]
+     (insert-batch :users input)
+     (is (= (first (first input)) (first (select :users))))
+     (truncate :users))))
+
+(deftest insert-batch-plain-test
+  (th/test-combinations
+   (let [input [{:name "Alex" :city "Munich" :age (int 19)}
+                {:name "Alex" :city "Munich" :age (int 19)}]]
+     (insert-batch :users input)
+     (is (= (first input) (first (select :users))))
+     (truncate :users))))
+
 (deftest update-test
   (testing "Simple updates"
     (th/test-combinations
