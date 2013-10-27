@@ -1,5 +1,18 @@
 ## Changes between 1.2.0 and 1.3.0
 
+### Extra Clauses Support in `insert-batch`
+
+It is now possible to use extra CQL clauses for every statement
+in a batch insert (e.g. to specify TTL):
+
+``` clojure
+(cql/insert-batch "table"
+  {:something "cats"}
+  [{:something "dogs"} (using :ttl 60)])
+```
+
+Contributed by Sam Neubardt.
+
 ### Cassandra Java Driver Update
 
 Cassandra Java driver has been updated to `1.0.4` which
