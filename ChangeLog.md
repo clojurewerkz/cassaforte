@@ -1,5 +1,18 @@
 ## Changes between 1.2.0 and 1.3.0
 
+### Hayt Update
+
+Hayt dependency has been updated to `1.4.1`, which supports
+`if-not-exists` in `create-keyspace`:
+
+``` clojure
+(create-keyspace "main"
+	         (if-not-exists)
+	         (with {:replication
+	                  {:class "SimpleStrategy"
+	                   :replication_factor 1 }}))
+```
+
 ### Extra Clauses Support in `insert-batch`
 
 It is now possible to use extra CQL clauses for every statement
