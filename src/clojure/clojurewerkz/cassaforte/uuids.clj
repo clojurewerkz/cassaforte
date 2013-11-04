@@ -18,7 +18,7 @@
 version 1 UUID generated at the provided timestamp.
 
    Timestamp must be a unix timestamp."
-  [timestamp]
+  [^long timestamp]
   (UUIDs/startOf timestamp))
 
 (defn end-of
@@ -26,10 +26,10 @@ version 1 UUID generated at the provided timestamp.
 version 1 UUID generated at the provided timestamp.
 
    Timestamp must be a unix timestamp."
-  [timestamp]
+  [^long timestamp]
   (UUIDs/endOf timestamp))
 
 (defn unix-timestamp
   "Return the unix timestamp contained by the provided time-based UUID."
-  [uuid]
+  [^UUID uuid]
   (UUIDs/unixTimestamp uuid))
