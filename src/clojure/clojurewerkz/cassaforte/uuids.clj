@@ -1,5 +1,5 @@
 (ns clojurewerkz.cassaforte.uuids
-  "Provides utility methods to work with UUID."
+  "Provides utility functions for UUID generation."
   (:import [com.datastax.driver.core.utils UUIDs]
            [java.util UUID]))
 
