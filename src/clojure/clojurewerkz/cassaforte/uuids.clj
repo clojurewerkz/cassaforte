@@ -1,6 +1,6 @@
 (ns clojurewerkz.cassaforte.uuids
   "Provides utility functions for UUID generation."
-  (:import [com.datastax.driver.core.utils UUIDs]
+  (:import com.datastax.driver.core.utils.UUIDs
            java.util.UUID))
 
 (defn random
