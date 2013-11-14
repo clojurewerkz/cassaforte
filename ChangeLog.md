@@ -1,8 +1,6 @@
 ## Changes between 1.2.0 and 1.3.0
 
-No changes yet.
-
-
+Cassandra Java driver has been updated to `2.0.0-rc1`.
 
 ## Changes between 1.1.0 and 1.2.0
 

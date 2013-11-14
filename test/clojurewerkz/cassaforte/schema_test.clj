@@ -36,11 +36,12 @@
 
   (let [td      (describe-table "new_cql_keyspace" "people")
         columns (describe-columns "new_cql_keyspace" "people")]
-    (is (= "org.apache.cassandra.db.marshal.DateType"
+    (is (= "org.apache.cassandra.db.marshal.TimestampType"
            (get-in columns [0 :validator])))
     (is (= "org.apache.cassandra.db.marshal.UTF8Type"
            (get-in columns [1 :validator])))
-    (is (= 2 (count columns)))))
+
+    (is (= 3 (count columns)))))
 
 (defn changes-by
   [f f2 n]

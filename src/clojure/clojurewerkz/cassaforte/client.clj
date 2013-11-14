@@ -10,8 +10,8 @@
             [clojurewerkz.cassaforte.conversion :as conv]
             [qbits.hayt.cql :as cql]
             [clojurewerkz.cassaforte.query :as query])
-  (:import [com.datastax.driver.core Query ResultSet ResultSetFuture Host Session Cluster
-            Cluster$Builder SimpleStatement PreparedStatement Query HostDistance PoolingOptions
+  (:import [com.datastax.driver.core Statement ResultSet ResultSetFuture Host Session Cluster
+            Cluster$Builder SimpleStatement PreparedStatement HostDistance PoolingOptions
             ConsistencyLevel]
            [com.google.common.util.concurrent Futures FutureCallback]
            [com.datastax.driver.core.policies
@@ -114,6 +114,7 @@ reached.
 (def ^:dynamic *consistency-level* :one)
 (def ^:dynamic *retry-policy* (retry-policy :default))
 
+
 (defmacro with-session
   "Executes a query with the given session"
   [session & body]
@@ -152,7 +153,7 @@ reached.
      (dbg/catch-exceptions ~@body)))
 
 (defn- set-statement-options-
-  [^Query statement]
+  [^Statement statement]
   (when *retry-policy*
     (.setRetryPolicy statement *retry-policy*))
   (when *consistency-level*
@@ -213,7 +214,8 @@ reached.
     (alter-var-root (var *consistency-level*) (constantly (resolve-consistency-level consistency-level))))
 
   (let [^Cluster$Builder builder        (Cluster/builder)
-        ^PoolingOptions pooling-options (.poolingOptions builder)]
+        ^PoolingOptions pooling-options (PoolingOptions.)]
+
     (when port
       (.withPort builder port))
 
@@ -226,6 +228,8 @@ reached.
     (when max-connections-per-host
       (.setMaxConnectionsPerHost pooling-options HostDistance/LOCAL
                                  max-connections-per-host))
+    (.withPoolingOptions builder pooling-options)
+
     (doseq [contact-point contact-points]
       (.addContactPoint builder contact-point))
 
@@ -290,12 +294,12 @@ reached.
   (let [[^Session session query & {:keys [prepared]}] (if (= (type (first args)) Session)
                                                         args
                                                         (cons *default-session* args))
-        ^Query statement (if prepared
-                           (if (coll? query)
-                             (build-statement (prepare session (first query))
-                                              (second query))
-                             (throw (Exception. "Query is meant to be executed as prepared, but no values were supplied.")))
-                           (build-statement query))
+        ^Statement statement (if prepared
+                               (if (coll? query)
+                                 (build-statement (prepare session (first query))
+                                                  (second query))
+                                 (throw (Exception. "Query is meant to be executed as prepared, but no values were supplied.")))
+                               (build-statement query))
         ^ResultSetFuture future (.executeAsync session statement)]
     (when *debug*
       (dbg/output-debug query))

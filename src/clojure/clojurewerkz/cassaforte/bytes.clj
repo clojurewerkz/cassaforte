@@ -2,7 +2,6 @@
   "Facility functions to use with serialization, handle deserialization of all the data types
    supported by Cassandra."
   (:import java.nio.ByteBuffer java.util.Date
-           org.apache.cassandra.utils.ByteBufferUtil
            [com.datastax.driver.core DataType DataType$Name]
            [org.apache.cassandra.db.marshal UTF8Type Int32Type IntegerType AsciiType FloatType
             DecimalType BytesType DoubleType LongType UUIDType DateType BooleanType ListType
