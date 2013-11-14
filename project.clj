@@ -1,11 +1,11 @@
-(defproject clojurewerkz/cassaforte "1.3.0-SNAPSHOT"
+(defproject clojurewerkz/cassaforte "1.3.0-beta4-SNAPSHOT"
   :min-lein-version "2.0.0"
   :description "A Clojure client for Apache Cassandra"
   :url "http://clojurecassandra.info"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure                          "1.5.1"]
-                 [cc.qbits/hayt                                "1.1.3"
+                 [cc.qbits/hayt                                "1.4.1"
                   :exclusions [org.flatland/useful]]
                  [com.datastax.cassandra/cassandra-driver-core "2.0.0-rc1"]]
   :source-paths      ["src/clojure"]
@@ -22,8 +22,8 @@
                                         [commons-lang/commons-lang          "2.6"]
                                         [org.apache.cassandra/cassandra-all "2.0.2"]
                                         [org.clojure/tools.trace            "0.7.5"]]}
-                   :cassandra20 {:dependencies [[org.apache.cassandra/cassandra-all "2.0.0"]]}}
-  :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.6:dev,master:dev,cassandra20:dev,1.4,cassandra20:dev,1.6,cassandra20:dev,master,cassandra20"]}
+                   :cassandra129 {:dependencies [[org.apache.cassandra/cassandra-all "1.2.9"]]}}
+  :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.6:dev,master:dev,cassandra129:dev,1.4,cassandra129:dev,1.6,cassandra129:dev,master,cassandra129"]}
   :test-selectors {:focus   :focus
                    :cql     :cql
                    :schema  :schema

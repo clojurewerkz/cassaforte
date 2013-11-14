@@ -18,7 +18,7 @@
                           ^ByteBuffer bytes (.getBytesUnsafe row n)]
                       [(keyword n) (when (and bytes (> (.capacity bytes) 0))
                                      (b/deserialize (.getType cd)
-                                                    (.getBytesUnsafe row n)))]))))))
+                                                    bytes))]))))))
   Host
   (to-map [^Host host]
     {:datacenter (.getDatacenter host)

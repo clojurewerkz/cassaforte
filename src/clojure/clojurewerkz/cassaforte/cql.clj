@@ -127,9 +127,12 @@
   (execute- query-params query/insert-query))
 
 (defn insert-batch
-  "Performs a batch insert (inserts multiple records into a table at the same time)"
+  "Performs a batch insert (inserts multiple records into a table at the same time).
+  To specify additional clauses for a record (such as where or using), wrap that record
+  and the clauses in a vector"
   [table records]
-  (let [query (->> (map #(query/insert-query table %) records)
+  (let [query (->> records
+                   (map (comp (partial apply (partial query/insert-query table)) flatten vector))
                    (apply query/queries)
                    query/batch-query
                    client/render-query)]
