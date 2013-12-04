@@ -1,9 +1,9 @@
 (ns clojurewerkz.cassaforte.iterate-world-test
-  (:require [clojurewerkz.cassaforte.test-helper :as th])
-  (:use clojurewerkz.cassaforte.cql
-        clojurewerkz.cassaforte.utils
-        clojure.test
-        clojurewerkz.cassaforte.query))
+  (:require [clojurewerkz.cassaforte.test-helper :as th]
+            [clojurewerkz.cassaforte.cql :refer :all]
+            [clojure.test :refer :all]
+            [clojurewerkz.cassaforte.query :refer :all]
+            [clojurewerkz.cassaforte.utils :refer :all]))
 
 (use-fixtures :each th/initialize!)
 
