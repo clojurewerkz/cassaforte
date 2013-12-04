@@ -1,6 +1,6 @@
 (ns clojurewerkz.cassaforte.debug
   "Debug utilities"
-  (:use clojure.stacktrace))
+  (:require [clojure.stacktrace :refer :all]))
 
 (defmacro output-debug
   "Prints debugging statements out."
