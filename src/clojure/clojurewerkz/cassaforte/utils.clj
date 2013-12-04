@@ -1,5 +1,5 @@
 (ns clojurewerkz.cassaforte.utils
-  (:use clojurewerkz.cassaforte.cql))
+  (:refer [clojurewerkz.cassaforte.cql :refer :all]))
 
 (defn- group-map
   "Groups by and applies f to each group"
