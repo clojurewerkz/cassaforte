@@ -1,7 +1,7 @@
 (ns clojurewerkz.cassaforte.bytes-test
-  (:use clojurewerkz.cassaforte.bytes
-        clojure.test)
-  (:import [java.nio ByteBuffer]))
+  (:require [clojurewerkz.cassaforte.bytes :refer :all]
+            [clojure.test :refer :all])
+  (:import java.nio.ByteBuffer))
 (comment
   (deftest t-serializer-roundtrip
     (are [type value]
