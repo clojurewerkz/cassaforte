@@ -1,9 +1,9 @@
 (ns clojurewerkz.cassaforte.stress-test
   (:require [clojurewerkz.cassaforte.test-helper :as th]
-            [clojurewerkz.cassaforte.client :as client])
-  (:use clojurewerkz.cassaforte.cql
-        clojure.test
-        clojurewerkz.cassaforte.query))
+            [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql :refer :all]
+            [clojure.test :refer :all]
+            [clojurewerkz.cassaforte.query :refer :all]))
 
 (use-fixtures :each th/initialize!)
 

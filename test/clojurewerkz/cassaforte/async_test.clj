@@ -1,9 +1,9 @@
 (ns clojurewerkz.cassaforte.async-test
-  (:require [clojurewerkz.cassaforte.test-helper :as th])
-  (:use clojurewerkz.cassaforte.cql
-        clojurewerkz.cassaforte.client
-        clojure.test
-        clojurewerkz.cassaforte.query))
+  (:require [clojurewerkz.cassaforte.test-helper :as th]
+            [clojurewerkz.cassaforte.cql :refer :all]
+            [clojurewerkz.cassaforte.client :refer :all]
+            [clojure.test :refer :all]
+            [clojurewerkz.cassaforte.query :refer :all]))
 
 (use-fixtures :each th/initialize!)
 
