@@ -23,7 +23,7 @@
                                         [org.apache.cassandra/cassandra-all "2.0.2"]
                                         [org.clojure/tools.trace            "0.7.5"]]}
                    :cassandra1211 {:dependencies [[org.apache.cassandra/cassandra-all "1.2.11"]]}}
-  :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.6:dev,master:dev,cassandra1211:dev,1.4,cassandra1211:dev,1.6,cassandra1211:dev,master,cassandra1211"]}
+  :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.6:dev,master"]}
   :test-selectors {:focus   :focus
                    :cql     :cql
                    :schema  :schema
