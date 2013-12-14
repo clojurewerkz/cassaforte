@@ -80,8 +80,8 @@ Cassaforte supports Clojure 1.4+.
 
 ## Supported Apache Cassandra Versions
 
-Cassaforte is built from the ground up for CQL 3 and Cassandra 1.2+.
-Cassaforte was tested against 2.0.1, no issues discovered.
+Cassaforte is built from the ground up for CQL 3 and Cassandra 1.2+
+and 2.x.
 
 
 
