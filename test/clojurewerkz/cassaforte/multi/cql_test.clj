@@ -126,6 +126,12 @@
                  set))))
    (truncate th/session :users)))
 
+(deftest create-drop-index-test
+  (create-index th/session :users :city
+                (index-name :users_city)
+                (if-not-exists))
+  (drop-index th/session :users_city))
+
 (deftest index-exact-match
   (create-index th/session :users :city)
   (th/test-combinations

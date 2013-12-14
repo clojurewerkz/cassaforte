@@ -47,7 +47,9 @@
 
    Example, creates an index on `users` table, `city` column:
 
-     (create-index :users :city)"
+      (create-index th/session :users :city
+                    (index-name :users_city)
+                    (if-not-exists))"
   [& query-params]
   (execute- query-params query/create-index-query))
 
@@ -57,7 +59,7 @@
 
    Example, drops an index on `users` table, `city` column:
 
-     (drop-index :users :city)"
+       (drop-index th/session :users_city)"
   [& query-params]
   (execute- query-params query/drop-index-query))
 
