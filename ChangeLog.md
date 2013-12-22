@@ -1,5 +1,10 @@
 ## Changes between 1.2.0 and 1.3.0
 
+### Cassandra Dependency
+
+Cassaforte now depends on `org.apache.cassandra/cassandra-all`. Data type serialization
+classes the library uses are now part of that jar.
+
 ### Cassandra Java Driver Update
 
 Cassandra Java driver has been updated to `2.0.0-rc2`.
