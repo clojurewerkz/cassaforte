@@ -7,15 +7,12 @@
   :dependencies [[org.clojure/clojure                          "1.5.1"]
                  [cc.qbits/hayt                                "1.4.1"
                   :exclusions [org.flatland/useful]]
-                 [com.datastax.cassandra/cassandra-driver-core "2.0.0-rc2"]
-                 ;; for data types conversion. MK.
-                 [org.apache.cassandra/cassandra-all           "2.0.3"]]
+                 [com.datastax.cassandra/cassandra-driver-core "2.0.0-rc2"]]
   :source-paths      ["src/clojure"]
   :java-source-paths ["src/java"]
   :profiles       {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
                    :1.6 {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
                    :master {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
-                   :provided {:dependencies [[org.apache.cassandra/cassandra-all "2.0.2"]]}
                    :dev {:jvm-opts     ["-Dlog4j.configuration=log4j.properties.unit"
                                         "-Xmx2048m"
                                         "-javaagent:lib/jamm-0.2.5.jar"]

@@ -2,11 +2,7 @@
   "Facility functions to use with serialization, handle deserialization of all the data types
    supported by Cassandra."
   (:import java.nio.ByteBuffer java.util.Date
-           [com.datastax.driver.core DataType DataType$Name]
-           [org.apache.cassandra.db.marshal UTF8Type Int32Type IntegerType AsciiType FloatType
-            DecimalType BytesType DoubleType LongType UUIDType DateType BooleanType ListType
-            MapType SetType AbstractType AbstractCompositeType InetAddressType TimeUUIDType
-            CounterColumnType]))
+           [com.datastax.driver.core DataType DataType$Name]))
 
 (declare serializers)
 
@@ -17,23 +13,22 @@
     bytes))
 
 (def ^:private deserializers
-  {DataType$Name/ASCII     (AsciiType/instance)
-   DataType$Name/BIGINT    (LongType/instance)
-   DataType$Name/BLOB      (BytesType/instance)
-   DataType$Name/BOOLEAN   (BooleanType/instance)
-   ;; DataType$Name/COUNTER   (CounterColumnType/instance)
-   DataType$Name/COUNTER   (LongType/instance)
-   DataType$Name/DECIMAL   (DecimalType/instance)
-   DataType$Name/DOUBLE    (DoubleType/instance)
-   DataType$Name/FLOAT     (FloatType/instance)
-   DataType$Name/INET      (InetAddressType/instance)
-   DataType$Name/INT       (Int32Type/instance)
-   DataType$Name/TEXT      (UTF8Type/instance)
-   DataType$Name/TIMESTAMP (DateType/instance)
-   DataType$Name/UUID      (UUIDType/instance)
-   DataType$Name/VARCHAR   (UTF8Type/instance)
-   DataType$Name/VARINT    (IntegerType/instance)
-   DataType$Name/TIMEUUID  (TimeUUIDType/instance)})
+  {DataType$Name/ASCII     (DataType/ascii)
+   DataType$Name/BIGINT    (DataType/bigint)
+   DataType$Name/BLOB      (DataType/blob)
+   DataType$Name/BOOLEAN   (DataType/cboolean)
+   DataType$Name/COUNTER   (DataType/counter)
+   DataType$Name/DECIMAL   (DataType/decimal)
+   DataType$Name/DOUBLE    (DataType/cdouble)
+   DataType$Name/FLOAT     (DataType/cfloat)
+   DataType$Name/INET      (DataType/inet)
+   DataType$Name/INT       (DataType/cint)
+   DataType$Name/TEXT      (DataType/text)
+   DataType$Name/TIMESTAMP (DataType/timestamp)
+   DataType$Name/UUID      (DataType/uuid)
+   DataType$Name/VARCHAR   (DataType/varchar)
+   DataType$Name/VARINT    (DataType/varint)
+   DataType$Name/TIMEUUID  (DataType/timeuuid)})
 
 (defn get-deserializer
   [^DataType t]
@@ -41,17 +36,12 @@
     (if-let [deserializer (get deserializers type-name)]
       deserializer
       (cond
-       (= type-name (DataType$Name/LIST)) (ListType/getInstance (get-deserializer (-> t (.getTypeArguments) (.get 0))))
-       (= type-name (DataType$Name/SET))  (SetType/getInstance (get-deserializer (-> t (.getTypeArguments) (.get 0))))
-       (= type-name (DataType$Name/MAP))  (MapType/getInstance (get-deserializer (-> t (.getTypeArguments) (.get 0)))
-                                                               (get-deserializer (-> t (.getTypeArguments) (.get 1))))
-       :else (throw (Exception. (str "Can't find matching deserializer for: " t)))))))
-
-(defn compose
-  [^AbstractType serializer bytes]
-  (.compose serializer bytes))
+       (= type-name (DataType$Name/LIST)) (DataType/list (get-deserializer (-> t (.getTypeArguments) (.get 0))))
+       (= type-name (DataType$Name/SET))  (DataType/set (get-deserializer (-> t (.getTypeArguments) (.get 0))))
+       (= type-name (DataType$Name/MAP))  (DataType/map (get-deserializer (-> t (.getTypeArguments) (.get 0)))
+                                                        (get-deserializer (-> t (.getTypeArguments) (.get 1))))
+       :else                              (throw (Exception. (str "Can't find matching deserializer for: " t)))))))
 
 (defn deserialize
   [^DataType dt bytes]
-    (compose (get-deserializer dt) bytes)
-  )
+  (.deserialize (get-deserializer dt) bytes))
