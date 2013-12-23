@@ -2,8 +2,8 @@
 
 ### Cassandra Dependency
 
-Cassaforte now depends on `org.apache.cassandra/cassandra-all`. Data type serialization
-classes the library uses are now part of that jar.
+Cassaforte now does not depend on `org.apache.cassandra/cassandra-all`.
+This dependency is dropped.
 
 ### Cassandra Java Driver Update
 
