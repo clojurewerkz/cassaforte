@@ -1,4 +1,4 @@
-(defproject clojurewerkz/cassaforte "1.3.0-beta7-SNAPSHOT"
+(defproject clojurewerkz/cassaforte "1.3.0-beta9-SNAPSHOT"
   :min-lein-version "2.0.0"
   :description "A Clojure client for Apache Cassandra"
   :url "http://clojurecassandra.info"
@@ -13,7 +13,6 @@
   :profiles       {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
                    :1.6 {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
                    :master {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
-                   :provided {:dependencies [[org.apache.cassandra/cassandra-all "2.0.2"]]}
                    :dev {:jvm-opts     ["-Dlog4j.configuration=log4j.properties.unit"
                                         "-Xmx2048m"
                                         "-javaagent:lib/jamm-0.2.5.jar"]

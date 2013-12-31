@@ -322,7 +322,7 @@ reached.
          {:datacenter (.getDatacenter host)
           :address    (.getHostAddress (.getAddress host))
           :rack       (.getRack host)
-          :is-up      (.isUp (.getMonitor host))})
+          :is-up      (.isUp host)})
        (-> session
            .getCluster
            .getMetadata

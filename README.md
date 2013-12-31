@@ -48,7 +48,7 @@ definition to your `pom.xml`:
 With Leiningen:
 
 ``` clojure
-[clojurewerkz/cassaforte "1.3.0-beta6"]
+[clojurewerkz/cassaforte "1.3.0-beta8"]
 ```
 
 With Maven:
@@ -57,7 +57,7 @@ With Maven:
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>1.3.0-beta6</version>
+  <version>1.3.0-beta8</version>
 </dependency>
 ```
 
@@ -145,4 +145,3 @@ the [Apache Public License 2.0](http://www.apache.org/licenses/LICENSE-2.0.html)
 
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/clojurewerkz/cassaforte/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
