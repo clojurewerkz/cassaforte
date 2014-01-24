@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.iterate-world-test
+(ns clojurewerkz.cassaforte.utils-test
   (:require [clojurewerkz.cassaforte.test-helper :as th]
             [clojurewerkz.cassaforte.cql :refer :all]
             [clojure.test :refer :all]
