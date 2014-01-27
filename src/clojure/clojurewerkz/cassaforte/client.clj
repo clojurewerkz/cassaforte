@@ -285,7 +285,7 @@ reached.
   (vector query values))
 
 (defn execute
-  "Executes built query
+  "Executes a pre-built query
 
    Options
      * prepared - wether the query should or should not be executed as prepared, always passed
