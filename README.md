@@ -1,7 +1,7 @@
 # Cassaforte, a Clojure Cassandra Client
 
 Cassaforte is a small, easy to use Clojure client for Apache Cassandra
-(1.2+), part of the [ClojureWerkz libraries](http://clojurewerkz.org).
+(2.0+ in recent releases), part of the [ClojureWerkz libraries](http://clojurewerkz.org).
 
 For quickstart, please refer to our [Getting Started with Clojure and Cassandra](http://clojurecassandra.info/articles/getting_started.html)
 guide.
@@ -12,7 +12,7 @@ guide.
  * Be well maintained.
  * Be well documented.
  * Be well tested.
- * Target Cassandra 1.2 and Clojure 1.4 and later from the ground up.
+ * Target modern Cassandra and Clojure releases.
  * Integrate with libraries like Joda Time.
  * Support URI connections to be friendly to Heroku and other PaaS providers.
 
@@ -20,9 +20,9 @@ guide.
 
 ## Project Maturity
 
-Cassaforte is a relatively young project. It took about a year to reach `1.0`. It is used heavily in a
-monitoring and event collection solution that processes fairly large
-amount of data.
+Cassaforte is a relatively young project. It took about a year to
+reach `1.0`. It is used heavily in a monitoring and event collection
+solution that processes fairly large amount of data.
 
 Cassaforte is based on the now stable new [DataStax Java driver for
 Cassandra](https://github.com/datastax/java-driver) and
