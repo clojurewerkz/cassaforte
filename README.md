@@ -1,7 +1,8 @@
 # Cassaforte, a Clojure Cassandra Client
 
 Cassaforte is a small, easy to use Clojure client for Apache Cassandra
-(2.0+ in recent releases), part of the [ClojureWerkz libraries](http://clojurewerkz.org).
+(recent releases: currently 1.2 and 2.0), part of the [ClojureWerkz
+libraries](http://clojurewerkz.org).
 
 For quickstart, please refer to our [Getting Started with Clojure and Cassandra](http://clojurecassandra.info/articles/getting_started.html)
 guide.
@@ -80,8 +81,9 @@ Cassaforte supports Clojure 1.4+.
 
 ## Supported Apache Cassandra Versions
 
-Cassaforte is built from the ground up for CQL 3. Cassaforte 1.3 and
-later versions target Cassandra 2.x.
+Cassaforte is built from the ground up for CQL.
+Cassaforte 1.2 targets Cassandra 1.2.x
+Cassaforte 1.3 and later versions target Cassandra 2.x.
 
 
 
