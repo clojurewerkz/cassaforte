@@ -7,14 +7,14 @@
 
 (use-fixtures :each th/initialize!)
 
-(deftest insert-test
+(deftest test-insert
   (th/test-combinations
    (let [r {:name "Alex" :city "Munich" :age (int 19)}]
      (insert :users r)
      (is (= r (first (select :users))))
      (truncate :users))))
 
-(deftest insert-batch-test
+(deftest test-insert-batch-with-ttl
   (th/test-combinations
    (let [input [[{:name "Alex" :city "Munich" :age (int 19)} (using :ttl 350)]
                 [{:name "Alex" :city "Munich" :age (int 19)} (using :ttl 350)]]]
@@ -22,7 +22,7 @@
      (is (= (first (first input)) (first (select :users))))
      (truncate :users))))
 
-(deftest insert-batch-plain-test
+(deftest test-insert-batch-plain
   (th/test-combinations
    (let [input [{:name "Alex" :city "Munich" :age (int 19)}
                 {:name "Alex" :city "Munich" :age (int 19)}]]
@@ -30,7 +30,7 @@
      (is (= (first input) (first (select :users))))
      (truncate :users))))
 
-(deftest update-test
+(deftest test-update
   (testing "Simple updates"
     (th/test-combinations
      (let [r {:name "Alex" :city "Munich" :age (int 19)}]
@@ -59,7 +59,7 @@
                             :post_id "post1"))
              [0 :body]))))))
 
-(deftest delete-test
+(deftest test-delete
   (th/test-combinations
    (dotimes [i 3]
      (insert :users {:name (str "name" i) :age (int i)}))
@@ -77,7 +77,7 @@
    (is (nil? (:age (select :users))))
    (truncate :users)))
 
-(deftest insert-with-timestamp-test
+(deftest test-insert-with-timestamp
   (th/test-combinations
    (let [r {:name "Alex" :city "Munich" :age (int 19)}]
      (insert :users r
@@ -85,7 +85,7 @@
      (is (= r (first (select :users))))
      (truncate :users))))
 
-(deftest ttl-test
+(deftest testlttl
   (th/test-combinations
    (dotimes [i 3]
      (insert :users {:name (str "name" i) :city (str "city" i) :age (int i)}
@@ -95,7 +95,7 @@
    (is (= 0 (perform-count :users)))))
 
 
-(deftest counter-test
+(deftest test-counter
   (update :user_counters {:user_count (increment-by 5)} (where :name "user1"))
   (is (= 5 (:user_count (first (select :user_counters)))))
   (update :user_counters {:user_count (decrement-by 5)} (where :name "user1"))
@@ -107,12 +107,12 @@
   (update :user_counters {:user_count [+ 50000000000000]} (where :name "user1"))
   (is (= 50000005000500 (:user_count (first (select :user_counters))))))
 
-(deftest counter-test-2
+(deftest test-counter-2
   (dotimes [i 100]
     (update :user_counters {:user_count [+ 1]} (where :name "user1")))
   (is (= 100 (:user_count (first (select :user_counters))))))
 
-(deftest index-test-filtering-range
+(deftest test-index-filtering-range
   (create-index :users :city)
   (create-index :users :age)
   (th/test-combinations
@@ -130,7 +130,7 @@
                  set))))
    (truncate :users)))
 
-(deftest index-exact-match
+(deftest test-index-exact-match
   (create-index :users :city)
   (th/test-combinations
    (dotimes [i 10]
@@ -146,7 +146,7 @@
                  :age))))
    (truncate :users)))
 
-(deftest list-operations-test
+(deftest test-list-operations
   (create-table :users_list
                 (column-definitions
                  {:name :varchar
@@ -190,7 +190,7 @@
 
   (drop-table :users_list))
 
-(deftest map-operations-test
+(deftest test-map-operations
   (create-table :users_map
                 (column-definitions
                  {:name :varchar
@@ -222,7 +222,7 @@
   (drop-table :users_map))
 
 
-(deftest set-operations-test
+(deftest test-set-operations
   (create-table :users_set
                 (column-definitions
                  {:name :varchar
@@ -268,7 +268,7 @@
 
   (drop-table :users_set))
 
-(deftest select-where-test
+(deftest test-select-where
   (th/test-combinations
    (insert :users {:name "Alex"   :city "Munich"        :age (int 19)})
    (insert :users {:name "Robert" :city "Berlin"        :age (int 25)})
@@ -276,7 +276,7 @@
 
    (is (= "Munich" (get-in (select :users (where :name "Alex")) [0 :city])))))
 
-(deftest select-in-test
+(deftest test-select-in
   (th/test-combinations
    (insert :users {:name "Alex"   :city "Munich"        :age (int 19)})
    (insert :users {:name "Robert" :city "Berlin"        :age (int 25)})
@@ -287,7 +287,7 @@
      (is (= "Munich" (get-in users [0 :city])))
      (is (= "Berlin" (get-in users [1 :city]))))))
 
-(deftest select-order-by-test
+(deftest test-select-order-by
   (th/test-combinations
    (dotimes [i 3]
      (insert :user_posts {:username "Alex" :post_id  (str "post" i) :body (str "body" i)}))
@@ -308,7 +308,7 @@
                   (where :username "Alex")
                   (order-by [:post_id :desc]))))))
 
-(deftest select-range-query-test
+(deftest test-select-range-query
   (create-table :tv_series
                 (column-definitions {:series_title  :varchar
                                      :episode_id    :int
@@ -343,7 +343,7 @@
   (drop-table :tv_series))
 
 
-(deftest paginate-test
+(deftest test-paginate
   (create-table :tv_series
                 (column-definitions {:series_title  :varchar
                                      :episode_id    :int
@@ -367,7 +367,7 @@
 
   (drop-table :tv_series))
 
-(deftest insert-with-consistency-level-test
+(deftest test-insert-with-consistency-level
   (testing "New DSL"
     (th/test-combinations
      (let [r {:name "Alex" :city "Munich" :age (int 19)}]
@@ -386,7 +386,7 @@
 ;; think about using `cons/conj` as a syntax sugar for prepended and appended list commands
 ;; test authentication
 
-(deftest insert-test-raw
+(deftest test-raw-cql-insert
   (testing "With default session"
     (client/execute "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
     (is (= {:name "Alex" :city "Munich" :age (int 19)}
@@ -400,7 +400,7 @@
            (first (client/execute "SELECT * FROM users;"))))
     (client/execute "TRUNCATE users;")))
 
-(deftest insert-nils-test
+(deftest test-insert-nils
   (client/prepared
    (let [r {:name "Alex" :city "Munich" :age nil}]
      (insert :users r)
