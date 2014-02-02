@@ -14,7 +14,6 @@
      (is (= r (first (select :users))))
      (truncate :users))))
 
-(comment)
 (deftest insert-batch-test
   (th/test-combinations
    (let [input [[{:name "Alex" :city "Munich" :age (int 19)} (using :ttl 350)]
