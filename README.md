@@ -37,7 +37,7 @@ generation DSL library.
 Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/cassaforte). If you are using Maven, add the following repository
 definition to your `pom.xml`:
 
-``` xml
+```xml
 <repository>
   <id>clojars.org</id>
   <url>http://clojars.org/repo</url>
@@ -49,7 +49,7 @@ definition to your `pom.xml`:
 With Leiningen:
 
 ``` clojure
-[clojurewerkz/cassaforte "1.3.0-beta8"]
+[clojurewerkz/cassaforte "1.3.0-beta9"]
 ```
 
 With Maven:
@@ -58,7 +58,7 @@ With Maven:
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>1.3.0-beta8</version>
+  <version>1.3.0-beta9</version>
 </dependency>
 ```
 
