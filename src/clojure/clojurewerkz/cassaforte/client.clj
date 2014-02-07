@@ -19,6 +19,12 @@
             LoggingRetryPolicy DefaultRetryPolicy DowngradingConsistencyRetryPolicy FallthroughRetryPolicy
             RetryPolicy ConstantReconnectionPolicy ExponentialReconnectionPolicy]))
 
+(def prepared-statement-cache (atom {}))
+
+(defn flush-prepared-statement-cache!
+  []
+  (reset! prepared-statement-cache {}))
+
 ;;
 ;; Load Balancing policies
 ;;
@@ -179,7 +185,11 @@ reached.
   ([^String query]
      (prepare *default-session* query))
   ([^Session session ^String query]
-     (.prepare ^Session session query)))
+     (if-let [cached (get @prepared-statement-cache [session query])]
+       cached
+       (let [prepared (.prepare ^Session session query)]
+         (swap! prepared-statement-cache #(assoc % [session query] prepared))
+         prepared))))
 
 (defn build-cluster
   "Builds an instance of Cluster you can connect to.
@@ -246,14 +256,17 @@ reached.
 (defn ^Session connect
   "Connects to the Cassandra cluster. Use `build` function to build cluster with all required options."
   ([^Cluster cluster]
+     (flush-prepared-statement-cache!)
      (.connect cluster))
   ([^Cluster cluster keyspace]
+     (flush-prepared-statement-cache!)
      (.connect cluster (name keyspace))))
 
 (defn connect!
   "Connects and sets *default-cluster* and *default-session* for default cluster and session, that
    cql/execute is going to use."
   [hosts & {:keys [keyspace] :as options}]
+  (flush-prepared-statement-cache!)
   (let [cluster (build-cluster (assoc options :contact-points hosts))
         session (if keyspace
                   (connect cluster keyspace)
