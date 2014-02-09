@@ -67,4 +67,5 @@ Raise an exception if any deletion fails unless silently is true."
 (defn stop-server!
   "Stops started embedded server"
   []
-  (.stop ^CassandraDaemon daemon))
+  (.deactivate ^CassandraDaemon daemon)
+  (.unbindRoot #'daemon))
