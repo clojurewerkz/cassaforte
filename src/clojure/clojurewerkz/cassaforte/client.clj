@@ -326,7 +326,10 @@ reached.
   [& args]
   (let [[^Session session query & {:keys [prepared]}] (if (= (type (first args)) Session)
                                                         args
-                                                        (cons *default-session* args))
+                                                        (if (bound? #'*default-session*)
+                                                          (cons *default-session* args)
+                                                          (throw
+                                                           (IllegalArgumentException. "Default session is invalid."))))
         ^Statement statement (if prepared
                                (if (coll? query)
                                  (build-statement (prepare session (first query))
