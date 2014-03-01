@@ -18,7 +18,7 @@
 (defn ^:private execute-
   [query-params builder]
   (let [rendered-query (client/render-query (client/compile-query query-params builder))]
-    (client/execute client/*default-session* rendered-query :prepared cql/*prepared-statement*)))
+    (client/execute rendered-query :prepared cql/*prepared-statement*)))
 
 ;;
 ;; Schema operations
@@ -147,7 +147,7 @@
                    (apply query/queries)
                    query/batch-query
                    client/render-query)]
-    (client/execute client/*default-session* query :prepared cql/*prepared-statement*)))
+    (client/execute query :prepared cql/*prepared-statement*)))
 
 (defn update
   "Updates one or more columns for a given row in a table. The `where` clause
