@@ -11,7 +11,7 @@
   :source-paths      ["src/clojure"]
   :java-source-paths ["src/java"]
   :profiles       {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
-                   :1.6 {:dependencies [[org.clojure/clojure "1.6.0"]]}
+                   :1.5 {:dependencies [[org.clojure/clojure "1.5.1"]]}
                    :master {:dependencies [[org.clojure/clojure "1.7.0-master-SNAPSHOT"]]}
                    :dev {:jvm-opts     ["-Dlog4j.configuration=log4j.properties.unit"
                                         "-Xmx2048m"
@@ -26,7 +26,7 @@
                                         [org.apache.cassandra/cassandra-all "2.0.6"]
                                         [org.clojure/tools.trace            "0.7.6"]]}
                    :cassandra1211 {:dependencies [[org.apache.cassandra/cassandra-all "1.2.11"]]}}
-  :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.6:dev,master"]}
+  :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.5:dev,master"]}
   :test-selectors {:focus   :focus
                    :cql     :cql
                    :schema  :schema
