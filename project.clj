@@ -17,6 +17,7 @@
                                         "-Xmx2048m"
                                         "-javaagent:lib/jamm-0.2.5.jar"]
                          :resource-paths ["resources"]
+                         :plugins [[codox "0.6.7"]]
                          :dependencies [
                                         ;; see https://issues.apache.org/jira/browse/CASSANDRA-6639
                                         ;; [com.google.guava/guava             "15.0"]
@@ -41,8 +42,8 @@
                                        :releases {:checksum :fail :update :always}}}
   :global-vars {*warn-on-reflection* true}
   :pedantic :warn
-  :codox {:src-dir-uri "https://github.com/clojurewerkz/cassaforte/blob/master"
-          :sources ["src"]
+  :codox {:src-dir-uri "https://github.com/clojurewerkz/cassaforte/blob/master/"
+          :sources ["src/clojure/"]
           :src-linenum-anchor-prefix "L"
           :exclude [clojurewerkz.cassaforte.conversion
                     clojurewerkz.cassaforte.aliases
