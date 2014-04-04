@@ -4,7 +4,7 @@
   :url "http://clojurecassandra.info"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure                          "1.5.1"]
+  :dependencies [[org.clojure/clojure                          "1.6.0"]
                  [cc.qbits/hayt                                "1.4.1"
                   :exclusions [org.flatland/useful]]
                  [com.datastax.cassandra/cassandra-driver-core "2.0.0-rc2"]]
