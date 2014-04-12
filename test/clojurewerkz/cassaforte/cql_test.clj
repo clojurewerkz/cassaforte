@@ -130,6 +130,24 @@
                  set))))
    (truncate :users)))
 
+(deftest test-index-filtering-range-alt-syntax
+  (create-index :users :city)
+  (create-index :users :age)
+  (th/test-combinations
+
+   (dotimes [i 10]
+     (insert :users {:name (str "name_" i) :city "Munich" :age (int i)}))
+
+   (let [res (select :users
+                     (where {:city "Munich"
+                             :age [> (int 5)]})
+                     (allow-filtering true))]
+     (is (= (set (range 6 10))
+            (->> res
+                 (map :age)
+                 set))))
+   (truncate :users)))
+
 (deftest test-index-exact-match
   (create-index :users :city)
   (th/test-combinations

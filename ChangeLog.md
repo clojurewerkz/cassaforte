@@ -1,5 +1,17 @@
 ## Changes between 1.2.0 and 1.3.0
 
+### Alternative `where` syntax
+
+Now it is possible to specify hash in where clause, which makes queries 
+more composable:
+
+```clj
+(select :users
+        (where {:city "Munich"
+                :age [> (int 5)]})
+        (allow-filtering true))
+```
+
 ### Clojure 1.6 By Default
 
 The project now depends on `org.clojure/clojure` version `1.6.0`. It is

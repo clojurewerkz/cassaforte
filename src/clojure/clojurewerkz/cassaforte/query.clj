@@ -82,7 +82,9 @@ Takes a table identifier and additional clause arguments:
   "Clause: takes a map or a vector of pairs to compose the where
 clause of a select/update/delete query"
   [& args]
-  {:where (partition 2 args)})
+  (if (and (= 1 (count args)) (-> args first map?))
+    {:where (first args)}
+    {:where (partition 2 args)}))
 
 (defn paginate
   "Paginate through the collection of results
