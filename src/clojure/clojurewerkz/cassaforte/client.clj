@@ -121,8 +121,16 @@ reached.
 ;; Client-related
 ;;
 
+(defprotocol DummySession
+  (executeAsync [_ query]))
+
+(deftype DummySessionImpl []
+  DummySession
+  (executeAsync [_ query] (throw (Exception. "Not connected"))))
+
+
 (def ^:dynamic *default-cluster*)
-(def ^:dynamic *default-session*)
+(def ^:dynamic *default-session* (DummySessionImpl.))
 (def ^:dynamic *async* false)
 (def ^:dynamic *debug* false)
 
@@ -324,7 +332,7 @@ reached.
      * prepared - wether the query should or should not be executed as prepared, always passed
        explicitly, because `execute` is considered to be a low-level function."
   [& args]
-  (let [[^Session session query & {:keys [prepared]}] (if (= (type (first args)) Session)
+  (let [[session query & {:keys [prepared]}] (if (= (type (first args)) Session)
                                                         args
                                                         (cons *default-session* args))
         ^Statement statement (if prepared
