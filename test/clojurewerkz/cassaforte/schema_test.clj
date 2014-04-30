@@ -1,6 +1,5 @@
 (ns clojurewerkz.cassaforte.schema-test
-  (:require [clojurewerkz.cassaforte.embedded :as e]
-            [clojurewerkz.cassaforte.test-helper :as th]
+  (:require [clojurewerkz.cassaforte.test-helper :as th]
             [clojurewerkz.cassaforte.cql :refer :all]
             [clojure.test :refer :all]
             [clojurewerkz.cassaforte.query :refer :all]))

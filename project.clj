@@ -7,7 +7,7 @@
   :dependencies [[org.clojure/clojure                          "1.6.0"]
                  [cc.qbits/hayt                                "1.4.1"
                   :exclusions [org.flatland/useful]]
-                 [com.datastax.cassandra/cassandra-driver-core "2.0.0-rc2"]]
+                 [com.datastax.cassandra/cassandra-driver-core "2.0.1"]]
   :source-paths      ["src/clojure"]
   :java-source-paths ["src/java"]
   :profiles       {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
@@ -21,9 +21,10 @@
                          :dependencies [
                                         ;; see https://issues.apache.org/jira/browse/CASSANDRA-6639
                                         ;; [com.google.guava/guava             "15.0"]
+                                        ;; [org.yaml/snakeyaml                 "1.11"]
                                         [org.xerial.snappy/snappy-java      "1.1.0.1"]
-                                        [commons-lang/commons-lang          "2.6"]
-                                        [org.apache.cassandra/cassandra-all "2.0.6"]
+                                        ;; [commons-lang/commons-lang          "2.6"]
+                                        ;; [org.apache.cassandra/cassandra-all "2.1.0-beta1"]
                                         [org.clojure/tools.trace            "0.7.6"]]}
                    :cassandra1211 {:dependencies [[org.apache.cassandra/cassandra-all "1.2.11"]]}}
   :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.5:dev,master"]}

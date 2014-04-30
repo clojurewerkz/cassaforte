@@ -1,6 +1,5 @@
 (ns clojurewerkz.cassaforte.test-helper
-  (:require [clojurewerkz.cassaforte.embedded :as e]
-            [clojurewerkz.cassaforte.client :as client]
+  (:require [clojurewerkz.cassaforte.client :as client]
             [clojurewerkz.cassaforte.cql :refer :all]
             [clojurewerkz.cassaforte.query :refer :all]))
 
@@ -49,10 +48,11 @@
 
 (defn initialize!
   [f]
-  (e/start-server! :cleanup true)
+  ;; until Cassandra Java client doesn't conflict with embedded
+  ;; Cassandra 2.0. MK.
+  ;; (e/start-server! :cleanup true)
   (when (not (bound? (var session)))
-    (def session (client/connect! ["127.0.0.1"]
-                                  :port 19042)))
+    (def session (client/connect! ["127.0.0.1"])))
 
   (client/with-session session
     (run! f)))
