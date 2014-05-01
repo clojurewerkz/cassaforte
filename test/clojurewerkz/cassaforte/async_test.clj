@@ -10,15 +10,16 @@
 (deftest async-test
   (th/test-combinations
    (let [record {:name "Alex" :city "Munich" :age (int 19)}
-         result (atom nil)]
+         result (atom nil)
+         finished? (promise)]
      (insert :users record)
-
-     (add-watch result :result
-                (fn [_ _ _ res]
-                  (is (= record (first res)))
-                  (is (= record
-                         (first (get-result (async (select :users))))))))
 
      (set-callbacks
       (async (select :users))
-      :success (fn [r] (reset! result r))))))
+      :success (fn [r] (reset! result r) (deliver finished? true)))
+
+     @finished?
+
+     (is (= record (first @result)))
+     (is (= record
+            (first (get-result (async (select :users)))))))))
