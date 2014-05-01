@@ -13,12 +13,12 @@
          result (atom nil)]
      (insert :users record)
 
+     (add-watch result :result
+                (fn [_ _ _ res]
+                  (is (= record (first res)))
+                  (is (= record
+                         (first (get-result (async (select :users))))))))
+
      (set-callbacks
       (async (select :users))
-      :success (fn [r] (reset! result r)))
-
-     (Thread/sleep 20)
-     (is (= record (first @result)))
-
-     (is (= record
-            (first (get-result (async (select :users)))))))))
+      :success (fn [r] (reset! result r))))))
