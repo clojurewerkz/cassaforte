@@ -329,7 +329,7 @@ reached.
   "Executes a pre-built query
 
    Options
-     * prepared - wether the query should or should not be executed as prepared, always passed
+     * prepared - whether the query should or should not be executed as prepared, always passed
        explicitly, because `execute` is considered to be a low-level function."
   [& args]
   (let [[session query & {:keys [prepared]}] (if (= (type (first args)) Session)
