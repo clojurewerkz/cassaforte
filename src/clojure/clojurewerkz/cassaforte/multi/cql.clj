@@ -46,7 +46,7 @@
 
    Example:
 
-     (create-keyspace :new_cql_keyspace
+     (create-keyspace th/session :new_cql_keyspace
                    (with {:replication
                           {:class \"SimpleStrategy\"
                            :replication_factor 1}}))"
@@ -86,11 +86,11 @@
 
    Example:
 
-     (create-table :users
-                (column-definitions {:name :varchar
-                                     :age  :int
-                                     :city :varchar
-                                     :primary-key [:name]}))"
+     (create-table th/session :users
+                  (column-definitions {:name :varchar
+                                       :age  :int
+                                       :city :varchar
+                                       :primary-key [:name]}))"
   [^Session session & query-params]
   (execute- session query-params query/create-table-query))
 
@@ -102,7 +102,7 @@
 
    Example:
 
-     (drop-table :users)"
+     (drop-table th/session :users)"
   [^Session session ks]
   (execute- session [ks] query/drop-table-query))
 
@@ -113,7 +113,7 @@
 
    Example:
 
-      (use :keyspace-name)"
+      (use th/session :keyspace-name)"
   [^Session session ks]
   (execute- session [ks] query/use-keyspace-query))
 
