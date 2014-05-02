@@ -392,8 +392,7 @@
        (truncate th/session :users)))))
 
 (deftest multi-connect
-  (let [session (-> (client/build-cluster {:contact-points ["127.0.0.1"]
-                                           :port 19042})
+  (let [session (-> (client/build-cluster {:contact-points ["127.0.0.1"]})
                     (client/connect :new_cql_keyspace))]
     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
       (insert session :users r)
