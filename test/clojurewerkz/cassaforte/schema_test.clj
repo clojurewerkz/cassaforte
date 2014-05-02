@@ -35,8 +35,11 @@
 
   (let [td      (describe-table "new_cql_keyspace" "people")
         columns (describe-columns "new_cql_keyspace" "people")]
-    (is (= "org.apache.cassandra.db.marshal.TimestampType"
-           (get-in columns [0 :validator])))
+    (is (or
+         (= "org.apache.cassandra.db.marshal.DateType"
+            (get-in columns [0 :validator]))
+         (= "org.apache.cassandra.db.marshal.TimestampType"
+            (get-in columns [0 :validator]))))
     (is (= "org.apache.cassandra.db.marshal.UTF8Type"
            (get-in columns [1 :validator])))
 
