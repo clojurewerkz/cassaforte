@@ -19,7 +19,7 @@
             [clojurewerkz.cassaforte.conversion :as conv]
             [qbits.hayt.cql :as cql]
             [clojurewerkz.cassaforte.query :as query])
-  (:import [com.datastax.driver.core Statement ResultSet ResultSetFuture Host SessionManager Cluster
+  (:import [com.datastax.driver.core Statement ResultSet ResultSetFuture Host Session Cluster
             Cluster$Builder SimpleStatement PreparedStatement HostDistance PoolingOptions
             ConsistencyLevel]
            [com.google.common.util.concurrent Futures FutureCallback]
@@ -121,16 +121,16 @@ reached.
 ;; Client-related
 ;;
 
-(defprotocol DummySessionManager
+(defprotocol DummySession
   (executeAsync [_ query]))
 
-(deftype DummySessionManagerImpl []
-  DummySessionManager
+(deftype DummySessionImpl []
+  DummySession
   (executeAsync [_ query] (throw (Exception. "Not connected"))))
 
 
 (def ^:dynamic *default-cluster*)
-(def ^:dynamic *default-session* (DummySessionManagerImpl.))
+(def ^:dynamic *default-session* (DummySessionImpl.))
 (def ^:dynamic *async* false)
 (def ^:dynamic *debug* false)
 
@@ -201,10 +201,10 @@ reached.
    This assumes that query is valid. Returns the prepared statement corresponding to the query."
   ([^String query]
      (prepare *default-session* query))
-  ([^SessionManager session ^String query]
+  ([^Session session ^String query]
      (if-let [cached (get @prepared-statement-cache [session query])]
        cached
-       (let [prepared (.prepare ^SessionManager session query)]
+       (let [prepared (.prepare ^Session session query)]
          (swap! prepared-statement-cache #(assoc % [session query] prepared))
          prepared))))
 
@@ -270,7 +270,7 @@ reached.
       (.withLoadBalancingPolicy builder load-balancing-policy))
     (.build builder)))
 
-(defn ^SessionManager connect
+(defn ^Session connect
   "Connects to the Cassandra cluster. Use `build` function to build cluster with all required options."
   ([^Cluster cluster]
      (flush-prepared-statement-cache!)
@@ -293,14 +293,14 @@ reached.
     session))
 
 (defn disconnect!
-  "0-arity version disconnects the (only) active SessionManager and shuts down the cluster.
+  "0-arity version disconnects the (only) active Session and shuts down the cluster.
 
-   1-arity version receives SessionManager, and shuts it down. It doesn't shut down all other sessions
+   1-arity version receives Session, and shuts it down. It doesn't shut down all other sessions
    on same cluster."
   ([]
      (.shutdown *default-session*)
      (.shutdown *default-cluster*))
-  ([^SessionManager session]
+  ([^Session session]
      (.shutdown session)))
 
 (defn shutdown-cluster
@@ -333,7 +333,7 @@ reached.
        explicitly, because `execute` is considered to be a low-level function."
   [& args]
 
-  (let [[session query & {:keys [prepared]}] (if (= (type (first args)) SessionManager)
+  (let [[session query & {:keys [prepared]}] (if (instance? Session (first args))
                                                args
                                                (cons *default-session* args))
         ^Statement statement (if prepared
@@ -351,7 +351,7 @@ reached.
 
 (defn ^String export-schema
   "Exports the schema as a string"
-  [^SessionManager client]
+  [^Session client]
   (-> client
       .getCluster
       .getMetadata
@@ -359,7 +359,7 @@ reached.
 
 (defn get-hosts
   "Returns all nodes in the cluster"
-  [^SessionManager session]
+  [^Session session]
   (map (fn [^Host host]
          {:datacenter (.getDatacenter host)
           :address    (.getHostAddress (.getAddress host))
