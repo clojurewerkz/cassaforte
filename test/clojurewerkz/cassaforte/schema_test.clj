@@ -43,7 +43,9 @@
     (is (= "org.apache.cassandra.db.marshal.UTF8Type"
            (get-in columns [1 :validator])))
 
-    (is (= 3 (count columns)))))
+    (is (or
+         (= 2 (count columns)) ;; Cassandra versions
+         (= 3 (count columns))))))
 
 (defn changes-by
   [f f2 n]
