@@ -24,7 +24,7 @@ for the majority of projects out there.
 
 ### Cassandra Java Driver Update
 
-Cassandra Java driver has been updated to `2.0.0-rc2`.
+Cassandra Java driver has been updated to `2.0.x`.
 
 ### UUID Generation Helpers
 
