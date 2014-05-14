@@ -1,17 +1,5 @@
 ## Changes between 1.2.0 and 1.3.0
 
-### Alternative `where` syntax
-
-Now it is possible to specify hash in where clause, which makes queries 
-more composable:
-
-```clj
-(select :users
-        (where {:city "Munich"
-                :age [> (int 5)]})
-        (allow-filtering true))
-```
-
 ### Clojure 1.6 By Default
 
 The project now depends on `org.clojure/clojure` version `1.6.0`. It is
@@ -25,6 +13,7 @@ for the majority of projects out there.
 ### Cassandra Java Driver Update
 
 Cassandra Java driver has been updated to `2.0.x`.
+
 
 ### UUID Generation Helpers
 
@@ -49,7 +38,6 @@ generation helpers:
 (u/end-of (u/unix-timestamp (u/time-based)))
 ;= #uuid "b31abb3f-4584-11e3-7f7f-7f7f7f7f7f7f"
 ```
-
 
 ### Hayt Update
 
@@ -77,6 +65,29 @@ in a batch insert (e.g. to specify TTL):
 
 Contributed by Sam Neubardt.
 
+### Alternative `where` syntax
+
+Now it is possible to specify hash in where clause, which makes queries 
+more composable:
+
+```clj
+(select :users
+        (where {:city "Munich"
+                :age [> (int 5)]})
+        (allow-filtering true))
+```
+
+### Batch Insert Improvements
+
+Clauses to be specified for each record in `insert-batch`:
+
+``` clojure
+(let [input [[{:name "Alex" :city "Munich"} (using :ttl 350)]
+             [{:name "Alex" :city "Munich"} (using :ttl 350)]]]
+  (insert-batch th/session :users input))
+```
+
+Contributed by Sam Neubardt.
 
 
 ## Changes between 1.1.0 and 1.2.0
