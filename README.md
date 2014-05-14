@@ -1,7 +1,7 @@
 # Cassaforte, a Clojure Cassandra Client
 
 Cassaforte is a small, easy to use Clojure client for Apache Cassandra
-(recent releases: currently 1.2 and 2.0), part of the [ClojureWerkz
+(recent releases: 2.0, 1.2), part of the [ClojureWerkz
 libraries](http://clojurewerkz.org).
 
 For quickstart, please refer to our [Getting Started with Clojure and Cassandra](http://clojurecassandra.info/articles/getting_started.html)
@@ -49,7 +49,7 @@ definition to your `pom.xml`:
 With Leiningen:
 
 ``` clojure
-[clojurewerkz/cassaforte "1.3.0-beta12"]
+[clojurewerkz/cassaforte "1.3.0"]
 ```
 
 With Maven:
@@ -58,7 +58,7 @@ With Maven:
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>1.3.0-beta12</version>
+  <version>1.3.0</version>
 </dependency>
 ```
 
@@ -78,13 +78,12 @@ With Maven:
 Cassaforte supports Clojure 1.4+.
 
 
-
 ## Supported Apache Cassandra Versions
 
 Cassaforte is built from the ground up for CQL.
-Cassaforte 1.2 targets Cassandra 1.2.x
-Cassaforte 1.3 and later versions target Cassandra 2.x.
 
+Cassaforte 1.3 and later versions target Cassandra 2.x.
+Cassaforte 1.2 targets Cassandra 1.2.x
 
 
 ## Documentation & Examples
