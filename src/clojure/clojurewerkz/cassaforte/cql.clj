@@ -93,22 +93,14 @@
 
 (defn drop-table
   "Drops a table: this results in the immediate, irreversible removal of a table, including
-   all data in it.
-
-   Example:
-
-     (drop-table :users)"
+   all data in it."
   [^Session session ks]
   (execute- session [ks] q/drop-table-query))
 
 (defn use-keyspace
   "Takes an existing keyspace name as argument and set it as the per-session current working keyspace.
    All subsequent keyspace-specific actions will be performed in the context of the selected keyspace,
-   unless otherwise specified, until another USE statement is issued or the connection terminates.
-
-   Example:
-
-      (use :keyspace-name)"
+   unless otherwise specified, until another USE statement is issued or the connection terminates."
   [^Session session ks]
   (execute- session [ks] q/use-keyspace-query))
 
@@ -147,7 +139,7 @@
                    (apply q/queries)
                    q/batch-query
                    client/render-query)]
-    (client/execute query :prepared hayt/*prepared-statement*)))
+    (client/execute session query {:prepared hayt/*prepared-statement*})))
 
 (defn update
   "Updates one or more columns for a given row in a table. The `where` clause
@@ -161,12 +153,7 @@
    only those columns are deleted from the row indicated by the `where` clause, please refer to
    KV guide (http://clojurecassandra.info/articles/kv.html) for more details. Otherwise whole rows
    are removed. The `where` allows to specify the key for the row(s) to delete. First argument
-   for this function should always be table name.
-
-   Example:
-
-       (delete :users
-               (where :name \"username\"))"
+   for this function should always be table name."
   [^Session session table & query-params]
   (execute- session (cons table query-params) q/delete-query))
 

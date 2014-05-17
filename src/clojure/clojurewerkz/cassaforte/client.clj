@@ -285,7 +285,6 @@ reached.
      * prepared - whether the query should or should not be executed as prepared, always passed
        explicitly, because `execute` is considered to be a low-level function."
   [^Session session query {:keys [prepared]}]
-
   (let [^Statement statement (if prepared
                                (if (coll? query)
                                  (build-statement (prepare session (first query))
@@ -295,7 +294,7 @@ reached.
                                (build-statement query))
         ^ResultSetFuture future (.executeAsync session statement)
         res                     (.getUninterruptibly future)]
-    (conv/to-map res)))
+    (conv/to-clj res)))
 
 (defn ^String export-schema
   "Exports the schema as a string"
@@ -330,21 +329,21 @@ reached.
 
 (defn set-callbacks
   "Set callbacks on a result future"
-  [^ResultSetFuture future & {:keys [success failure]}]
+  [^ResultSetFuture future {:keys [success failure]}]
   {:pre [(not (nil? success))]}
   (Futures/addCallback
    future
    (reify FutureCallback
      (onSuccess [_ result]
        (success
-        (conv/to-map (.get future))))
+        (conv/to-clj (.get future))))
      (onFailure [_ result]
        (failure result)))))
 
 (defn get-result
   "Get result from Future. Optional `timeout-ms` should be specified in milliseconds."
-  ([^ResultSetFuture future ^long timeout-ms]
-     (conv/to-map (.get future timeout-ms
-                        java.util.concurrent.TimeUnit/MILLISECONDS)))
   ([^ResultSetFuture future]
-     (conv/to-map (.get future))))
+     (conv/to-clj (.get future)))
+  ([^ResultSetFuture future ^long timeout-ms]
+     (conv/to-clj (.get future timeout-ms
+                        java.util.concurrent.TimeUnit/MILLISECONDS))))
