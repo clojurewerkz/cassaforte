@@ -293,8 +293,9 @@ reached.
                                  (throw (IllegalArgumentException.
                                          "Query is meant to be executed as prepared, but no values were supplied.")))
                                (build-statement query))
-        ^ResultSetFuture future (.executeAsync session statement)]
-    (.getUninterruptibly future)))
+        ^ResultSetFuture future (.executeAsync session statement)
+        res                     (.getUninterruptibly future)]
+    (conv/to-map res)))
 
 (defn ^String export-schema
   "Exports the schema as a string"
