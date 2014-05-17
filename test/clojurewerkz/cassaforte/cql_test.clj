@@ -159,9 +159,9 @@
                        (where :city "city_5")
                        (allow-filtering true))]
        (is (= 5
-              (->> res
-                   first
-                   :age))))
+              (-> res
+                  first
+                  :age))))
      (truncate s :users)))
 
   (deftest test-list-operations
