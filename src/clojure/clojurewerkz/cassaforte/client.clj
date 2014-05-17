@@ -174,9 +174,8 @@
   [query & values]
   (vector query values))
 
-;; TODO: separate async and sync versions
 (defn execute
-  "Executes a pre-built query
+  "Executes a pre-built query.
 
    Options
      * prepared - whether the query should or should not be executed as prepared, always passed
@@ -194,6 +193,24 @@
            ^ResultSetFuture future (.executeAsync session statement)
            res                     (.getUninterruptibly future)]
        (conv/to-clj res))))
+
+(defn ^ResultSetFuture execute-async
+  "Executes a pre-built query and returns a future.
+
+   Options
+     * prepared - whether the query should or should not be executed as prepared, always passed
+       explicitly, because `execute` is considered to be a low-level function."
+  ([^Session session query]
+     (execute-async session query {}))
+  ([^Session session query {:keys [prepared]}]
+     (let [^Statement statement (if prepared
+                                  (if (coll? query)
+                                    (build-statement (prepare session (first query))
+                                                     (second query))
+                                    (throw (IllegalArgumentException.
+                                            "Query is meant to be executed as prepared, but no values were supplied.")))
+                                  (build-statement query))]
+       (.executeAsync session statement))))
 
 (defn ^String export-schema
   "Exports the schema as a string"
