@@ -1,6 +1,7 @@
 (ns clojurewerkz.cassaforte.cql-test
   (:require [clojurewerkz.cassaforte.test-helper :as th]
             [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.policies :as cp]
             [clojurewerkz.cassaforte.cql :refer :all]
             [clojure.test :refer :all]
             [clojurewerkz.cassaforte.query :refer :all]))
@@ -386,20 +387,12 @@
     (drop-table s :tv_series))
 
   (deftest test-insert-with-consistency-level
-    (testing "New DSL"
-      (th/test-combinations
-       (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-         (client/with-consistency-level :quorum
-           (insert s :users r))
-         (is (= r (get-one s :users)))
-         (truncate s :users))))
-    (testing "Old DSL"
-      (th/test-combinations
-       (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-         (client/with-consistency-level (client/consistency-level :quorum)
-           (insert s :users r))
-         (is (= r (get-one s :users)))
-         (truncate s :users)))))
+    (th/test-combinations
+     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+       (cp/with-consistency-level :quorum
+         (insert s :users r))
+       (is (= r (get-one s :users)))
+       (truncate s :users))))
 
   ;; TODO: think about using `cons/conj` as a syntax sugar for prepended and appended list commands
   ;; TODO: test authentication

@@ -15,18 +15,12 @@
    * tuning load balancing, retries, reconnection strategies and consistency settings
    * preparing and executing queries constructed via DSL
    * working with executing results"
-  (:require [clojurewerkz.cassaforte.debug :as dbg]
+  (:require [clojurewerkz.cassaforte.policies :as cp]
             [clojurewerkz.cassaforte.conversion :as conv]
-            [qbits.hayt.cql :as cql]
-            [clojurewerkz.cassaforte.query :as query])
+            [qbits.hayt.cql :as hayt])
   (:import [com.datastax.driver.core Statement ResultSet ResultSetFuture Host Session Cluster
-            Cluster$Builder SimpleStatement PreparedStatement HostDistance PoolingOptions
-            ConsistencyLevel]
-           [com.google.common.util.concurrent Futures FutureCallback]
-           [com.datastax.driver.core.policies
-            LoadBalancingPolicy DCAwareRoundRobinPolicy RoundRobinPolicy TokenAwarePolicy
-            LoggingRetryPolicy DefaultRetryPolicy DowngradingConsistencyRetryPolicy FallthroughRetryPolicy
-            RetryPolicy ConstantReconnectionPolicy ExponentialReconnectionPolicy]))
+            Cluster$Builder SimpleStatement PreparedStatement HostDistance PoolingOptions]
+           [com.google.common.util.concurrent Futures FutureCallback]))
 
 (def prepared-statement-cache (atom {}))
 
@@ -34,111 +28,12 @@
   []
   (reset! prepared-statement-cache {}))
 
-;;
-;; Load Balancing policies
-;;
-
-(defn round-robin-policy
-  "Round-robin load balancing policy. Picks nodes to execute requests on in order."
-  []
-  (RoundRobinPolicy.))
-
-(defn dc-aware-round-robin-policy
-  "Datacenter aware load balancing policy.
-
-   Like round-robin but over the nodes located in the same datacenter.
-   Nodes from other datacenters will be tried only if all requests to local nodes fail."
-  [^String local-dc]
-  (DCAwareRoundRobinPolicy. local-dc))
-
-(defn token-aware-policy
-  "Takes a load balancing policy and makes it token-aware"
-  [^LoadBalancingPolicy underlying-policy]
-  (TokenAwarePolicy. underlying-policy))
-
-;;
-;; Retry policies
-;;
-
-(def retry-policies {:default                 (constantly DefaultRetryPolicy/INSTANCE)
-                     :downgrading-consistency (constantly DowngradingConsistencyRetryPolicy/INSTANCE)
-                     :fallthrough             (constantly FallthroughRetryPolicy/INSTANCE)})
-
-(defn retry-policy
-  [rp]
-  ((rp retry-policies)))
-
-(defn logging-retry-policy
-  "A retry policy that wraps another policy, logging the decision made by its sub-policy."
-  [^RetryPolicy policy]
-  (LoggingRetryPolicy. policy))
-
-;;
-;; Reconnection policies
-;;
-
-(defn exponential-reconnection-policy
-  "Reconnection policy that waits exponentially longer between each
-reconnection attempt but keeps a constant delay once a maximum delay is reached.
-
-   Delays should be given in milliseconds"
-  [base-delay-ms max-delay-ms]
-  (ExponentialReconnectionPolicy. base-delay-ms max-delay-ms))
-
-(defn constant-reconnection-policy
-  "Reconnection policy that waits constantly longer between each
-reconnection attempt but keeps a constant delay once a maximum delay is
-reached.
-
-   Delay should be given in milliseconds"
-  [delay-ms]
-  (ConstantReconnectionPolicy. delay-ms))
-
-;;
-;; Consistency Level
-;;
-
-(def consistency-levels
-  {:any ConsistencyLevel/ANY
-   :one ConsistencyLevel/ONE
-   :two ConsistencyLevel/TWO
-   :three ConsistencyLevel/THREE
-   :quorum ConsistencyLevel/QUORUM
-   :all ConsistencyLevel/ALL
-   :local-quorum ConsistencyLevel/LOCAL_QUORUM
-   :each-quorum ConsistencyLevel/EACH_QUORUM})
-
-(defn consistency-level
-  [cl]
-  (get consistency-levels cl))
-
-(defn resolve-consistency-level
-  [cl]
-  (if (= (type cl) ConsistencyLevel)
-    cl
-    (consistency-level cl)))
-
 (defprotocol DummySession
   (executeAsync [_ query]))
 
 (deftype DummySessionImpl []
   DummySession
   (executeAsync [_ query] (throw (Exception. "Not connected"))))
-
-(def ^:dynamic *consistency-level* :one)
-(def ^:dynamic *retry-policy* (retry-policy :default))
-
-(defmacro with-consistency-level
-  "Executes a query with the given consistency level"
-  [consistency-level & body]
-  `(binding [*consistency-level* ~consistency-level]
-     ~@body))
-
-(defmacro with-retry-policy
-  "Executes a query with the given retry policy"
-  [retry-policy & body]
-  `(binding [*retry-policy* ~retry-policy]
-     ~@body))
 
 (defn ^Cluster build-cluster
   "Builds an instance of Cluster you can connect to.
@@ -165,11 +60,11 @@ reached.
            load-balancing-policy
            force-prepared-queries]}]
   (when force-prepared-queries
-    (alter-var-root (var cql/*prepared-statement*) (constantly true)))
-
+    (alter-var-root (var hayt/*prepared-statement*)
+                    (constantly true)))
   (when consistency-level
-    (alter-var-root (var *consistency-level*) (constantly (resolve-consistency-level consistency-level))))
-
+    (alter-var-root (var cp/*consistency-level*)
+                    (constantly (cp/resolve-consistency-level consistency-level))))
   (let [^Cluster$Builder builder        (Cluster/builder)
         ^PoolingOptions pooling-options (PoolingOptions.)]
     (when port
@@ -225,16 +120,16 @@ reached.
 (defmacro prepared
   "Executes a prepared statement"
   [& body]
-  `(binding [cql/*prepared-statement* true
-             cql/*param-stack*        (atom [])]
+  `(binding [hayt/*prepared-statement* true
+             hayt/*param-stack*        (atom [])]
      (do ~@body)))
 
 (defn- set-statement-options-
   [^Statement statement]
-  (when *retry-policy*
-    (.setRetryPolicy statement *retry-policy*))
-  (when *consistency-level*
-    (.setConsistencyLevel statement (resolve-consistency-level *consistency-level*)))
+  (when cp/*retry-policy*
+    (.setRetryPolicy statement cp/*retry-policy*))
+  (when cp/*consistency-level*
+    (.setConsistencyLevel statement (cp/resolve-consistency-level cp/*consistency-level*)))
   statement)
 
 (defn- build-statement
@@ -263,7 +158,9 @@ reached.
 (defn render-query
   "Renders compiled query"
   [query-params]
-  (let [renderer (if cql/*prepared-statement* cql/->prepared cql/->raw)]
+  (let [renderer (if hayt/*prepared-statement*
+                   hayt/->prepared
+                   hayt/->raw)]
     (renderer query-params)))
 
 (defn compile-query
