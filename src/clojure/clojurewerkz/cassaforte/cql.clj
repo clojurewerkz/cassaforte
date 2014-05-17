@@ -10,15 +10,15 @@
 (ns clojurewerkz.cassaforte.cql
   "Main namespace for working with CQL, prepared statements. Convenience functions
    for key operations built on top of CQL."
-  (:require
-   [qbits.hayt.cql :as cql]
-   [clojurewerkz.cassaforte.query :as query]
-   [clojurewerkz.cassaforte.client :as client]))
+  (:require [qbits.hayt.cql :as hayt]
+            [clojurewerkz.cassaforte.query :as q]
+            [clojurewerkz.cassaforte.client :as client])
+  (:import com.datastax.driver.core.Session))
 
 (defn ^:private execute-
-  [query-params builder]
+  [^Session session query-params builder]
   (let [rendered-query (client/render-query (client/compile-query query-params builder))]
-    (client/execute rendered-query :prepared cql/*prepared-statement*)))
+    (client/execute session rendered-query {:prepared hayt/*prepared-statement*})))
 
 ;;
 ;; Schema operations
@@ -31,8 +31,8 @@
    Example:
 
      (drop-keyspace :new_cql_keyspace)"
-  [ks]
-  (execute- [ks] query/drop-keyspace-query))
+  [^Session session ks]
+  (execute- session [ks] q/drop-keyspace-query))
 
 (defn create-keyspace
   "Creates a new top-level keyspace. A keyspace is a namespace that
@@ -45,8 +45,8 @@
                    (with {:replication
                           {:class \"SimpleStrategy\"
                            :replication_factor 1}}))"
-  [& query-params]
-  (execute- query-params query/create-keyspace-query))
+  [^Session session & query-params]
+  (execute- session query-params q/create-keyspace-query))
 
 (defn create-index
   "Creates a new (automatic) secondary index for a given (existing)
@@ -59,8 +59,8 @@
       (create-index th/session :users :city
                     (index-name :users_city)
                     (if-not-exists))"
-  [& query-params]
-  (execute- query-params query/create-index-query))
+  [^Session session & query-params]
+  (execute- session query-params q/create-index-query))
 
 (defn drop-index
   "Drop an existing secondary index. The argument of the statement
@@ -69,8 +69,8 @@
    Example, drops an index on `users` table, `city` column:
 
        (drop-index th/session :users_city)"
-  [& query-params]
-  (execute- query-params query/drop-index-query))
+  [^Session session & query-params]
+  (execute- session query-params q/drop-index-query))
 
 (defn create-table
   "Creates a new table. A table is a set of rows (usually
@@ -86,43 +86,35 @@
                                      :age  :int
                                      :city :varchar
                                      :primary-key [:name]}))"
-  [& query-params]
-  (execute- query-params query/create-table-query))
+  [^Session session & query-params]
+  (execute- session query-params q/create-table-query))
 
 (def create-column-family create-table)
 
 (defn drop-table
   "Drops a table: this results in the immediate, irreversible removal of a table, including
-   all data in it.
-
-   Example:
-
-     (drop-table :users)"
-  [ks]
-  (execute- [ks] query/drop-table-query))
+   all data in it."
+  [^Session session ks]
+  (execute- session [ks] q/drop-table-query))
 
 (defn use-keyspace
   "Takes an existing keyspace name as argument and set it as the per-session current working keyspace.
    All subsequent keyspace-specific actions will be performed in the context of the selected keyspace,
-   unless otherwise specified, until another USE statement is issued or the connection terminates.
-
-   Example:
-
-      (use :keyspace-name)"
-  [ks]
-  (execute- [ks] query/use-keyspace-query))
+   unless otherwise specified, until another USE statement is issued or the connection terminates."
+  [^Session session ks]
+  (execute- session [ks] q/use-keyspace-query))
 
 (defn alter-table
   "Alters a table definition. Use it to add new
    columns, drop existing ones, change the type of existing columns, or update the table options."
-  [& query-params]
-  (execute- query-params query/alter-table-query))
+  [^Session session & query-params]
+  (execute- session query-params q/alter-table-query))
 
 (defn alter-keyspace
   "Alters properties of an existing keyspace. The
    supported properties are the same that for `create-keyspace`"
-  [& query-params]
-  (execute- query-params query/alter-keyspace-query))
+  [^Session session & query-params]
+  (execute- session query-params q/alter-keyspace-query))
 
 ;;
 ;; DB Operations
@@ -134,81 +126,76 @@
    Note that since a row is identified by its primary key, the columns that compose it must be
    specified. Also, since a row only exists when it contains one value for a column not part of
    the primary key, one such value must be specified too."
-  [& query-params]
-  (execute- query-params query/insert-query))
+  [^Session session & query-params]
+  (execute- session query-params q/insert-query))
 
 (defn insert-batch
   "Performs a batch insert (inserts multiple records into a table at the same time).
   To specify additional clauses for a record (such as where or using), wrap that record
   and the clauses in a vector"
-  [table records]
+  [^Session session table records]
   (let [query (->> records
-                   (map (comp (partial apply (partial query/insert-query table)) flatten vector))
-                   (apply query/queries)
-                   query/batch-query
+                   (map (comp (partial apply (partial q/insert-query table)) flatten vector))
+                   (apply q/queries)
+                   q/batch-query
                    client/render-query)]
-    (client/execute query :prepared cql/*prepared-statement*)))
+    (client/execute session query {:prepared hayt/*prepared-statement*})))
 
 (defn update
   "Updates one or more columns for a given row in a table. The `where` clause
    is used to select the row to update and must include all columns composing the PRIMARY KEY.
    Other columns values are specified through assignment within the `set` clause."
-  [& query-params]
-  (execute- query-params query/update-query))
+  [^Session session & query-params]
+  (execute- session query-params q/update-query))
 
 (defn delete
   "Deletes columns and rows. If the `columns` clause is provided,
    only those columns are deleted from the row indicated by the `where` clause, please refer to
    KV guide (http://clojurecassandra.info/articles/kv.html) for more details. Otherwise whole rows
    are removed. The `where` allows to specify the key for the row(s) to delete. First argument
-   for this function should always be table name.
-
-   Example:
-
-       (delete :users
-               (where :name \"username\"))"
-  [table & query-params]
-  (execute- (cons table query-params) query/delete-query))
+   for this function should always be table name."
+  [^Session session table & query-params]
+  (execute- session (cons table query-params) q/delete-query))
 
 (defn select
   "Retrieves one or more columns for one or more rows in a table.
    It returns a result set, where every row is a collection of columns returned by the query."
-  [& query-params]
-  (execute- query-params query/select-query))
+  [^Session session & query-params]
+  (execute- session query-params q/select-query))
 
 (defn truncate
   "Truncates a table: permanently and irreversably removes all rows from the table,
    not removing the table itself."
-  [table]
-  (execute- [table] query/truncate-query))
+  [^Session session table]
+  (execute- session [table] q/truncate-query))
 
 (defn create-user
-  [& query-params]
-  (execute- query-params query/create-user-query))
+  [^Session session & query-params]
+  (execute- session query-params q/create-user-query))
 
 (defn alter-user
-  [& query-params]
-  (execute- query-params query/alter-user-query))
+  [^Session session & query-params]
+  (execute- session query-params q/alter-user-query))
 
 (defn drop-user
-  [& query-params]
-  (execute- query-params query/drop-user-query))
+  [^Session session & query-params]
+  (execute- session query-params q/drop-user-query))
 
 (defn grant
-  [& query-params]
-  (execute- query-params query/grant-query))
+  [^Session session & query-params]
+  (execute- session query-params q/grant-query))
 
 (defn revoke
-  [& query-params]
-  (execute- query-params query/revoke-query))
+  [^Session session & query-params]
+  (execute- session query-params q/revoke-query))
 
 (defn list-users
-  [& query-params]
-  (execute- query-params query/list-users-query))
+  [^Session session & query-params]
+  (execute- session query-params q/list-users-query))
 
 (defn list-permissions
-  [& query-params]
-  (execute- query-params query/list-perm-query))
+  [^Session session & query-params]
+  (execute- session query-params q/list-perm-query))
 
 ;;
 ;; Higher level DB functions
@@ -218,20 +205,20 @@
   "Executes query to get exactly one result. Does not add `limit` clause to the query, this is
    a convenience function only. Please use `limit` clause if you execute queries that potentially
    return more than a single result."
-  [& query-params]
-  (first (execute- query-params query/select-query)))
+  [^Session session & query-params]
+  (first (execute- session query-params q/select-query)))
 
 (defn perform-count
   "Helper function to perform count on a table with given query. Count queries are slow in Cassandra,
    in order to get a rough idea of how many items you have in certain table, use `nodetool cfstats`,
    for more complex cases, you can wither do a full table scan or perform a count with this function,
    please note that it does not have any performance guarantees and is potentially expensive."
-  [table & query-params]
+  [^Session session table & query-params]
   (:count
    (first
-    (select table
+    (select session table
             (cons
-             (query/columns (query/count*))
+             (q/columns (q/count*))
              query-params)))))
 
 ;;
@@ -240,49 +227,49 @@
 
 (defn describe-keyspace
   "Returns a keyspace description, taken from `system.schema_keyspaces`."
-  [ks]
+  [^Session session ks]
   (first
-   (select :system.schema_keyspaces
-           (query/where :keyspace_name ks))))
+   (select session :system.schema_keyspaces
+           (q/where :keyspace_name ks))))
 
 (defn describe-table
   "Returns a table description, taken from `system.schema_columnfamilies`."
-  [ks table]
+  [^Session session ks table]
   (first
-   (select :system.schema_columnfamilies
-           (query/where :keyspace_name ks
-                        :columnfamily_name table))))
+   (select session :system.schema_columnfamilies
+           (q/where :keyspace_name ks
+                    :columnfamily_name table))))
 
 (defn describe-columns
   "Returns table columns description, taken from `system.schema_columns`."
-  [ks table]
-  (select :system.schema_columns
-          (query/where :keyspace_name ks
-                       :columnfamily_name table)))
+  [^Session session ks table]
+  (select session :system.schema_columns
+          (q/where :keyspace_name ks
+                   :columnfamily_name table)))
 
 ;;
 ;; Higher-level collection manipulation
 ;;
 
-(defn- get-chunk
-  "Returns next chunk for the lazy world iteration"
-  [table partition-key chunk-size last-pk]
+(defn- load-chunk
+  "Returns next chunk for the lazy table iteration"
+  [^Session session table partition-key chunk-size last-pk]
   (if (nil? (first last-pk))
-    (select table
-            (query/limit chunk-size))
-    (select table
-            (query/where (apply query/token partition-key) [> (apply query/token last-pk)])
-            (query/limit chunk-size))))
+    (select session table
+            (q/limit chunk-size))
+    (select session table
+            (q/where (apply q/token partition-key) [> (apply q/token last-pk)])
+            (q/limit chunk-size))))
 
-(defn iterate-world
-  "Lazily iterates through the collection, returning chunks of chunk-size."
-  ([table partition-key chunk-size]
-     (iterate-world table (if (sequential? partition-key)
-                            partition-key
-                            [partition-key])
+(defn iterate-table
+  "Lazily iterates through a table, returning chunks of chunk-size."
+  ([^Session session table partition-key chunk-size]
+     (iterate-table session table (if (sequential? partition-key)
+                                    partition-key
+                                    [partition-key])
                     chunk-size []))
-  ([table partition-key chunk-size c]
+  ([^Session session table partition-key chunk-size c]
      (lazy-cat c
                (let [last-pk    (map #(get (last c) %) partition-key)
-                     next-chunk (get-chunk table partition-key chunk-size last-pk)]
-                 (iterate-world table partition-key chunk-size next-chunk)))))
+                     next-chunk (load-chunk session table partition-key chunk-size last-pk)]
+                 (iterate-table session table partition-key chunk-size next-chunk)))))

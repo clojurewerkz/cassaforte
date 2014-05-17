@@ -18,9 +18,9 @@
 (defn console-reporter
   [^Session client]
   (let [registry (-> client
-                     (.getCluster)
-                     (.getMetrics)
-                     (.getRegistry))]
+                     .getCluster
+                     .getMetrics
+                     .getRegistry)]
     (ConsoleReporter/enable registry 1000 TimeUnit/SECONDS)))
 
 (defn csv-reporter

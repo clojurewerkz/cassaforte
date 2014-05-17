@@ -13,12 +13,12 @@
            [java.nio ByteBuffer])
   (:require [clojurewerkz.cassaforte.bytes :as b]))
 
-(defprotocol DefinitionToMap
-  (to-map [input] "Converts any definition to map"))
+(defprotocol ClojureRepresentation
+  (to-clj [input] "Converts any definition to a Clojure data structure"))
 
-(extend-protocol DefinitionToMap
+(extend-protocol ClojureRepresentation
   ResultSet
-  (to-map [^ResultSet input]
+  (to-clj [^ResultSet input]
     (into []
           (for [^Row row input]
             (into {}
@@ -29,7 +29,7 @@
                                      (b/deserialize (.getType cd)
                                                     bytes))]))))))
   Host
-  (to-map [^Host host]
+  (to-clj [^Host host]
     {:datacenter (.getDatacenter host)
      :address    (.getHostAddress (.getAddress host))
      :rack       (.getRack host)}))
