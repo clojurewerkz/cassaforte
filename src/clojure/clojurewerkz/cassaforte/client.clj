@@ -117,9 +117,6 @@ reached.
   (if (= (type cl) ConsistencyLevel)
     cl
     (consistency-level cl)))
-;;
-;; Client-related
-;;
 
 (defprotocol DummySession
   (executeAsync [_ query]))
@@ -128,34 +125,8 @@ reached.
   DummySession
   (executeAsync [_ query] (throw (Exception. "Not connected"))))
 
-
-(def ^:dynamic *default-cluster*)
-(def ^:dynamic *default-session* (DummySessionImpl.))
-(def ^:dynamic *async* false)
-(def ^:dynamic *debug* false)
-
 (def ^:dynamic *consistency-level* :one)
 (def ^:dynamic *retry-policy* (retry-policy :default))
-
-
-(defmacro with-session
-  "Executes a query with the given session"
-  [session & body]
-  `(binding [*default-session* ~session]
-     ~@body))
-
-(defmacro async
-  "Executes a query asyncronously"
-  [& body]
-  `(binding [*async* true]
-     ~@body))
-
-(defmacro prepared
-  "Executes a prepared statement"
-  [& body]
-  `(binding [cql/*prepared-statement* true
-             cql/*param-stack*        (atom [])]
-     (do ~@body)))
 
 (defmacro with-consistency-level
   "Executes a query with the given consistency level"
@@ -169,11 +140,94 @@ reached.
   `(binding [*retry-policy* ~retry-policy]
      ~@body))
 
-(defmacro with-debug
-  "Executes a query with *debug* bound to true"
+(defn ^Cluster build-cluster
+  "Builds an instance of Cluster you can connect to.
+
+   Options:
+     * hosts: hosts to connect to
+     * port: port, listening to incoming binary CQL connections (make sure you have `start_native_transport` set to true).
+     * credentials: connection credentials in the form {:username username :password password}
+     * connections-per-host: specifies core number of connections per host.
+     * max-connections-per-host: maximum number of connections per host.
+     * retry-policy: configures the retry policy to use for the new cluster.
+     * load-balancing-policy: configures the load balancing policy to use for the new cluster.
+     * force-prepared-queries: forces all queries to be executed as prepared by default
+     * consistency-level: default consistency level for all queires to be executed against this cluster"
+  [{:keys [hosts
+           port
+           credentials
+           connections-per-host
+           max-connections-per-host
+
+           consistency-level
+           retry-policy
+           reconnection-policy
+           load-balancing-policy
+           force-prepared-queries]}]
+  (when force-prepared-queries
+    (alter-var-root (var cql/*prepared-statement*) (constantly true)))
+
+  (when consistency-level
+    (alter-var-root (var *consistency-level*) (constantly (resolve-consistency-level consistency-level))))
+
+  (let [^Cluster$Builder builder        (Cluster/builder)
+        ^PoolingOptions pooling-options (PoolingOptions.)]
+    (when port
+      (.withPort builder port))
+    (when credentials
+      (.withCredentials builder (:username credentials) (:password credentials)))
+    (when connections-per-host
+      (.setCoreConnectionsPerHost pooling-options HostDistance/LOCAL
+                                  connections-per-host))
+    (when max-connections-per-host
+      (.setMaxConnectionsPerHost pooling-options HostDistance/LOCAL
+                                 max-connections-per-host))
+    (.withPoolingOptions builder pooling-options)
+    (doseq [h hosts]
+      (.addContactPoint builder h))
+    (when retry-policy
+      (.withRetryPolicy builder retry-policy))
+    (when reconnection-policy
+      (.withReconnectionPolicy builder reconnection-policy))
+    (when load-balancing-policy
+      (.withLoadBalancingPolicy builder load-balancing-policy))
+    (.build builder)))
+
+(defn ^Session connect
+  "Connects to the Cassandra cluster. Use `build` function to build cluster with all required options."
+  ([hosts]
+     (flush-prepared-statement-cache!)
+     (.connect (build-cluster {:hosts hosts})))
+  ([hosts keyspace]
+     (flush-prepared-statement-cache!)
+     (let [c (build-cluster {:hosts hosts})]
+       (.connect c (name keyspace))))
+  ([hosts keyspace opts]
+     (flush-prepared-statement-cache!)
+     (let [c (build-cluster (merge opts {:hosts hosts}))]
+       (.connect c (name keyspace)))))
+
+(defn disconnect
+  "1-arity version receives Session, and shuts it down. It doesn't shut down all other sessions
+   on same cluster."
+  [^Session session]
+  (.shutdown session))
+
+(defn shutdown-cluster
+  "Shuts down provided cluster"
+  [^Cluster cluster]
+  (.shutdown cluster))
+
+;;
+;; Query, Prepared statements
+;;
+
+(defmacro prepared
+  "Executes a prepared statement"
   [& body]
-  `(binding [*debug* true]
-     (dbg/catch-exceptions ~@body)))
+  `(binding [cql/*prepared-statement* true
+             cql/*param-stack*        (atom [])]
+     (do ~@body)))
 
 (defn- set-statement-options-
   [^Statement statement]
@@ -199,114 +253,12 @@ reached.
   "Prepares the provided query on C* server for futher execution.
 
    This assumes that query is valid. Returns the prepared statement corresponding to the query."
-  ([^String query]
-     (prepare *default-session* query))
   ([^Session session ^String query]
      (if-let [cached (get @prepared-statement-cache [session query])]
        cached
        (let [prepared (.prepare ^Session session query)]
          (swap! prepared-statement-cache #(assoc % [session query] prepared))
          prepared))))
-
-(defn build-cluster
-  "Builds an instance of Cluster you can connect to.
-
-   Options:
-     * contact-points - cluster hosts to connect to
-     * port - port, listening to incoming binary CQL connections (make sure you have `start_native_transport` set
-       to true).
-     * credentials - connection credentials in the form {:username username :password password}
-     * connections-per-host - specifies core number of connections per host.
-     * max-connections-per-host - maximum number of connections per host.
-     * retry-policy - configures the retry policy to use for the new cluster.
-     * load-balancing-policy - configures the load balancing policy to use for the new cluster.
-     * force-prepared-queries - forces all queries to be executed as prepared by default
-     * consistency-level - sets the default consistency level for all queires to be executed against this cluster,
-       use `with-consistency-level` to specify consistency level on a per-query basis"
-  [{:keys [contact-points
-           port
-           credentials
-           connections-per-host
-           max-connections-per-host
-
-           consistency-level
-           retry-policy
-           reconnection-policy
-           load-balancing-policy
-           force-prepared-queries]}]
-  (when force-prepared-queries
-    (alter-var-root (var cql/*prepared-statement*) (constantly true)))
-
-  (when consistency-level
-    (alter-var-root (var *consistency-level*) (constantly (resolve-consistency-level consistency-level))))
-
-  (let [^Cluster$Builder builder        (Cluster/builder)
-        ^PoolingOptions pooling-options (PoolingOptions.)]
-
-    (when port
-      (.withPort builder port))
-
-    (when credentials
-      (.withCredentials builder (:username credentials) (:password credentials)))
-
-    (when connections-per-host
-      (.setCoreConnectionsPerHost pooling-options HostDistance/LOCAL
-                                  connections-per-host))
-    (when max-connections-per-host
-      (.setMaxConnectionsPerHost pooling-options HostDistance/LOCAL
-                                 max-connections-per-host))
-    (.withPoolingOptions builder pooling-options)
-
-    (doseq [contact-point contact-points]
-      (.addContactPoint builder contact-point))
-
-    (when retry-policy
-      (.withRetryPolicy builder retry-policy))
-
-    (when reconnection-policy
-      (.withReconnectionPolicy builder reconnection-policy))
-
-    (when load-balancing-policy
-      (.withLoadBalancingPolicy builder load-balancing-policy))
-    (.build builder)))
-
-(defn ^Session connect
-  "Connects to the Cassandra cluster. Use `build` function to build cluster with all required options."
-  ([^Cluster cluster]
-     (flush-prepared-statement-cache!)
-     (.connect cluster))
-  ([^Cluster cluster keyspace]
-     (flush-prepared-statement-cache!)
-     (.connect cluster (name keyspace))))
-
-(defn connect!
-  "Connects and sets *default-cluster* and *default-session* for default cluster and session, that
-   cql/execute is going to use."
-  [hosts & {:keys [keyspace] :as options}]
-  (flush-prepared-statement-cache!)
-  (let [cluster (build-cluster (assoc options :contact-points hosts))
-        session (if keyspace
-                  (connect cluster keyspace)
-                  (connect cluster))]
-    (alter-var-root (var *default-cluster*) (constantly cluster))
-    (alter-var-root (var *default-session*) (constantly session))
-    session))
-
-(defn disconnect!
-  "0-arity version disconnects the (only) active Session and shuts down the cluster.
-
-   1-arity version receives Session, and shuts it down. It doesn't shut down all other sessions
-   on same cluster."
-  ([]
-     (.shutdown *default-session*)
-     (.shutdown *default-cluster*))
-  ([^Session session]
-     (.shutdown session)))
-
-(defn shutdown-cluster
-  "Shut down the Cluster"
-  [^Cluster cluster]
-  (.shutdown cluster))
 
 (defn render-query
   "Renders compiled query"
@@ -325,29 +277,24 @@ reached.
   [query & values]
   (vector query values))
 
+;; TODO: separate async and sync versions
 (defn execute
   "Executes a pre-built query
 
    Options
      * prepared - whether the query should or should not be executed as prepared, always passed
        explicitly, because `execute` is considered to be a low-level function."
-  [& args]
+  [^Session session query {:keys [prepared]}]
 
-  (let [[session query & {:keys [prepared]}] (if (instance? Session (first args))
-                                               args
-                                               (cons *default-session* args))
-        ^Statement statement (if prepared
+  (let [^Statement statement (if prepared
                                (if (coll? query)
                                  (build-statement (prepare session (first query))
                                                   (second query))
-                                 (throw (Exception. "Query is meant to be executed as prepared, but no values were supplied.")))
+                                 (throw (IllegalArgumentException.
+                                         "Query is meant to be executed as prepared, but no values were supplied.")))
                                (build-statement query))
         ^ResultSetFuture future (.executeAsync session statement)]
-    (when *debug*
-      (dbg/output-debug query))
-    (if *async*
-      future
-      (conv/to-map (.getUninterruptibly future)))))
+    (.getUninterruptibly future)))
 
 (defn ^String export-schema
   "Exports the schema as a string"

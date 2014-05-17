@@ -10,15 +10,15 @@
 (ns clojurewerkz.cassaforte.cql
   "Main namespace for working with CQL, prepared statements. Convenience functions
    for key operations built on top of CQL."
-  (:require
-   [qbits.hayt.cql :as cql]
-   [clojurewerkz.cassaforte.query :as q]
-   [clojurewerkz.cassaforte.client :as client]))
+  (:require [qbits.hayt.cql :as hayt]
+            [clojurewerkz.cassaforte.query :as q]
+            [clojurewerkz.cassaforte.client :as client])
+  (:import com.datastax.driver.core.Session))
 
 (defn ^:private execute-
   [^Session session query-params builder]
   (let [rendered-query (client/render-query (client/compile-query query-params builder))]
-    (client/execute session rendered-query :prepared cql/*prepared-statement*)))
+    (client/execute session rendered-query {:prepared hayt/*prepared-statement*})))
 
 ;;
 ;; Schema operations
@@ -147,7 +147,7 @@
                    (apply q/queries)
                    q/batch-query
                    client/render-query)]
-    (client/execute query :prepared cql/*prepared-statement*)))
+    (client/execute query :prepared hayt/*prepared-statement*)))
 
 (defn update
   "Updates one or more columns for a given row in a table. The `where` clause
@@ -251,14 +251,14 @@
   (first
    (select session "system.schema_columnfamilies"
            (q/where :keyspace_name ks
-                        :columnfamily_name table))))
+                    :columnfamily_name table))))
 
 (defn describe-columns
   "Returns table columns description, taken from `system.schema_columns`."
   [^Session session ks table]
   (select session "system.schema_columns"
           (q/where :keyspace_name ks
-                       :columnfamily_name table)))
+                   :columnfamily_name table)))
 
 ;;
 ;; Higher-level collection manipulation
@@ -278,8 +278,8 @@
   "Lazily iterates through the collection, returning chunks of chunk-size."
   ([^Session session table partition-key chunk-size]
      (iterate-world session table (if (sequential? partition-key)
-                            partition-key
-                            [partition-key])
+                                    partition-key
+                                    [partition-key])
                     chunk-size []))
   ([^Session session table partition-key chunk-size c]
      (lazy-cat c
