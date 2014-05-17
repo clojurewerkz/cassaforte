@@ -229,21 +229,21 @@
   "Returns a keyspace description, taken from `system.schema_keyspaces`."
   [^Session session ks]
   (first
-   (select session "system.schema_keyspaces"
+   (select session :system.schema_keyspaces
            (q/where :keyspace_name ks))))
 
 (defn describe-table
   "Returns a table description, taken from `system.schema_columnfamilies`."
   [^Session session ks table]
   (first
-   (select session "system.schema_columnfamilies"
+   (select session :system.schema_columnfamilies
            (q/where :keyspace_name ks
                     :columnfamily_name table))))
 
 (defn describe-columns
   "Returns table columns description, taken from `system.schema_columns`."
   [^Session session ks table]
-  (select session "system.schema_columns"
+  (select session :system.schema_columns
           (q/where :keyspace_name ks
                    :columnfamily_name table)))
 
@@ -251,8 +251,8 @@
 ;; Higher-level collection manipulation
 ;;
 
-(defn- get-chunk
-  "Returns next chunk for the lazy world iteration"
+(defn- load-chunk
+  "Returns next chunk for the lazy table iteration"
   [^Session session table partition-key chunk-size last-pk]
   (if (nil? (first last-pk))
     (select session table
@@ -261,15 +261,15 @@
             (q/where (apply q/token partition-key) [> (apply q/token last-pk)])
             (q/limit chunk-size))))
 
-(defn iterate-world
-  "Lazily iterates through the collection, returning chunks of chunk-size."
+(defn iterate-table
+  "Lazily iterates through a table, returning chunks of chunk-size."
   ([^Session session table partition-key chunk-size]
-     (iterate-world session table (if (sequential? partition-key)
+     (iterate-table session table (if (sequential? partition-key)
                                     partition-key
                                     [partition-key])
                     chunk-size []))
   ([^Session session table partition-key chunk-size c]
      (lazy-cat c
                (let [last-pk    (map #(get (last c) %) partition-key)
-                     next-chunk (get-chunk table partition-key chunk-size last-pk)]
-                 (iterate-world session table partition-key chunk-size next-chunk)))))
+                     next-chunk (load-chunk session table partition-key chunk-size last-pk)]
+                 (iterate-table session table partition-key chunk-size next-chunk)))))

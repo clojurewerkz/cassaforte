@@ -34,7 +34,9 @@
                                      :primary-key [:name]}))
 
   (f)
-  (drop-keyspace session :new_cql_keyspace))
+  (try
+    (drop-keyspace session :new_cql_keyspace)
+    (catch Exception _ nil)))
 
 (defmacro test-combinations
   "Run given queries in both plain and prepared modes."
