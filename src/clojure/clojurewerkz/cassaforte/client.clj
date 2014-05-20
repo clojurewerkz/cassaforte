@@ -298,15 +298,15 @@ reached.
    1-arity version receives Session, and shuts it down. It doesn't shut down all other sessions
    on same cluster."
   ([]
-     (.shutdown *default-session*)
-     (.shutdown *default-cluster*))
+     (.close *default-session*)
+     (.close *default-cluster*))
   ([^Session session]
-     (.shutdown session)))
+     (.close session)))
 
 (defn shutdown-cluster
   "Shut down the Cluster"
   [^Cluster cluster]
-  (.shutdown cluster))
+  (.close cluster))
 
 (defn render-query
   "Renders compiled query"
