@@ -106,12 +106,12 @@
   "1-arity version receives Session, and shuts it down. It doesn't shut down all other sessions
    on same cluster."
   [^Session session]
-  (.shutdown session))
+  (.close session))
 
 (defn shutdown-cluster
   "Shuts down provided cluster"
   [^Cluster cluster]
-  (.shutdown cluster))
+  (.close cluster))
 
 ;;
 ;; Query, Prepared statements
