@@ -1,3 +1,11 @@
+## Changes between 1.3.0 and 1.3.1
+
+`Session#shutdown` was renamed to `Session#close` in cassandra-driver-core.
+Cassaforte needs to be adapted to that.
+
+Contributed by Jarkko Mönkkönen.
+
+
 ## Changes between 1.2.0 and 1.3.0
 
 ### Clojure 1.6 By Default
