@@ -89,7 +89,7 @@
     (.build builder)))
 
 (defn ^Session connect
-  "Connects to the Cassandra cluster. Use `build` function to build cluster with all required options."
+  "Connects to the Cassandra cluster. Use `build-cluster` to build a cluster."
   ([hosts]
      (flush-prepared-statement-cache!)
      (.connect (build-cluster {:hosts hosts})))
