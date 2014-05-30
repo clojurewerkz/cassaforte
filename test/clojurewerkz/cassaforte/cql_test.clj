@@ -394,8 +394,19 @@
        (is (= r (get-one s :users)))
        (truncate s :users))))
 
-  ;; TODO: think about using `cons/conj` as a syntax sugar for prepended and appended list commands
-  ;; TODO: test authentication
+  (deftest test-insert-with-forced-prepared-statements
+    (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+      (cp/forcing-prepared-statements
+        (insert s :users r))
+      (is (= r (get-one s :users)))
+      (truncate s :users)))
+
+  (deftest test-insert-without-prepared-statements
+    (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+      (cp/without-prepared-statements
+        (insert s :users r))
+      (is (= r (get-one s :users)))
+      (truncate s :users)))
 
   (deftest test-raw-cql-insert
     (testing "With default session"
