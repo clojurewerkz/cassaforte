@@ -12,13 +12,18 @@
    for key operations built on top of CQL."
   (:require [qbits.hayt.cql :as hayt]
             [clojurewerkz.cassaforte.query :as q]
-            [clojurewerkz.cassaforte.client :as client])
+            [clojurewerkz.cassaforte.client :as cc])
   (:import com.datastax.driver.core.Session))
 
 (defn ^:private execute-
   [^Session session query-params builder]
-  (let [rendered-query (client/render-query (client/compile-query query-params builder))]
-    (client/execute session rendered-query {:prepared hayt/*prepared-statement*})))
+  (let [rendered-query (cc/render-query (cc/compile-query query-params builder))]
+    (cc/execute session rendered-query {:prepared hayt/*prepared-statement*})))
+
+(defn ^:private execute-async-
+  [^Session session query-params builder]
+  (let [rendered-query (cc/render-query (cc/compile-query query-params builder))]
+    (cc/execute-async session rendered-query {:prepared hayt/*prepared-statement*})))
 
 ;;
 ;; Schema operations
@@ -26,11 +31,7 @@
 
 (defn drop-keyspace
   "Drops a keyspace: results in immediate, irreversible removal of an existing keyspace,
-   including all column families in it, and all data contained in those column families.
-
-   Example:
-
-     (drop-keyspace :new_cql_keyspace)"
+   including all column families in it, and all data contained in those column families."
   [^Session session ks]
   (execute- session [ks] q/drop-keyspace-query))
 
@@ -41,7 +42,7 @@
 
    Example:
 
-     (create-keyspace :new_cql_keyspace
+     (create-keyspace conn :new_cql_keyspace
                    (with {:replication
                           {:class \"SimpleStrategy\"
                            :replication_factor 1}}))"
@@ -56,7 +57,7 @@
 
    Example, creates an index on `users` table, `city` column:
 
-      (create-index th/session :users :city
+      (create-index conn :users :city
                     (index-name :users_city)
                     (if-not-exists))"
   [^Session session & query-params]
@@ -129,17 +130,32 @@
   [^Session session & query-params]
   (execute- session query-params q/insert-query))
 
+(defn insert-async
+  "Same as insert but returns a future"
+  [^Session session & query-params]
+  (execute-async- session query-params q/insert-query))
+
+(defn ^{:private true} batch-query-from
+  [table records]
+  (->> records
+       (map (comp (partial apply (partial q/insert-query table)) flatten vector))
+       (apply q/queries)
+       q/batch-query
+       cc/render-query))
+
 (defn insert-batch
   "Performs a batch insert (inserts multiple records into a table at the same time).
   To specify additional clauses for a record (such as where or using), wrap that record
   and the clauses in a vector"
   [^Session session table records]
-  (let [query (->> records
-                   (map (comp (partial apply (partial q/insert-query table)) flatten vector))
-                   (apply q/queries)
-                   q/batch-query
-                   client/render-query)]
-    (client/execute session query {:prepared hayt/*prepared-statement*})))
+  (let [query (batch-query-from table records)]
+    (cc/execute session query {:prepared hayt/*prepared-statement*})))
+
+(defn insert-batch-async
+  "Same as insert-batch but returns a future"
+  [^Session session table records]
+  (let [query (batch-query-from table records)]
+    (cc/execute-async session query {:prepared hayt/*prepared-statement*})))
 
 (defn update
   "Updates one or more columns for a given row in a table. The `where` clause
@@ -148,20 +164,35 @@
   [^Session session & query-params]
   (execute- session query-params q/update-query))
 
+(defn update-async
+  "Same as update but returns a future"
+  [^Session session & query-params]
+  (execute-async- session query-params q/update-query))
+
 (defn delete
   "Deletes columns and rows. If the `columns` clause is provided,
    only those columns are deleted from the row indicated by the `where` clause, please refer to
-   KV guide (http://clojurecassandra.info/articles/kv.html) for more details. Otherwise whole rows
+   doc guide (http://clojurecassandra.info/articles/kv.html) for more details. Otherwise whole rows
    are removed. The `where` allows to specify the key for the row(s) to delete. First argument
    for this function should always be table name."
   [^Session session table & query-params]
   (execute- session (cons table query-params) q/delete-query))
+
+(defn delete-async
+  "Same as delete but returns a future"
+  [^Session session table & query-params]
+  (execute-async- session (cons table query-params) q/delete-query))
 
 (defn select
   "Retrieves one or more columns for one or more rows in a table.
    It returns a result set, where every row is a collection of columns returned by the query."
   [^Session session & query-params]
   (execute- session query-params q/select-query))
+
+(defn select-async
+  "Same as select but returns a future"
+  [^Session session & query-params]
+  (execute-async- session query-params q/select-query))
 
 (defn truncate
   "Truncates a table: permanently and irreversably removes all rows from the table,

@@ -174,6 +174,16 @@
   [query & values]
   (vector query values))
 
+(defn- ^Statement statement-for
+  [^Session session query prepared?]
+  (if prepared?
+    (if (coll? query)
+      (build-statement (prepare session (first query))
+                       (second query))
+      (throw (IllegalArgumentException.
+              "Query is meant to be executed as prepared, but no values were supplied.")))
+    (build-statement query)))
+
 (defn ^ResultSetFuture execute-async
   "Executes a pre-built query and returns a future.
 
@@ -183,14 +193,9 @@
   ([^Session session query]
      (execute-async session query {}))
   ([^Session session query {:keys [prepared]}]
-     (let [^Statement statement (if prepared
-                                  (if (coll? query)
-                                    (build-statement (prepare session (first query))
-                                                     (second query))
-                                    (throw (IllegalArgumentException.
-                                            "Query is meant to be executed as prepared, but no values were supplied.")))
-                                  (build-statement query))]
-       (.executeAsync session statement))))
+     (let [^Statement statement (statement-for session query prepared)
+           ^ResultSetFuture fut (.executeAsync session statement)]
+       (future (conv/to-clj (.getUninterruptibly fut))))))
 
 (defn execute
   "Executes a pre-built query.
@@ -200,10 +205,10 @@
        explicitly, because `execute` is considered to be a low-level function."
   ([^Session session query]
      (execute session query {}))
-  ([^Session session query opts]
-     (let [^ResultSetFuture future (execute-async session query opts)
-           res                     (.getUninterruptibly future)]
-       (conv/to-clj res))))
+  ([^Session session query {:keys [prepared]}]
+     (let [^Statement statement (statement-for session query prepared)
+           ^ResultSetFuture fut (.executeAsync session statement)]
+       (conv/to-clj (.getUninterruptibly fut)))))
 
 (defn ^String export-schema
   "Exports the schema as a string"
