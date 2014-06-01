@@ -118,7 +118,8 @@
 ;;
 
 (defmacro prepared
-  "Executes a prepared statement"
+  "Same as cassaforte.policies/forcing-prepared-statements. Kept for backwards
+   compatibility."
   [& body]
   `(binding [hayt/*prepared-statement* true
              hayt/*param-stack*        (atom [])]
