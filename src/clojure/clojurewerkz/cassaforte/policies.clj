@@ -114,7 +114,8 @@ reached.
 (defmacro forcing-prepared-statements
   "Forces prepared statements for operations executed in the body"
   [& body]
-  `(binding [hayt/*prepared-statement* true]
+  `(binding [hayt/*prepared-statement* true
+             hayt/*param-stack*        (atom [])]
      ~@body))
 
 (defmacro without-prepared-statements
