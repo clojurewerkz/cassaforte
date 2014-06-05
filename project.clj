@@ -17,7 +17,7 @@
                                         "-Xmx2048m"
                                         "-javaagent:lib/jamm-0.2.5.jar"]
                          :resource-paths ["resources"]
-                         :plugins [[codox "0.8.8"]]
+                         :plugins [[codox "0.8.9"]]
                          :dependencies [[com.codahale.metrics/metrics-core "3.0.2"]
                                         ;; see https://issues.apache.org/jira/browse/CASSANDRA-6639
                                         ;; [com.google.guava/guava             "15.0"]
