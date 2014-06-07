@@ -1,5 +1,63 @@
 ## Changes between 1.3.0 and 2.0.0
 
+Cassaforte 2.0 has [breaking API changes](http://blog.clojurewerkz.org/blog/2014/04/26/major-breaking-public-api-changes-coming-in-our-projects/) in most namespaces.
+
+### Client (Session) is Explicit Argument
+
+All Cassaforte public API functions that issue requests to Cassandra now require
+a client (session) to be passed as an explicit argument:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/use-keyspace conn "cassaforte_keyspace"))
+```
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/create-table conn "user_posts"
+                (column-definitions {:username :varchar
+                                     :post_id  :varchar
+                                     :body     :text
+                                     :primary-key [:username :post_id]})))
+```
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/insert conn "users" {:name "Alex" :age (int 19)}))
+```
+
+### Policy Namespace
+
+Policy-related functions from `clojurewerkz.cassaforte.client` were extracted into
+`clojurewerkz.cassaforte.policies`:
+
+```clojure
+(require '[clojurewerkz.cassaforte.policies :as cp])
+
+(cp/exponential-reconnection-policy 100 1000)
+```
+
+``` clojure
+(require '[clojurewerkz.cassaforte.policies :as cp])
+
+(let [p (cp/round-robin-policy)]
+  (cp/token-aware-policy p))
+```
+
+
 ### Cassandra Sessions Compatible with with-open
 
 `Session#shutdown` was renamed to `Session#close` in
