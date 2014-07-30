@@ -75,9 +75,13 @@ The `:ssl` connection option now can be a map with two keys:
  * `:keystore-path`
  * `:keystore-password`
 
-which provide a path and password to a [JDK KeyStore](http://docs.oracle.com/javase/7/docs/api/java/security/KeyStore.html) on disk, created with [keytool](http://docs.oracle.com/javase/7/docs/technotes/tools/solaris/keytool.html).
+which provide a path and password to a [JDK KeyStore](http://docs.oracle.com/javase/7/docs/api/java/security/KeyStore.html)
+on disk, created with
+[keytool](http://docs.oracle.com/javase/7/docs/technotes/tools/solaris/keytool.html).
 
-Optionally, an instance of [SSLOptions](http://www.datastax.com/drivers/java/2.0/com/datastax/driver/core/SSLOptions.html) can be provided via the `:ssl-options` connection option.
+Optionally, an instance of
+[SSLOptions](http://www.datastax.com/drivers/java/2.0/com/datastax/driver/core/SSLOptions.html)
+can be provided via the `:ssl-options` connection option.
 
 Contributed by Max Barnash.
 
