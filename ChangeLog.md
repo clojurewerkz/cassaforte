@@ -65,6 +65,24 @@ cassandra-driver-core. Cassaforte needs to be adapted to that.
 
 Contributed by Jarkko Mönkkönen.
 
+### TLS and Kerberos Support
+
+Cassaforte now supports TLS connections and Kerberos authentication
+via [DataStax CQL extensions](http://www.datastax.com/dev/blog/accessing-secure-dse-clusters-with-cql-native-protocol).
+
+The `:ssl` connection option now can be a map with two keys:
+
+ * `:keystore-path`
+ * `:keystore-password`
+
+which provide a path and password to a [JDK KeyStore](http://docs.oracle.com/javase/7/docs/api/java/security/KeyStore.html) on disk, created with [keytool](http://docs.oracle.com/javase/7/docs/technotes/tools/solaris/keytool.html).
+
+Optionally, an instance of [SSLOptions](http://www.datastax.com/drivers/java/2.0/com/datastax/driver/core/SSLOptions.html) can be provided via the `:ssl-options` connection option.
+
+Contributed by Max Barnash.
+
+GH issue: [#60](https://github.com/clojurewerkz/cassaforte/pull/60).
+
 
 ## Changes between 1.2.0 and 1.3.0
 
