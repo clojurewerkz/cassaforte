@@ -15,12 +15,19 @@
    * tuning load balancing, retries, reconnection strategies and consistency settings
    * preparing and executing queries constructed via DSL
    * working with executing results"
-  (:require [clojurewerkz.cassaforte.policies :as cp]
+  (:require [clojure.java.io :as io]
+            [clojurewerkz.cassaforte.policies :as cp]
             [clojurewerkz.cassaforte.conversion :as conv]
             [qbits.hayt.cql :as hayt])
   (:import [com.datastax.driver.core Statement ResultSet ResultSetFuture Host Session Cluster
-            Cluster$Builder SimpleStatement PreparedStatement HostDistance PoolingOptions]
-           [com.google.common.util.concurrent Futures FutureCallback]))
+            Cluster$Builder SimpleStatement PreparedStatement HostDistance PoolingOptions
+            SSLOptions]
+           [com.datastax.driver.auth DseAuthProvider]
+           [com.google.common.util.concurrent Futures FutureCallback]
+           [javax.net.ssl TrustManagerFactory KeyManagerFactory SSLContext]
+           [java.security KeyStore SecureRandom]))
+
+(declare build-ssl-options)
 
 (def prepared-statement-cache (atom {}))
 
@@ -47,18 +54,23 @@
      * retry-policy: configures the retry policy to use for the new cluster.
      * load-balancing-policy: configures the load balancing policy to use for the new cluster.
      * force-prepared-queries: forces all queries to be executed as prepared by default
-     * consistency-level: default consistency level for all queires to be executed against this cluster"
+     * consistency-level: default consistency level for all queires to be executed against this cluster
+     * ssl: ssl options in the form {:keystore-path path :keystore-password password}
+     * ssl-options: pre-built SSLOptions object (overrides :ssl)
+     * kerberos: enables kerberos authentication"
   [{:keys [hosts
            port
            credentials
            connections-per-host
            max-connections-per-host
-
            consistency-level
            retry-policy
            reconnection-policy
            load-balancing-policy
-           force-prepared-queries]}]
+           force-prepared-queries
+           ssl
+           ssl-options
+           kerberos]}]
   (when force-prepared-queries
     (alter-var-root (var hayt/*prepared-statement*)
                     (constantly true)))
@@ -86,7 +98,27 @@
       (.withReconnectionPolicy builder reconnection-policy))
     (when load-balancing-policy
       (.withLoadBalancingPolicy builder load-balancing-policy))
+    (when ssl
+      (.withSSL builder (build-ssl-options ssl)))
+    (when ssl-options
+      (.withSSL builder ssl-options))
+    (when kerberos
+      (.withAuthProvider builder (DseAuthProvider.)))
     (.build builder)))
+
+(defn- ^SSLOptions build-ssl-options
+  [{:keys [keystore-path keystore-password]}]
+  (let [keystore-stream (io/input-stream keystore-path)
+        keystore (KeyStore/getInstance "JKS")
+        ssl-context (SSLContext/getInstance "SSL")
+        keymanager (KeyManagerFactory/getInstance (KeyManagerFactory/getDefaultAlgorithm))
+        trustmanager (TrustManagerFactory/getInstance (TrustManagerFactory/getDefaultAlgorithm))
+        password (char-array keystore-password)]
+    (.load keystore keystore-stream password)
+    (.init keymanager keystore password)
+    (.init trustmanager keystore)
+    (.init ssl-context (.getKeyManagers keymanager) (.getTrustManagers trustmanager) nil)
+    (SSLOptions. ssl-context SSLOptions/DEFAULT_SSL_CIPHER_SUITES)))
 
 (defn ^Session connect
   "Connects to the Cassandra cluster. Use `build-cluster` to build a cluster."
