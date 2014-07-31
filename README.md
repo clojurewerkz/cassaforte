@@ -49,7 +49,7 @@ definition to your `pom.xml`:
 With Leiningen:
 
 ``` clojure
-[clojurewerkz/cassaforte "1.3.0"]
+[clojurewerkz/cassaforte "2.0.0-beta1"]
 ```
 
 With Maven:
@@ -58,7 +58,7 @@ With Maven:
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>1.3.0</version>
+  <version>2.0.0-beta1</version>
 </dependency>
 ```
 
