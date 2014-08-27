@@ -87,6 +87,32 @@ Contributed by Max Barnash.
 
 GH issue: [#60](https://github.com/clojurewerkz/cassaforte/pull/60).
 
+### Support for overriding default SSL cipher suites
+
+Providing a `:cipher-suites` key in the `:ssl` connection option allows to specify cipher suites
+that are enabled when connecting to a cluster with SSL.
+The value of this key is a Seq of Strings (e.g. a vector) where each item specifies a cipher suite:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]))
+
+(cc/build-cluster {:ssl {:keystore-path "path/to/keystore"
+                         :keystore-password "password"}})]
+                         :cipher-suites ["TLS_RSA_WITH_AES_128_CBC_SHA"]}}
+```
+
+The `:cipher-suites` key is optional and may be omitted, in which case Datastax Java driver's
+default cipher suites (`com.datastax.driver.core.SSLOptions/DEFAULT_SSL_CIPHER_SUITES`) are enabled.
+
+This can be used to work around the need to install Java Cryptography Extension (JCE) Unlimited Strength
+Jurisdiction Policy Files required by the default set of cipher suites. `TLS_RSA_WITH_AES_128_CBC_SHA`
+is a suite in the default set that works with the standard JCE. E.g. by specifying just that one,
+as in the code example, the standard JCE is enough.
+
+Contributed by Juhani Hietikko.
+
+GH issue: [#61](https://github.com/clojurewerkz/cassaforte/pull/61).
 
 ## Changes between 1.2.0 and 1.3.0
 
