@@ -55,7 +55,7 @@
      * load-balancing-policy: configures the load balancing policy to use for the new cluster.
      * force-prepared-queries: forces all queries to be executed as prepared by default
      * consistency-level: default consistency level for all queires to be executed against this cluster
-     * ssl: ssl options in the form {:keystore-path path :keystore-password password}
+     * ssl: ssl options in the form {:keystore-path path :keystore-password password} Also accepts :cipher-suites with a Seq of cipher suite specs.
      * ssl-options: pre-built SSLOptions object (overrides :ssl)
      * kerberos: enables kerberos authentication"
   [{:keys [hosts
@@ -107,18 +107,21 @@
     (.build builder)))
 
 (defn- ^SSLOptions build-ssl-options
-  [{:keys [keystore-path keystore-password]}]
+  [{:keys [keystore-path keystore-password cipher-suites]}]
   (let [keystore-stream (io/input-stream keystore-path)
         keystore (KeyStore/getInstance "JKS")
         ssl-context (SSLContext/getInstance "SSL")
         keymanager (KeyManagerFactory/getInstance (KeyManagerFactory/getDefaultAlgorithm))
         trustmanager (TrustManagerFactory/getInstance (TrustManagerFactory/getDefaultAlgorithm))
-        password (char-array keystore-password)]
+        password (char-array keystore-password)
+        ssl-cipher-suites (if cipher-suites
+                            (into-array String cipher-suites)
+                            SSLOptions/DEFAULT_SSL_CIPHER_SUITES)]
     (.load keystore keystore-stream password)
     (.init keymanager keystore password)
     (.init trustmanager keystore)
     (.init ssl-context (.getKeyManagers keymanager) (.getTrustManagers trustmanager) nil)
-    (SSLOptions. ssl-context SSLOptions/DEFAULT_SSL_CIPHER_SUITES)))
+    (SSLOptions. ssl-context ssl-cipher-suites)))
 
 (defn ^Session connect
   "Connects to the Cassandra cluster. Use `build-cluster` to build a cluster."
