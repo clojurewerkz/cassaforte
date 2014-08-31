@@ -70,7 +70,8 @@
            force-prepared-queries
            ssl
            ssl-options
-           kerberos]}]
+           kerberos
+           protocol-version]}]
   (when force-prepared-queries
     (alter-var-root (var hayt/*prepared-statement*)
                     (constantly true)))
@@ -81,6 +82,8 @@
         ^PoolingOptions pooling-options (PoolingOptions.)]
     (when port
       (.withPort builder port))
+    (when protocol-version
+      (.withProtocolVersion builder protocol-version))
     (when credentials
       (.withCredentials builder (:username credentials) (:password credentials)))
     (when connections-per-host
