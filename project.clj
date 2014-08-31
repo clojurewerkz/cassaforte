@@ -13,6 +13,7 @@
   :java-source-paths ["src/java"]
   :profiles       {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
                    :1.5 {:dependencies [[org.clojure/clojure "1.5.1"]]}
+                   :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha1"]]}
                    :master {:dependencies [[org.clojure/clojure "1.7.0-master-SNAPSHOT"]]}
                    :dev {:jvm-opts     ["-Dlog4j.configuration=log4j.properties.unit"
                                         "-Xmx2048m"
@@ -22,7 +23,7 @@
                          :dependencies [[com.codahale.metrics/metrics-core "3.0.2"]
                                         [org.xerial.snappy/snappy-java     "1.1.0.1"]
                                         [org.clojure/tools.trace           "0.7.6"]]}}
-  :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.5:dev,master"]}
+  :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.5:dev,1.7:dev,master"]}
   :test-selectors {:focus   :focus
                    :cql     :cql
                    :schema  :schema
