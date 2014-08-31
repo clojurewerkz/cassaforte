@@ -25,9 +25,8 @@ Cassaforte is a relatively young project. It took about a year to
 reach `1.0`. It is used heavily in a monitoring and event collection
 solution that processes fairly large amount of data.
 
-Cassaforte is based on the now stable new [DataStax Java driver for
-Cassandra](https://github.com/datastax/java-driver) and
-[Hayt](https://github.com/mpenet/hayt), a fairly battle tested CQL
+Cassaforte is based on the now stable new [DataStax Java driver for Cassandra](https://github.com/datastax/java-driver)
+and [Hayt](https://github.com/mpenet/hayt), a fairly battle tested CQL
 generation DSL library.
 
 
@@ -88,9 +87,10 @@ Cassaforte 1.2 targets Cassandra 1.2.x
 
 ## Documentation & Examples
 
-Please refer to our [Getting Started with Clojure and
-Cassandra](http://clojurecassandra.info/articles/getting_started.html)
-guide.  [Documentation guides](http://clojurecassandra.info) are not
+Please refer to our [Getting Started with Clojure and Cassandra](http://clojurecassandra.info/articles/getting_started.html)
+guide.
+
+[Documentation guides](http://clojurecassandra.info) are not
 finished and will be improved over time.
 
 [API reference](http://reference.clojurecassandra.info/) is also available.
