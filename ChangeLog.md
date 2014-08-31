@@ -57,6 +57,10 @@ Policy-related functions from `clojurewerkz.cassaforte.client` were extracted in
   (cp/token-aware-policy p))
 ```
 
+### DataStax Java Driver Update
+
+DataStax Java driver has been updated to `2.1.x`.
+
 
 ### Cassandra Sessions Compatible with with-open
 
