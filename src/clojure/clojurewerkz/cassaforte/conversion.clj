@@ -13,6 +13,9 @@
            [java.nio ByteBuffer])
   (:require [clojurewerkz.cassaforte.bytes :as b]))
 
+;; Protocol version 2, requires Cassandra 2.0+.
+(def ^:const protocol-version 2)
+
 (defprotocol ClojureRepresentation
   (to-clj [input] "Converts any definition to a Clojure data structure"))
 
@@ -27,7 +30,8 @@
                           ^ByteBuffer bytes (.getBytesUnsafe row n)]
                       [(keyword n) (when (and bytes (> (.capacity bytes) 0))
                                      (b/deserialize (.getType cd)
-                                                    bytes))]))))))
+                                                    bytes
+                                                    protocol-version))]))))))
   Host
   (to-clj [^Host host]
     {:datacenter (.getDatacenter host)
