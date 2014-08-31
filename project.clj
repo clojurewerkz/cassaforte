@@ -21,8 +21,7 @@
                          :plugins [[codox "0.8.10"]]
                          :dependencies [[com.codahale.metrics/metrics-core "3.0.2"]
                                         [org.xerial.snappy/snappy-java     "1.1.0.1"]
-                                        [org.clojure/tools.trace           "0.7.6"]]}
-                   :cassandra1211 {:dependencies [[org.apache.cassandra/cassandra-all "1.2.11"]]}}
+                                        [org.clojure/tools.trace           "0.7.6"]]}}
   :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.5:dev,master"]}
   :test-selectors {:focus   :focus
                    :cql     :cql
