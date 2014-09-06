@@ -25,6 +25,7 @@
                                         [org.clojure/tools.trace           "0.7.6"]]}}
   :aliases        {"all" ["with-profile" "dev:dev,1.4:dev,1.5:dev,1.7:dev,master"]}
   :test-selectors {:focus   :focus
+                   :client  :client
                    :cql     :cql
                    :schema  :schema
                    :stress  :stress

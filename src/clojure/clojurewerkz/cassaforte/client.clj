@@ -146,6 +146,11 @@
   [^Session session]
   (.close session))
 
+(defn disconnect!
+  "Shuts the cluster and session down.  If you have other sessions, use the safe `disconnect` function instead."
+  [^Session session]
+  (.close (.getCluster session)))
+
 (defn shutdown-cluster
   "Shuts down provided cluster"
   [^Cluster cluster]
