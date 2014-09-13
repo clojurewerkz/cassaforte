@@ -69,7 +69,7 @@ With Maven:
  * CQL 3.0 queries, including queries with placeholders (?, a la JDBC)
  * Nice CQL query DSL for Clojure
  * Automatic deserialization of column names and values according to the schema
-
+ * TLS connections, Kerberos authentication (DataStax Enterprise)
 
 
 ## Supported Clojure Versions
