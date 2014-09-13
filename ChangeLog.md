@@ -57,6 +57,17 @@ Policy-related functions from `clojurewerkz.cassaforte.client` were extracted in
   (cp/token-aware-policy p))
 ```
 
+### Cassandra 2.1 Compatibility
+
+Cassaforte 2.0 is compatible with Cassandra 2.1.
+
+
+### Prepared Statement Cache Removed
+
+Prepared statement cache was affecting client correctness in some cases
+and was removed.
+
+
 ### DataStax Java Driver Update
 
 DataStax Java driver has been updated to `2.1.x`.
