@@ -29,12 +29,6 @@
 
 (declare build-ssl-options)
 
-(def prepared-statement-cache (atom {}))
-
-(defn flush-prepared-statement-cache!
-  []
-  (reset! prepared-statement-cache {}))
-
 (defprotocol DummySession
   (executeAsync [_ query]))
 
@@ -129,14 +123,11 @@
 (defn ^Session connect
   "Connects to the Cassandra cluster. Use `build-cluster` to build a cluster."
   ([hosts]
-     (flush-prepared-statement-cache!)
      (.connect (build-cluster {:hosts hosts})))
   ([hosts keyspace]
-     (flush-prepared-statement-cache!)
      (let [c (build-cluster {:hosts hosts})]
        (.connect c (name keyspace))))
   ([hosts keyspace opts]
-     (flush-prepared-statement-cache!)
      (let [c (build-cluster (merge opts {:hosts hosts}))]
        (.connect c (name keyspace)))))
 
@@ -193,11 +184,7 @@
 
    This assumes that query is valid. Returns the prepared statement corresponding to the query."
   ([^Session session ^String query]
-     (if-let [cached (get @prepared-statement-cache [session query])]
-       cached
-       (let [prepared (.prepare ^Session session query)]
-         (swap! prepared-statement-cache #(assoc % [session query] prepared))
-         prepared))))
+     (.prepare ^Session session query)))
 
 (defn render-query
   "Renders compiled query"
