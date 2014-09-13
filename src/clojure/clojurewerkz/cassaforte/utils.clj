@@ -8,6 +8,7 @@
 ;; You must not remove this notice, or any other, from this software.
 
 (ns clojurewerkz.cassaforte.utils
+  (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.cql :refer :all]))
 
 (defn- group-map

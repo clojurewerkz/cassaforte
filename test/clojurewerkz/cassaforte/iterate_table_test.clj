@@ -1,4 +1,5 @@
 (ns clojurewerkz.cassaforte.iterate-table-test
+  (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.client :as client]
             [clojurewerkz.cassaforte.test-helper :as th]
             [clojurewerkz.cassaforte.cql :refer :all]
