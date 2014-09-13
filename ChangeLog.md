@@ -1,4 +1,23 @@
-## Changes between 1.3.0 and 2.0.0
+## Changes between 2.0.0-beta2 and 2.0.0-beta3
+
+### Cassandra 2.1 Compatibility
+
+Cassaforte 2.0 is compatible with Cassandra 2.1.
+
+
+### Prepared Statement Cache Removed
+
+Prepared statement cache was affecting client correctness in some cases
+and was removed.
+
+
+### Clojure 1.7.0-alpha2+ Compatibility
+
+Cassaforte is now compatible with Clojure `1.7.0-alpha2` and later versions.
+
+
+
+## Changes between 1.3.0 and 2.0.0-beta2
 
 Cassaforte 2.0 has [breaking API changes](http://blog.clojurewerkz.org/blog/2014/04/26/major-breaking-public-api-changes-coming-in-our-projects/) in most namespaces.
 
@@ -56,17 +75,6 @@ Policy-related functions from `clojurewerkz.cassaforte.client` were extracted in
 (let [p (cp/round-robin-policy)]
   (cp/token-aware-policy p))
 ```
-
-### Cassandra 2.1 Compatibility
-
-Cassaforte 2.0 is compatible with Cassandra 2.1.
-
-
-### Prepared Statement Cache Removed
-
-Prepared statement cache was affecting client correctness in some cases
-and was removed.
-
 
 ### DataStax Java Driver Update
 
