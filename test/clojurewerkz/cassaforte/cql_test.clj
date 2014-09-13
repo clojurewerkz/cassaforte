@@ -1,4 +1,5 @@
 (ns clojurewerkz.cassaforte.cql-test
+  (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.test-helper :as th]
             [clojurewerkz.cassaforte.client :as client]
             [clojurewerkz.cassaforte.policies :as cp]

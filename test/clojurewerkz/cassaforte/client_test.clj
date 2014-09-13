@@ -1,4 +1,5 @@
 (ns clojurewerkz.cassaforte.client-test
+  (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.client :as client]
             [clojure.test :refer :all]))
 
