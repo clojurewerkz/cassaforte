@@ -29,8 +29,6 @@
 
 (declare build-ssl-options)
 
-(def prepared-statement-cache (atom {}))
-
 (defprotocol DummySession
   (executeAsync [_ query]))
 
@@ -181,11 +179,7 @@
 
    This assumes that query is valid. Returns the prepared statement corresponding to the query."
   ([^Session session ^String query]
-     (if-let [cached (get @prepared-statement-cache [session query])]
-       cached
-       (let [prepared (.prepare ^Session session query)]
-         (swap! prepared-statement-cache #(assoc % [session query] prepared))
-         prepared))))
+     (.prepare ^Session session query)))
 
 (defn render-query
   "Renders compiled query"
