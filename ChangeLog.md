@@ -1,4 +1,40 @@
-## Changes between 1.3.0 and 2.0.0
+## Changes between 2.0.0-beta3 and 2.0.0-beta4
+
+### URI Connections
+
+It is now possible to connect to a node and switch to a namespace
+using a URI string:
+
+``` clojure
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]))
+
+;; connects to node 127.0.0.1:9042 and uses "new_cql_keyspace" as keyspace
+(cc/connect-with-uri "cql://127.0.0.1:9042/new_cql_keyspace")
+```
+
+
+
+## Changes between 2.0.0-beta2 and 2.0.0-beta3
+
+### Cassandra 2.1 Compatibility
+
+Cassaforte 2.0 is compatible with Cassandra 2.1.
+
+
+### Prepared Statement Cache Removed
+
+Prepared statement cache was affecting client correctness in some cases
+and was removed.
+
+
+### Clojure 1.7.0-alpha2+ Compatibility
+
+Cassaforte is now compatible with Clojure `1.7.0-alpha2` and later versions.
+
+
+
+## Changes between 1.3.0 and 2.0.0-beta2
 
 Cassaforte 2.0 has [breaking API changes](http://blog.clojurewerkz.org/blog/2014/04/26/major-breaking-public-api-changes-coming-in-our-projects/) in most namespaces.
 
