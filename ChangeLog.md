@@ -1,3 +1,20 @@
+## Changes between 2.0.0-beta3 and 2.0.0-beta4
+
+### URI Connections
+
+It is now possible to connect to a node and switch to a namespace
+using a URI string:
+
+``` clojure
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]))
+
+;; connects to node 127.0.0.1:9042 and uses "new_cql_keyspace" as keyspace
+(cc/connect-with-uri "cql://127.0.0.1:9042/new_cql_keyspace")
+```
+
+
+
 ## Changes between 2.0.0-beta2 and 2.0.0-beta3
 
 ### Cassandra 2.1 Compatibility

@@ -24,6 +24,7 @@
             SSLOptions]
            [com.datastax.driver.auth DseAuthProvider]
            [com.google.common.util.concurrent Futures FutureCallback]
+           java.net.URI
            [javax.net.ssl TrustManagerFactory KeyManagerFactory SSLContext]
            [java.security KeyStore SecureRandom]))
 
@@ -125,11 +126,17 @@
   ([hosts]
      (.connect (build-cluster {:hosts hosts})))
   ([hosts keyspace]
-     (let [c (build-cluster {:hosts hosts})]
-       (.connect c (name keyspace))))
+     (connect hosts keyspace {}))
   ([hosts keyspace opts]
      (let [c (build-cluster (merge opts {:hosts hosts}))]
        (.connect c (name keyspace)))))
+
+(defn ^Session connect-with-uri
+  ([^String uri]
+     (connect-with-uri uri {}))
+  ([^String uri opts]
+     (let [^URI u (URI. uri)]
+       (connect [(.getHost u)] (-> u .getPath (.substring 1)) (merge {:port (.getPort u)} opts)))))
 
 (defn disconnect
   "1-arity version receives Session, and shuts it down. It doesn't shut down all other sessions
