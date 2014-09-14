@@ -73,6 +73,17 @@
            (= 2 (count columns)) ;; Cassandra versions
            (= 3 (count columns))))))
 
+  (deftest test-create-table-with-indices
+    (create-table s :people
+                  (column-definitions {:name        :varchar
+                                       :title       :varchar
+                                       :birth_date  :timestamp
+                                       :primary-key [:name]}))
+    (create-index s :people :title
+                  (index-name :people_title))
+    (drop-index   s :people_title)
+    (drop-table s :people))
+
   (deftest test-create-alter-table-add-column
     (create-table s :userstmp
                   (column-definitions {:name        :varchar
