@@ -125,18 +125,20 @@
   "Connects to the Cassandra cluster. Use `build-cluster` to build a cluster."
   ([hosts]
      (.connect (build-cluster {:hosts hosts})))
-  ([hosts keyspace]
-     (connect hosts keyspace {}))
-  ([hosts keyspace opts]
-     (let [c (build-cluster (merge opts {:hosts hosts}))]
-       (.connect c (name keyspace)))))
+  ([hosts opts]
+     (let [keyspace (:keyspace opts)
+           opts (dissoc opts :keyspace)
+           c (build-cluster (merge opts {:hosts hosts}))]
+       (if keyspace
+        (.connect c (name keyspace))
+        (.connect c)))))
 
 (defn ^Session connect-with-uri
   ([^String uri]
      (connect-with-uri uri {}))
   ([^String uri opts]
      (let [^URI u (URI. uri)]
-       (connect [(.getHost u)] (-> u .getPath (.substring 1)) (merge {:port (.getPort u)} opts)))))
+       (connect [(.getHost u)] (merge {:port (.getPort u) :keyspace (-> u .getPath (.substring 1))} opts)))))
 
 (defn disconnect
   "1-arity version receives Session, and shuts it down. It doesn't shut down all other sessions

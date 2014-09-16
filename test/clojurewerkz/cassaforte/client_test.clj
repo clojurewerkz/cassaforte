@@ -3,7 +3,8 @@
   (:require [clojurewerkz.cassaforte.client :as client]
             [clojurewerkz.cassaforte.cql   :refer :all]
             [clojurewerkz.cassaforte.query :refer :all]
-            [clojure.test :refer :all]))
+            [clojure.test :refer :all])
+  (:import [com.datastax.driver.core.policies TokenAwarePolicy RoundRobinPolicy]))
 
 
 (deftest ^:client test-disconnect
@@ -41,3 +42,41 @@
           (client/disconnect s2)
           (is (= (.isClosed s2) true)))
         (client/disconnect s)))
+
+
+(deftest ^:client test-connect
+  (testing "Connect without options or keyspace"
+    (let [session (client/connect ["127.0.0.1"])
+          cluster (.getCluster session)]
+      (is (= false (.isClosed session)))
+      (is (= false (.isClosed cluster)))
+      (is (= nil (.getLoggedKeyspace session)))
+      (is (= TokenAwarePolicy (class (.. cluster getConfiguration getPolicies getLoadBalancingPolicy))))
+      (client/disconnect session)))
+
+  (testing "Connect with keyspace"
+    (let [session (client/connect ["127.0.0.1"] {:keyspace "system"})
+          cluster (.getCluster session)]
+      (is (= false (.isClosed session)))
+      (is (= false (.isClosed cluster)))
+      (is (= "system" (.getLoggedKeyspace session)))
+      (is (= TokenAwarePolicy (class (.. cluster getConfiguration getPolicies getLoadBalancingPolicy))))
+      (client/disconnect session)))
+
+  (testing "Connect with options"
+    (let [session (client/connect ["127.0.0.1"] {:load-balancing-policy (RoundRobinPolicy.)})
+          cluster (.getCluster session)]
+      (is (= false (.isClosed session)))
+      (is (= false (.isClosed cluster)))
+      (is (= nil (.getLoggedKeyspace session)))
+      (is (= RoundRobinPolicy (class (.. cluster getConfiguration getPolicies getLoadBalancingPolicy))))
+      (client/disconnect session)))
+
+  (testing "Connect with both options and keyspace"
+    (let [session (client/connect ["127.0.0.1"] {:load-balancing-policy (RoundRobinPolicy.) :keyspace "system"})
+          cluster (.getCluster session)]
+      (is (= false (.isClosed session)))
+      (is (= false (.isClosed cluster)))
+      (is (= "system" (.getLoggedKeyspace session)))
+      (is (= RoundRobinPolicy (class (.. cluster getConfiguration getPolicies getLoadBalancingPolicy))))
+      (client/disconnect session))))
