@@ -54,7 +54,16 @@
       (is (= TokenAwarePolicy (class (.. cluster getConfiguration getPolicies getLoadBalancingPolicy))))
       (client/disconnect session)))
 
-  (testing "Connect with keyspace"
+  (testing "Connect with keyspace, without options"
+    (let [session (client/connect ["127.0.0.1"] "system")
+          cluster (.getCluster session)]
+      (is (= false (.isClosed session)))
+      (is (= false (.isClosed cluster)))
+      (is (= "system" (.getLoggedKeyspace session)))
+      (is (= TokenAwarePolicy (class (.. cluster getConfiguration getPolicies getLoadBalancingPolicy))))
+      (client/disconnect session)))
+
+  (testing "Connect with keyspace in options"
     (let [session (client/connect ["127.0.0.1"] {:keyspace "system"})
           cluster (.getCluster session)]
       (is (= false (.isClosed session)))
@@ -72,8 +81,17 @@
       (is (= RoundRobinPolicy (class (.. cluster getConfiguration getPolicies getLoadBalancingPolicy))))
       (client/disconnect session)))
 
-  (testing "Connect with both options and keyspace"
+  (testing "Connect with options and keyspace (in options)"
     (let [session (client/connect ["127.0.0.1"] {:load-balancing-policy (RoundRobinPolicy.) :keyspace "system"})
+          cluster (.getCluster session)]
+      (is (= false (.isClosed session)))
+      (is (= false (.isClosed cluster)))
+      (is (= "system" (.getLoggedKeyspace session)))
+      (is (= RoundRobinPolicy (class (.. cluster getConfiguration getPolicies getLoadBalancingPolicy))))
+      (client/disconnect session)))
+
+  (testing "Connect with options and keyspace (separate args)"
+    (let [session (client/connect ["127.0.0.1"] "system" {:load-balancing-policy (RoundRobinPolicy.)})
           cluster (.getCluster session)]
       (is (= false (.isClosed session)))
       (is (= false (.isClosed cluster)))
