@@ -1,3 +1,21 @@
+## Changes between 2.0.0-beta4 and 2.0.0-beta5
+
+### Keyspace as Option
+
+It is now possible to choose keyspace via an option:
+
+``` clojure
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]))
+
+(let [conn (cc/connect {:hosts ["127.0.0.1"] :keyspace "a-keyspace"})]
+  )
+```
+
+Contributed by Max Barnash (DataStax).
+
+
+
 ## Changes between 2.0.0-beta3 and 2.0.0-beta4
 
 ### URI Connections
