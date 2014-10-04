@@ -1,5 +1,11 @@
 ## Changes between 2.0.0-beta4 and 2.0.0-beta5
 
+### clojurewerkz.cassandra.cql/iterate-table Now Terminates
+
+`clojurewerkz.cassandra.cql/iterate-table` no longer produces an infinite
+sequence.
+
+
 ### Keyspace as Option
 
 It is now possible to choose keyspace via an option:
