@@ -16,7 +16,7 @@
         (insert s :users {:name (str "name_" i) :city (str "city" i) :age (int i)}))
 
       (let [res (group-by :name
-                          (take n (iterate-table s :users :name 10)))]
+                          (take n (iterate-table s :users :name 1024)))]
         (dotimes [i n]
           (let [item (first (get res (str "name_" i)))]
             (is (= {:name (str "name_" i) :city (str "city" i) :age (int i)}
