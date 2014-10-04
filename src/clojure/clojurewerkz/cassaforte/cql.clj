@@ -304,4 +304,6 @@
      (lazy-cat c
                (let [last-pk    (map #(get (last c) %) partition-key)
                      next-chunk (load-chunk session table partition-key chunk-size last-pk)]
-                 (iterate-table session table partition-key chunk-size next-chunk)))))
+                 (if (empty? next-chunk)
+                   []
+                   (iterate-table session table partition-key chunk-size next-chunk))))))
