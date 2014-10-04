@@ -11,13 +11,13 @@
                         (th/with-temporary-keyspace s f)))
 
   (deftest test-iterate-table
-    (th/test-combinations
-     (dotimes [i 100]
-       (insert s :users {:name (str "name_" i) :city (str "city" i) :age (int i)})))
+    (let [n 100000]
+      (dotimes [i n]
+        (insert s :users {:name (str "name_" i) :city (str "city" i) :age (int i)}))
 
-    (let [res (group-by :name
-                        (take 100 (iterate-table s :users :name 10)))]
-      (dotimes [i 100]
-        (let [item (first (get res (str "name_" i)))]
-          (is (= {:name (str "name_" i) :city (str "city" i) :age (int i)}
-                 item)))))))
+      (let [res (group-by :name
+                          (take n (iterate-table s :users :name 10)))]
+        (dotimes [i n]
+          (let [item (first (get res (str "name_" i)))]
+            (is (= {:name (str "name_" i) :city (str "city" i) :age (int i)}
+                   item))))))))
