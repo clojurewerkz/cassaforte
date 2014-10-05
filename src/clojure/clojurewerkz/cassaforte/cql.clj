@@ -262,22 +262,22 @@
   [^Session session ks]
   (first
    (select session :system.schema_keyspaces
-           (q/where :keyspace_name ks))))
+           (q/where :keyspace_name (name ks)))))
 
 (defn describe-table
   "Returns a table description, taken from `system.schema_columnfamilies`."
   [^Session session ks table]
   (first
    (select session :system.schema_columnfamilies
-           (q/where :keyspace_name ks
-                    :columnfamily_name table))))
+           (q/where :keyspace_name (name ks)
+                    :columnfamily_name (name table)))))
 
 (defn describe-columns
   "Returns table columns description, taken from `system.schema_columns`."
   [^Session session ks table]
   (select session :system.schema_columns
-          (q/where :keyspace_name ks
-                   :columnfamily_name table)))
+          (q/where :keyspace_name (name ks)
+                   :columnfamily_name (name table))))
 
 ;;
 ;; Higher-level collection manipulation
