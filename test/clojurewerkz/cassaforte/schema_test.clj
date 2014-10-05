@@ -21,7 +21,7 @@
 (let [s (client/connect ["127.0.0.1"])]
   (use-fixtures :each (fn [f]
                         (try
-                          (drop-keyspace s :new_cql_keyspace)
+                          (drop-keyspace s "new_cql_keyspace")
                           (catch Exception _ nil))
                         (create-keyspace s "new_cql_keyspace"
                                          (with {:replication
@@ -32,22 +32,22 @@
 
   (deftest test-create-drop-keyspace
     (try
-      (drop-keyspace s :new_cql_keyspace)
+      (drop-keyspace s "new_cql_keyspace")
       (catch Exception _ nil))
-    (is (nil? (describe-keyspace s :new_cql_keyspace)))
-    (create-keyspace s :new_cql_keyspace
+    (is (nil? (describe-keyspace s "new_cql_keyspace")))
+    (create-keyspace s "new_cql_keyspace"
                      (with {:replication
                             {:class              "SimpleStrategy"
                              :replication_factor 1 }}))
-    (is (describe-keyspace s :new_cql_keyspace)))
+    (is (describe-keyspace s "new_cql_keyspace")))
 
   (deftest test-create-alter-keyspace
-    (alter-keyspace s :new_cql_keyspace
+    (alter-keyspace s "new_cql_keyspace"
                     (with {:durable_writes false
                            :replication    {:class "NetworkTopologyStrategy"
                                             :dc1 1
                                             :dc2 2}}))
-    (let [res (describe-keyspace s :new_cql_keyspace)]
+    (let [res (describe-keyspace s "new_cql_keyspace")]
       (is (= "new_cql_keyspace" (:keyspace_name res)))
       (is (= false (:durable_writes res)))
       (is (= "{\"dc2\":\"2\",\"dc1\":\"1\"}" (:strategy_options res)))))
@@ -116,7 +116,7 @@
                                        :city       :varchar
                                        :info :text
                                        :primary-key [:first_name :last_name :city]}))
-    (let [cfd (describe-table s :new_cql_keyspace :people)]
+    (let [cfd (describe-table s "new_cql_keyspace" "people")]
       (is (= "[\"first_name\"]" (:key_aliases cfd)))
       (is (= "[\"last_name\",\"city\"]" (:column_aliases cfd)))))
 
@@ -127,6 +127,6 @@
                                        :city       :varchar
                                        :info :text
                                        :primary-key [[:first_name :last_name] :city]}))
-    (let [cfd (describe-table s :new_cql_keyspace :people)]
+    (let [cfd (describe-table s "new_cql_keyspace" :people)]
       (is (= "[\"first_name\",\"last_name\"]" (:key_aliases cfd)))
       (is (= "[\"city\"]" (:column_aliases cfd))))))
