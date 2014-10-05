@@ -106,7 +106,7 @@ clause of a select/update/delete query"
   ([& {:keys [key last-key per-page where] :or {:page 0}}]
      {:limit per-page
       :where (if last-key
-               (assoc where key [> last-key])
+               (conj (vec where) [> key last-key])
                where)}))
 
 
