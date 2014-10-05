@@ -84,7 +84,12 @@ clause of a select/update/delete query"
   [& args]
   (if (and (= 1 (count args)) (-> args first map?))
     {:where (first args)}
-    {:where (partition 2 args)}))
+    {:where (->> (partition 2 args)
+                 (map (fn [[k v]]
+                    (if (sequential? v)
+                      [(first v) k (second v)]
+                      [k v])))
+                 )}))
 
 (defn paginate
   "Paginate through the collection of results
