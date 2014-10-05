@@ -125,7 +125,7 @@
 
      (let [res (select s :users
                        (where :city "Munich"
-                              :age [> (int 5)])
+                              :age  [> (int 5)])
                        (allow-filtering true))]
        (is (= (set (range 6 10))
               (->> res
@@ -333,7 +333,7 @@
                   (column-definitions {:series_title  :varchar
                                        :episode_id    :int
                                        :episode_title :text
-                                       :primary-key [:series_title :episode_id]}))
+                                       :primary-key   [:series_title :episode_id]}))
     (dotimes [i 20]
       (insert s :tv_series {:series_title "Futurama" :episode_id i :episode_title (str "Futurama Title " i)})
       (insert s :tv_series {:series_title "Simpsons" :episode_id i :episode_title (str "Simpsons Title " i)}))
@@ -373,9 +373,10 @@
       (insert s :tv_series {:series_title "Futurama" :episode_id i :episode_title (str "Futurama Title " i)})
       (insert s :tv_series {:series_title "Simpsons" :episode_id i :episode_title (str "Simpsons Title " i)}))
 
+
     (is (= (set (range 0 10))
            (->> (select s :tv_series
-                        (paginate :key :episode_id :per-page 10 :where { :series_title "Futurama"}))
+                        (paginate :key :episode_id :per-page 10 :where {:series_title "Futurama"}))
                 (map :episode_id)
                 set)))
 
@@ -398,14 +399,14 @@
   (deftest test-insert-with-forced-prepared-statements
     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
       (cp/forcing-prepared-statements
-        (insert s :users r))
+       (insert s :users r))
       (is (= r (get-one s :users)))
       (truncate s :users)))
 
   (deftest test-insert-without-prepared-statements
     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
       (cp/without-prepared-statements
-        (insert s :users r))
+       (insert s :users r))
       (is (= r (get-one s :users)))
       (truncate s :users)))
 
@@ -427,4 +428,5 @@
     (client/prepared
      (let [r {:name "Alex" :city "Munich" :age nil}]
        (insert s :users r)
-       (is (= r (first (select s :users))))))))
+       (is (= r (first (select s :users)))))))
+  )
