@@ -78,18 +78,22 @@ Takes a table identifier and additional clause arguments:
 ;; Overrides
 ;;
 
+(defn- transform-ranges
+  [coll]
+  (map (fn [[k v]]
+         (if (sequential? v)
+           [(first v) k (second v)]
+           [k v]))
+       coll))
+
 (defn where
   "Clause: takes a map or a vector of pairs to compose the where
 clause of a select/update/delete query"
   [& args]
   (if (and (= 1 (count args)) (-> args first map?))
-    {:where (first args)}
+    {:where (transform-ranges (first args))}
     {:where (->> (partition 2 args)
-                 (map (fn [[k v]]
-                    (if (sequential? v)
-                      [(first v) k (second v)]
-                      [k v])))
-                 )}))
+                 (transform-ranges))}))
 
 (defn paginate
   "Paginate through the collection of results
