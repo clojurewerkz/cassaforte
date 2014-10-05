@@ -20,8 +20,8 @@
 
   (deftest test-insert-batch-with-ttl
     (th/test-combinations
-     (let [input [[{:name "Alex" :city "Munich" :age (int 19)} (using :ttl 350)]
-                  [{:name "Alex" :city "Munich" :age (int 19)} (using :ttl 350)]]]
+     (let [input [[{:name "Alex" :city "Munich" :age (int 19)} (using :ttl (int 350))]
+                  [{:name "Alex" :city "Munich" :age (int 19)} (using :ttl (int 350))]]]
        (insert-batch s :users input)
        (is (= (first (first input)) (first (select s :users))))
        (truncate s :users))))
