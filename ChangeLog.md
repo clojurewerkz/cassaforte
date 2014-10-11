@@ -1,3 +1,11 @@
+## Changes between 2.0.0-beta5 and 2.0.0-beta7
+
+### Hayt Upgraded to 2.0
+
+[Hayt](https://github.com/mpenet/hayt) was upgraded to 2.0. `where` clauses in CQL are still compatible
+with Hayt 1.x, although using the 2.0 DSL is highly recommended.
+
+
 ## Changes between 2.0.0-beta4 and 2.0.0-beta5
 
 ### clojurewerkz.cassandra.cql/iterate-table Now Terminates
