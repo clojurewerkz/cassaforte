@@ -1,9 +1,49 @@
+## Changes between 2.0.0-beta7 and 2.0.0-beta8
+
+`2.0.0-beta8` introduces a major **breaking API change**.
+
+### Query DSL Taken From Hayt 2.0
+
+Cassaforte no longer tries to support query condition DSLs for both Hayt 1.x
+and Hayt 2.0. Hayt 2.0 is the only supported flavour now and
+is the future.
+
+Some examples of the changes:
+
+``` clojure
+;; before
+(where :name "Alex")
+
+;; after
+(where [[= :name "Alex"]])
+(where {:name "Alex"})
+
+
+;; before
+(where :name "Alex" :age [> 25])
+
+;; after
+(where [[= :name "Alex"]
+        [> :age  25]])
+
+;; before
+(where :name "Alex" :city [:in ["Munich" "Frankfurt"]])
+
+;; after
+(where [[= :name "Alex"]
+        [:in :city ["Munich" "Frankfurt"]]])
+```
+
+As it's easy to see, the new condition style closer resembles
+Clojure itself and thus was a reasonable decision on behalf of Hayt
+developers.
+
+
 ## Changes between 2.0.0-beta5 and 2.0.0-beta7
 
 ### Hayt Upgraded to 2.0
 
-[Hayt](https://github.com/mpenet/hayt) was upgraded to 2.0. `where` clauses in CQL are still compatible
-with Hayt 1.x, although using the 2.0 DSL is highly recommended.
+[Hayt](https://github.com/mpenet/hayt) was upgraded to 2.0.
 
 
 ## Changes between 2.0.0-beta4 and 2.0.0-beta5
