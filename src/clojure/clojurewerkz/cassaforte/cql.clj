@@ -290,7 +290,7 @@
     (select session table
             (q/limit chunk-size))
     (select session table
-            (q/where (q/token partition-key) [> (q/token last-pk)])
+            (q/where {(apply q/token partition-key) [> (apply q/token last-pk)]})
             (q/limit chunk-size))))
 
 (defn iterate-table
