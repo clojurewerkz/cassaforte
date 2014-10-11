@@ -42,7 +42,7 @@
          (is (= r (first (select s :users))))
          (update s :users
                  {:age (int 25)}
-                 (where :name "Alex"))
+                 (where {:name "Alex"}))
          (is (= {:name "Alex" :city "Munich" :age (int 25)}
                 (first (select s :users)))))))
 
@@ -54,13 +54,13 @@
                                 :body (str "body" i)}))
        (update s :user_posts
                {:body "bodynew"}
-               (where :username "user1"
-                      :post_id "post1"))
+               (where {:username "user1"
+                       :post_id "post1"}))
        (is (= "bodynew"
               (get-in
                (select s :user_posts
-                       (where :username "user1"
-                              :post_id "post1"))
+                       (where {:username "user1"
+                               :post_id "post1"}))
                [0 :body]))))))
 
   (deftest test-delete
@@ -69,7 +69,7 @@
        (insert s :users {:name (str "name" i) :age (int i)}))
      (is (= 3 (perform-count s :users)))
      (delete s :users
-             (where :name "name1"))
+             (where {:name "name1"}))
      (is (= 2 (perform-count s :users)))
      (truncate s :users))
 
@@ -77,7 +77,7 @@
      (insert s :users {:name "name1" :age (int 19)})
      (delete s :users
              (columns :age)
-             (where :name "name1"))
+             (where {:name "name1"}))
      (is (nil? (:age (select s :users))))
      (truncate s :users)))
 
@@ -100,20 +100,20 @@
 
 
   (deftest test-counter
-    (update s :user_counters {:user_count (increment-by 5)} (where :name "user1"))
+    (update s :user_counters {:user_count (increment-by 5)} (where {:name "user1"}))
     (is (= 5 (:user_count (first (select s :user_counters)))))
-    (update s :user_counters {:user_count (decrement-by 5)} (where :name "user1"))
+    (update s :user_counters {:user_count (decrement-by 5)} (where {:name "user1"}))
     (is (= 0 (:user_count (first (select s :user_counters)))))
-    (update s :user_counters {:user_count [+ 500]} (where :name "user1"))
+    (update s :user_counters {:user_count [+ 500]} (where {:name "user1"}))
     (is (= 500 (:user_count (first (select s :user_counters)))))
-    (update s :user_counters {:user_count [+ 5000000]} (where :name "user1"))
+    (update s :user_counters {:user_count [+ 5000000]} (where {:name "user1"}))
     (is (= 5000500 (:user_count (first (select s :user_counters)))))
-    (update s :user_counters {:user_count [+ 50000000000000]} (where :name "user1"))
+    (update s :user_counters {:user_count [+ 50000000000000]} (where {:name "user1"}))
     (is (= 50000005000500 (:user_count (first (select s :user_counters))))))
 
   (deftest test-counter-2
     (dotimes [i 100]
-      (update s :user_counters {:user_count [+ 1]} (where :name "user1")))
+      (update s :user_counters {:user_count [+ 1]} (where {:name "user1"})))
     (is (= 100 (:user_count (first (select s :user_counters))))))
 
   (deftest test-index-filtering-range
@@ -124,8 +124,8 @@
        (insert s :users {:name (str "name_" i) :city "Munich" :age (int i)}))
 
      (let [res (select s :users
-                       (where :city "Munich"
-                              :age  [> (int 5)])
+                       (where [[= :city "Munich"]
+                               [> :age (int 5)]])
                        (allow-filtering true))]
        (is (= (set (range 6 10))
               (->> res
@@ -141,8 +141,8 @@
        (insert s :users {:name (str "name_" i) :city "Munich" :age (int i)}))
 
      (let [res (select s :users
-                       (where {:city "Munich"
-                               :age [> (int 5)]})
+                       (where [[= :city "Munich"]
+                               [> :age (int 5)]])
                        (allow-filtering true))]
        (is (= (set (range 6 10))
               (->> res
@@ -158,7 +158,7 @@
 
 
      (let [res (select s :users
-                       (where :city "city_5")
+                       (where {:city "city_5"})
                        (allow-filtering true))]
        (is (= 5
               (-> res
@@ -190,7 +190,7 @@
        (dotimes [i 3]
          (update s :users_list
                  {:test_list [+ [(str "str" i)]]}
-                 (where :name "user1")))
+                 (where {:name "user1"})))
 
        (is (= ["str0" "str1" "str2"] (get-in (select s :users_list)
                                              [0 :test_list])))
@@ -203,7 +203,7 @@
                 :test_list ["str0" "str1" "str2"]})
        (update s :users_list
                {:test_list [- ["str0" "str1"]]}
-               (where :name "user1"))
+               (where {:name "user1"}))
 
        (is (= ["str2"] (get-in (select s :users_list)
                                [0 :test_list])))))
@@ -234,7 +234,7 @@
        (dotimes [i 3]
          (update s :users_map
                  {:test_map [+ {"a" "b" "c" "d"}]}
-                 (where :name "user1")))
+                 (where {:name "user1"})))
 
        (is (= {"a" "b" "c" "d"} (get-in (select s :users_map)
                                         [0 :test_map])))
@@ -268,7 +268,7 @@
          (dotimes [_ 2]
            (update s :users_set
                    {:test_set [+ #{(str "str" i)}]}
-                   (where :name "user1"))))
+                   (where {:name "user1"}))))
 
        (is (= #{"str0" "str1" "str2"} (get-in (select s :users_set)
                                               [0 :test_set])))
@@ -281,7 +281,7 @@
                 :test_set #{"str0" "str1" "str2"}})
        (update s :users_set
                {:test_set [- #{"str0" "str1"}]}
-               (where :name "user1"))
+               (where {:name "user1"}))
 
        (is (= #{"str2"} (get-in (select s :users_set)
                                 [0 :test_set])))))
@@ -294,7 +294,7 @@
      (insert s :users {:name "Robert" :city "Berlin"        :age (int 25)})
      (insert s :users {:name "Sam"    :city "San Francisco" :age (int 21)})
 
-     (is (= "Munich" (get-in (select s :users (where :name "Alex")) [0 :city])))))
+     (is (= "Munich" (get-in (select s :users (where {:name "Alex"})) [0 :city])))))
 
   (deftest test-select-in
     (th/test-combinations
@@ -303,7 +303,7 @@
      (insert s :users {:name "Sam"    :city "San Francisco" :age (int 21)})
 
      (let [users (select s :users
-                         (where :name [:in ["Alex" "Robert"]]))]
+                         (where [[:in :name ["Alex" "Robert"]]]))]
        (is (= "Munich" (get-in users [0 :city])))
        (is (= "Berlin" (get-in users [1 :city]))))))
 
@@ -317,7 +317,7 @@
              {:post_id "post2"}]
             (select s :user_posts
                     (columns :post_id)
-                    (where :username "Alex")
+                    (where {:username "Alex"})
                     (order-by [:post_id]))))
 
      (is (= [{:post_id "post2"}
@@ -325,7 +325,7 @@
              {:post_id "post0"}]
             (select s :user_posts
                     (columns :post_id)
-                    (where :username "Alex")
+                    (where {:username "Alex"})
                     (order-by [:post_id :desc]))))))
 
   (deftest test-select-range-query
@@ -340,23 +340,23 @@
 
     (is (= (set (range 11 20))
            (->> (select s :tv_series
-                        (where :series_title "Futurama"
-                               :episode_id [> 10]))
+                        (where [[= :series_title "Futurama"]
+                                [> :episode_id 10]]))
                 (map :episode_id )
                 set)))
 
     (is (= (set (range 11 16))
            (->> (select s :tv_series
-                        (where :series_title "Futurama"
-                               :episode_id [> 10]
-                               :episode_id [<= 15]))
+                        (where [[=  :series_title "Futurama"]
+                                [>  :episode_id 10]
+                                [<= :episode_id 15]]))
                 (map :episode_id)
                 set)))
 
     (is (= (set (range 0 15))
            (->> (select s :tv_series
-                        (where :series_title "Futurama"
-                               :episode_id [< 15]))
+                        (where [[= :series_title "Futurama"]
+                                [< :episode_id 15]]))
                 (map :episode_id)
                 set)))
 
@@ -428,5 +428,4 @@
     (client/prepared
      (let [r {:name "Alex" :city "Munich" :age nil}]
        (insert s :users r)
-       (is (= r (first (select s :users)))))))
-  )
+       (is (= r (first (select s :users))))))))

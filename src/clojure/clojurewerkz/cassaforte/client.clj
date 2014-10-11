@@ -252,6 +252,7 @@
   ([^Session session query {:keys [prepared]}]
      (let [^Statement statement (statement-for session query prepared)
            ^ResultSetFuture fut (.executeAsync session statement)]
+       #_ (println statement)
        (conv/to-clj (.getUninterruptibly fut)))))
 
 (defn ^String export-schema
