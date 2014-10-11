@@ -42,7 +42,7 @@
          (is (= r (first @(select-async s :users))))
          (update s :users
                  {:age (int 25)}
-                 (where :name "Alex"))
+                 (where {:name "Alex"}))
          (is (= {:name "Alex" :city "Munich" :age (int 25)}
                 (first @(select-async s :users)))))))
 
@@ -54,12 +54,12 @@
                                       :body (str "body" i)}))
        (update-async s :user_posts
                      {:body "bodynew"}
-                     (where :username "user1"
-                            :post_id "post1"))
+                     (where {:username "user1"
+                             :post_id "post1"}))
        (is (= "bodynew"
               (get-in @(select-async s :user_posts
-                                     (where :username "user1"
-                                            :post_id "post1"))
+                                     (where {:username "user1"
+                                             :post_id "post1"}))
                       [0 :body]))))))
 
   (deftest test-delete
@@ -68,7 +68,7 @@
        (insert-async s :users {:name (str "name" i) :age (int i)}))
      (is (= 3 (perform-count s :users)))
      (delete-async s :users
-                   (where :name "name1"))
+                   (where {:name "name1"}))
      (is (= 2 (perform-count s :users)))
      (truncate s :users))
 
@@ -76,7 +76,7 @@
      (insert-async s :users {:name "name1" :age (int 19)})
      (delete-async s :users
                    (columns :age)
-                   (where :name "name1"))
+                   (where {:name "name1"}))
      (is (nil? (:age @(select-async s :users))))
      (truncate s :users)))
 

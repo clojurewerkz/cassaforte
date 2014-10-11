@@ -11,7 +11,7 @@
   "Functions for building dynamic CQL queries, in case you feel
    that `cql` namespace is too limiting for you."
   (:require [qbits.hayt.dsl.statement :as statement]
-            [qbits.hayt.cql :as cql]
+            [qbits.hayt.dsl.clause :as clause]
             [clojurewerkz.cassaforte.aliases :refer :all]))
 
 (doseq [module '(dsl.clause fns utils)]
@@ -74,26 +74,11 @@ Takes a table identifier and additional clause arguments:
 (defalias list-users-query statement/list-users)
 (defalias list-perm-query statement/list-perm)
 
-;;
-;; Overrides
-;;
+(defalias where clause/where)
 
-(defn- transform-ranges
-  [coll]
-  (map (fn [[k v]]
-         (if (sequential? v)
-           [(first v) k (second v)]
-           [k v]))
-       coll))
-
-(defn where
-  "Clause: takes a map or a vector of pairs to compose the where
-clause of a select/update/delete query"
-  [& args]
-  (if (and (= 1 (count args)) (-> args first map?))
-    {:where (transform-ranges (first args))}
-    {:where (->> (partition 2 args)
-                 (transform-ranges))}))
+;;
+;; Overrides & Extensions
+;;
 
 (defn paginate
   "Paginate through the collection of results
