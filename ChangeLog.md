@@ -20,6 +20,15 @@ Some examples of the changes:
 
 
 ;; before
+(where :name "Alex" :city "Munich")
+
+;; after
+(where [[= :name "Alex"]
+        [= :city "Munich"]])
+(where {:name "Alex" :city "Munich"})
+
+
+;; before
 (where :name "Alex" :age [> 25])
 
 ;; after
