@@ -12,7 +12,7 @@
   :java-source-paths ["src/java"]
   :profiles       {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
                    :1.5 {:dependencies [[org.clojure/clojure "1.5.1"]]}
-                   :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha2"]]}
+                   :1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha3"]]}
                    :master {:dependencies [[org.clojure/clojure "1.7.0-master-SNAPSHOT"]]}
                    :dev {:jvm-opts     ["-Dlog4j.configuration=log4j.properties.unit"
                                         "-Xmx2048m"
