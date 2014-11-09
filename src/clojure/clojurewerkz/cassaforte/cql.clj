@@ -158,6 +158,12 @@
   (let [query (batch-query-from table records)]
     (cc/execute-async session query {:prepared hayt/*prepared-statement*})))
 
+(defn atomic-batch
+  "Executes a group of operations as an atomic batch (BEGIN BATCH ... APPLY BATCH)"
+  [^Session session & clauses]
+  (let [q (cc/render-query (cc/compile-query clauses q/batch-query))]
+    (cc/execute session q {:prepared hayt/*prepared-statement*})))
+
 (defn update
   "Updates one or more columns for a given row in a table. The `where` clause
    is used to select the row to update and must include all columns composing the PRIMARY KEY.

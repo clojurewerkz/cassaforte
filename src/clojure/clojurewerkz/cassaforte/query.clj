@@ -63,6 +63,7 @@ Takes a table identifier and additional clause arguments:
 (defalias alter-keyspace-query  statement/alter-keyspace)
 
 (defalias batch-query  statement/batch)
+(defalias queries      clause/queries)
 
 (defalias use-keyspace-query  statement/use-keyspace)
 

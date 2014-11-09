@@ -3,9 +3,11 @@
   (:require [clojurewerkz.cassaforte.test-helper :as th]
             [clojurewerkz.cassaforte.client :as client]
             [clojurewerkz.cassaforte.policies :as cp]
-            [clojurewerkz.cassaforte.cql :refer :all]
+            [clojurewerkz.cassaforte.cql :as cql :refer :all]
             [clojure.test :refer :all]
-            [clojurewerkz.cassaforte.query :refer :all]))
+            [clojurewerkz.cassaforte.query :refer :all]
+            [qbits.hayt.dsl.statement :as hs]
+            [qbits.hayt.dsl.clause :as hc]))
 
 (let [s (client/connect ["127.0.0.1"])]
   (use-fixtures :each (fn [f]
@@ -62,6 +64,14 @@
                        (where {:username "user1"
                                :post_id "post1"}))
                [0 :body]))))))
+
+  (deftest ^:focus test-insert-with-atomic-batch
+    (th/test-combinations
+     (cql/atomic-batch s (queries
+                          (hs/insert :users (values {:name "Alex" :city "Munich" :age (int 19)}))
+                          (hs/insert :users (values {:name "Fritz" :city "Hamburg" :age (int 28)}))))
+     (is (= "Munich" (-> (select s :users) first :city)))
+     (truncate s :users)))
 
   (deftest test-delete
     (th/test-combinations

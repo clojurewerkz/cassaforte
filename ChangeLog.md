@@ -1,3 +1,22 @@
+## Changes between 2.0.0-beta8 and 2.0.0-beta9
+
+### Atomic Batches Support
+
+[Atomic batches](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/batch_r.html) are now easier to use with Cassaforte:
+
+``` clojure
+(require '[clojurewerkz.cassaforte.client :as client])
+(require '[clojurewerkz.cassaforte.cql :as cql :refer :all])
+(require '[clojurewerkz.cassaforte.query :refer :all])
+(require '[qbits.hayt.dsl.statement :as hs])
+
+(let [s (client/connect ["127.0.0.1"])]
+  (cql/atomic-batch s (queries
+                         (hs/insert :users (values {:name "Alex" :city "Munich" :age (int 19)}))
+                         (hs/insert :users (values {:name "Fritz" :city "Hamburg" :age (int 28)})))))
+```
+
+
 ## Changes between 2.0.0-beta7 and 2.0.0-beta8
 
 `2.0.0-beta8` introduces a major **breaking API change**.
