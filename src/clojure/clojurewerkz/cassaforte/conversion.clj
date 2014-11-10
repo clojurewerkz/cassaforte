@@ -10,7 +10,8 @@
 (ns clojurewerkz.cassaforte.conversion
   (:import [com.datastax.driver.core ResultSet Host Row ColumnDefinitions ColumnDefinitions
             ColumnDefinitions$Definition]
-           [java.nio ByteBuffer])
+           [java.nio ByteBuffer]
+           [java.util Map List Set])
   (:require [clojurewerkz.cassaforte.bytes :as b]))
 
 ;; Protocol version 2, requires Cassandra 2.0+.
@@ -19,6 +20,38 @@
 (defprotocol ClojureRepresentation
   (to-clj [input] "Converts any definition to a Clojure data structure"))
 
+
+;;
+;; Core JDK Types
+;;
+
+(extend-protocol ClojureRepresentation
+  nil
+  (to-clj [input] nil)
+
+  String
+  (to-clj [^String input] input)
+
+  Object
+  (to-clj [input] input)
+
+  Map
+  (to-clj [^Map input]
+    (into {} input))
+
+  Set
+  (to-clj [^Set input]
+    (into #{} input))
+
+  List
+  (to-clj [^List input]
+    (into [] input)))
+
+
+;;
+;; C* Types
+;;
+
 (extend-protocol ClojureRepresentation
   ResultSet
   (to-clj [^ResultSet input]
@@ -26,12 +59,11 @@
           (for [^Row row input]
             (into {}
                   (for [^ColumnDefinitions$Definition cd (.getColumnDefinitions row)]
-                    (let [^String n         (.getName cd)
-                          ^ByteBuffer bytes (.getBytesUnsafe row n)]
+                    (let [^String n                      (.getName cd)
+                          ^ByteBuffer bytes              (.getBytesUnsafe row n)]
                       [(keyword n) (when (and bytes (> (.capacity bytes) 0))
-                                     (b/deserialize (.getType cd)
-                                                    bytes
-                                                    protocol-version))]))))))
+                                     (let [v (b/deserialize (.getType cd) bytes protocol-version)]
+                                       (to-clj v)))]))))))
   Host
   (to-clj [^Host host]
     {:datacenter (.getDatacenter host)
