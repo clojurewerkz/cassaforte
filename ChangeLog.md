@@ -1,5 +1,11 @@
 ## Changes between 2.0.0-beta8 and 2.0.0-beta9
 
+### Collections Converted to Clojure Data Structures
+
+Cassandra maps, sets and lists are now automatically converted to their
+immutable Clojure counterparts.
+
+
 ### Atomic Batches Support
 
 [Atomic batches](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/batch_r.html) are now easier to use with Cassaforte:
