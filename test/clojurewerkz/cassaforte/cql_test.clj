@@ -7,7 +7,10 @@
             [clojure.test :refer :all]
             [clojurewerkz.cassaforte.query :refer :all]
             [qbits.hayt.dsl.statement :as hs]
-            [qbits.hayt.dsl.clause :as hc]))
+            [qbits.hayt.dsl.clause :as hc]
+            [qbits.hayt.fns :as fns]
+            [clj-time.core :refer [seconds ago]]
+            [clj-time.coerce :as cc]))
 
 (let [s (client/connect ["127.0.0.1"])]
   (use-fixtures :each (fn [f]
@@ -371,6 +374,24 @@
                 set)))
 
     (drop-table s :tv_series))
+
+  (deftest ^:focus test-timeuuid-now-and-unix-timestamp-of
+    (create-table s :events
+                  (column-definitions {:message      :varchar
+                                       :created_at   :timeuuid
+                                       :primary-key  [:created_at]}))
+
+    (let [dt (-> 2 seconds ago)
+          ts (cc/to-long dt)]
+      (dotimes [i 20]
+        (insert s :events {:created_at (fns/now) :message (format "Message %d" i)}))
+      (let [xs  (select s :events
+                        (columns (fns/unix-timestamp-of :created_at))
+                        (limit 5))
+            ts' (get (first xs) (keyword "unixTimestampOf(created_at)"))]
+        (is (> ts' ts))))
+
+    (drop-table s :events))
 
 
   (deftest test-paginate
