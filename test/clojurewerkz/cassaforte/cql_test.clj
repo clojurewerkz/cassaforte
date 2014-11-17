@@ -375,7 +375,7 @@
 
     (drop-table s :tv_series))
 
-  (deftest ^:focus test-timeuuid-now-and-unix-timestamp-of
+  (deftest test-timeuuid-now-and-unix-timestamp-of
     (create-table s :events
                   (column-definitions {:message      :varchar
                                        :created_at   :timeuuid
