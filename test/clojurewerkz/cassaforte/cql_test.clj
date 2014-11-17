@@ -9,7 +9,7 @@
             [qbits.hayt.dsl.statement :as hs]
             [qbits.hayt.dsl.clause :as hc]
             [qbits.hayt.fns :as fns]
-            [clj-time.core :refer [seconds ago]]
+            [clj-time.core :refer [seconds ago before?]]
             [clj-time.coerce :as cc]))
 
 (let [s (client/connect ["127.0.0.1"])]
@@ -390,6 +390,23 @@
                         (limit 5))
             ts' (get (first xs) (keyword "unixTimestampOf(created_at)"))]
         (is (> ts' ts))))
+
+    (drop-table s :events))
+
+  (deftest test-timeuuid-dateof
+    (create-table s :events
+                  (column-definitions {:message      :varchar
+                                       :created_at   :timeuuid
+                                       :primary-key  [:created_at]}))
+
+    (let [dt (-> 2 seconds ago)]
+      (dotimes [i 20]
+        (insert s :events {:created_at (fns/now) :message (format "Message %d" i)}))
+      (let [xs  (select s :events
+                        (columns (fns/date-of :created_at))
+                        (limit 5))
+            dt' (cc/from-date (get (first xs) (keyword "dateOf(created_at)")))]
+        (is (before? dt dt'))))
 
     (drop-table s :events))
 
