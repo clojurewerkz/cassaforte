@@ -4,12 +4,13 @@
             [clojurewerkz.cassaforte.client :as client]
             [clojurewerkz.cassaforte.policies :as cp]
             [clojurewerkz.cassaforte.cql :as cql :refer :all]
+            [clojurewerkz.cassaforte.uuids :as uuids]
             [clojure.test :refer :all]
             [clojurewerkz.cassaforte.query :refer :all]
             [qbits.hayt.dsl.statement :as hs]
             [qbits.hayt.dsl.clause :as hc]
             [qbits.hayt.fns :as fns]
-            [clj-time.core :refer [seconds ago before?]]
+            [clj-time.core :refer [seconds ago before? date-time]]
             [clj-time.coerce :as cc]))
 
 (let [s (client/connect ["127.0.0.1"])]
@@ -407,6 +408,28 @@
                         (limit 5))
             dt' (cc/from-date (get (first xs) (keyword "dateOf(created_at)")))]
         (is (before? dt dt'))))
+
+    (drop-table s :events))
+
+  (deftest test-timeuuid-min-max-range-query
+    (create-table s :events
+                  (column-definitions {:message      :varchar
+                                       :city         :varchar
+                                       :created_at   :timeuuid
+                                       :primary-key  [:message :created_at]}))
+    (create-index s :events :created_at)
+    (dotimes [i 10]
+      (let [dt (date-time 2014 11 17 23 i)]
+        (insert s :events {:created_at (uuids/start-of (cc/to-long dt))
+                           :city       "London, UK"
+                           :message    (format "Message %d" i)})))
+    (let [xs  (select s :events
+                      (where [[:in :message ["Message 7" "Message 8" "Message 9" "Message 10"]]
+                              [>= :created_at (-> (date-time 2014 11 17 23 8)
+                                                  .toDate
+                                                  fns/min-timeuuid)]]))]
+        (is (= #{"Message 8" "Message 9"}
+               (set (map :message xs)))))
 
     (drop-table s :events))
 
