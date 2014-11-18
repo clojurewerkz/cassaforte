@@ -26,7 +26,8 @@
                         (create-keyspace s "new_cql_keyspace"
                                          (with {:replication
                                                 {:class "SimpleStrategy"
-                                                 :replication_factor 1 }}))
+                                                 :replication_factor 1 }})
+                                         (if-not-exists))
                         (use-keyspace s "new_cql_keyspace")
                         (f)))
 
