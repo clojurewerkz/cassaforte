@@ -69,7 +69,7 @@
                                :post_id "post1"}))
                [0 :body]))))))
 
-  (deftest ^:focus test-insert-with-atomic-batch
+  (deftest test-insert-with-atomic-batch
     (th/test-combinations
      (cql/atomic-batch s (queries
                           (hs/insert :users (values {:name "Alex" :city "Munich" :age (int 19)}))
@@ -411,7 +411,7 @@
 
     (drop-table s :events))
 
-  (deftest test-timeuuid-min-max-range-query
+  (deftest test-timeuuid-min-open-range-query
     (create-table s :events
                   (column-definitions {:message      :varchar
                                        :city         :varchar
@@ -428,8 +428,32 @@
                               [>= :created_at (-> (date-time 2014 11 17 23 8)
                                                   .toDate
                                                   fns/min-timeuuid)]]))]
-        (is (= #{"Message 8" "Message 9"}
-               (set (map :message xs)))))
+      (is (= #{"Message 8" "Message 9"}
+             (set (map :message xs)))))
+
+    (drop-table s :events))
+
+  (deftest test-timeuuid-min-max-timeuuid-range-query
+    (create-table s :events
+                  (column-definitions {:message      :varchar
+                                       :created_at   :timeuuid
+                                       :primary-key  [:message :created_at]}))
+    (create-index s :events :created_at)
+    (dotimes [i 10]
+      (let [dt (date-time 2014 11 17 23 i)]
+        (insert s :events {:created_at (uuids/start-of (cc/to-long dt))
+                           :message    (format "Message %d" i)})))
+    (let [xs  (select s :events
+                      (where [[:in :message ["Message 5" "Message 6" "Message 7"
+                                             "Message 8" "Message 9"]]
+                              [>= :created_at (-> (date-time 2014 11 17 23 6)
+                                                  .toDate
+                                                  fns/min-timeuuid)]
+                              [<= :created_at (-> (date-time 2014 11 17 23 8)
+                                                  .toDate
+                                                  fns/max-timeuuid)]]))]
+      (is (= #{"Message 6" "Message 7" "Message 8"}
+             (set (map :message xs)))))
 
     (drop-table s :events))
 
