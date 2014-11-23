@@ -1,3 +1,10 @@
+## Changes between 2.0.0-beta9 and 2.0.0-rc1
+
+### Clojure 1.4 and 1.5 Support Dropped
+
+Cassaforte now requires Clojure `1.6.0`.
+
+
 ## Changes between 2.0.0-beta8 and 2.0.0-beta9
 
 ### Collections Converted to Clojure Data Structures
