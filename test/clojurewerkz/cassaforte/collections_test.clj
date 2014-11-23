@@ -9,7 +9,7 @@
 (let [s (client/connect ["127.0.0.1"])]
   (use-fixtures :each (fn [f]
                         (th/with-temporary-keyspace s f)))
-  (deftest test-map-and-list-conversion
+  (deftest test-collection-conversion-on-load
     (let [t :users_collections]
       (create-table s t
                   (column-definitions
