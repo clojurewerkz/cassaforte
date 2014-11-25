@@ -21,14 +21,14 @@
             [qbits.hayt.cql :as hayt])
   (:import [com.datastax.driver.core Statement ResultSet ResultSetFuture Host Session Cluster
             Cluster$Builder SimpleStatement PreparedStatement HostDistance PoolingOptions
-            SSLOptions]
+            SSLOptions ProtocolOptions$Compression]
            [com.datastax.driver.auth DseAuthProvider]
            [com.google.common.util.concurrent Futures FutureCallback]
            java.net.URI
            [javax.net.ssl TrustManagerFactory KeyManagerFactory SSLContext]
            [java.security KeyStore SecureRandom]))
 
-(declare build-ssl-options)
+(declare build-ssl-options select-compression)
 
 (defprotocol DummySession
   (executeAsync [_ query]))
@@ -66,7 +66,8 @@
            ssl
            ssl-options
            kerberos
-           protocol-version]}]
+           protocol-version
+           compression]}]
   (when force-prepared-queries
     (alter-var-root (var hayt/*prepared-statement*)
                     (constantly true)))
@@ -96,6 +97,8 @@
       (.withReconnectionPolicy builder reconnection-policy))
     (when load-balancing-policy
       (.withLoadBalancingPolicy builder load-balancing-policy))
+    (when compression
+      (.withCompression (select-compression compression)))
     (when ssl
       (.withSSL builder (build-ssl-options ssl)))
     (when ssl-options
@@ -120,6 +123,13 @@
     (.init trustmanager keystore)
     (.init ssl-context (.getKeyManagers keymanager) (.getTrustManagers trustmanager) nil)
     (SSLOptions. ssl-context ssl-cipher-suites)))
+
+(defn- ^ProtocolOptions$Compression select-compression
+  [compression]
+  (case compression
+    :snappy ProtocolOptions$Compression/SNAPPY
+    :lz4 ProtocolOptions$Compression/LZ4
+    ProtocolOptions$Compression/NONE))
 
 (defn ^Session connect
   "Connects to the Cassandra cluster. Use `build-cluster` to build a cluster."
