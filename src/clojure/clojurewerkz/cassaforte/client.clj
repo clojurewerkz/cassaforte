@@ -238,6 +238,9 @@
               "Query is meant to be executed as prepared, but no values were supplied.")))
     (build-statement query)))
 
+(defn ^:dynamic success-cb [_])
+(defn ^:dynamic failure-cb [_])
+
 (defn ^ResultSetFuture execute-async
   "Executes a pre-built query and returns a future.
 
@@ -248,7 +251,19 @@
      (execute-async session query {}))
   ([^Session session query {:keys [prepared]}]
      (let [^Statement statement (statement-for session query prepared)
-           ^ResultSetFuture fut (.executeAsync session statement)]
+           ^ResultSetFuture fut (.executeAsync session statement)
+           success success-cb
+           failure failure-cb]
+       (Futures/addCallback
+        fut
+        (reify FutureCallback
+          (onSuccess [_ result]
+            (when-not (nil? result)
+              (Thread/sleep 0)
+              (success (conv/to-clj result))))
+          (onFailure [_ result]
+            (when-not (nil? result)
+              (failure (conv/to-clj result))))))
        (future (conv/to-clj (.getUninterruptibly fut))))))
 
 (defn execute
@@ -295,18 +310,14 @@
 ;; Result Handling
 ;;
 
-(defn set-callbacks
-  "Set callbacks on a result future"
-  [^ResultSetFuture future {:keys [success failure]}]
-  {:pre [(not (nil? success))]}
-  (Futures/addCallback
-   future
-   (reify FutureCallback
-     (onSuccess [_ result]
-       (success
-        (conv/to-clj (.get future))))
-     (onFailure [_ result]
-       (failure result)))))
+(defmacro with-callbacks
+  "Redefine callbacks for async methods"
+  [body {:keys [success failure]}]
+  (let [on-success (or success #())
+        on-failure (or failure #())]
+    `(binding [success-cb ~on-success
+               failure-cb ~on-failure]
+       ~@body)))
 
 (defn get-result
   "Get result from Future. Optional `timeout-ms` should be specified in milliseconds."

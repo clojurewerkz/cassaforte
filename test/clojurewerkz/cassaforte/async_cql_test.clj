@@ -86,4 +86,29 @@
        (insert-async s :users r
                      (using :timestamp (.getTime (java.util.Date.))))
        (is (= r (first @(select-async s :users))))
-       (truncate s :users)))))
+       (truncate s :users))))
+
+  (deftest test-select-async-with-callbacks
+    (th/test-combinations
+     (let [r {:name "Alex" :city "Munich" :age (int 19)}
+           success (fn [res]
+                     (is (= r (first res)))
+                     (truncate s :users))]
+       (is (= [] @(insert-async s :users r)))
+       (client/with-callbacks (select-async s :users) {:success success}))))
+
+  (deftest test-select-async-with-multi-callbacks
+    (th/test-combinations
+     (let [r [{:name "Alex" :city "Munich" :age (int 19)}
+              {:name "Kirill" :city "Phuket" :age (int 25)}]
+           success-1 (fn [res]
+                       (is (= (first r) (first res)))
+                       (truncate s :users))
+           success-2 (fn [res]
+                       (is (= (last r) (first res)))
+                       (truncate s :users))]
+       (is (= [] @(insert-batch-async s :users r)))
+       (client/with-callbacks (select-async s :users) {:success success-1})
+       (Thread/sleep 100)
+       (is (= [] @(insert-async s :users (last r))))
+       (client/with-callbacks (select-async s :users) {:success success-2})))))
