@@ -49,8 +49,8 @@
     (into [] input))
 
   DriverException
-  (to-clj [^DriverException error]
-    (Exception. (.getMessage error))))
+  (to-clj [^DriverException e]
+    e))
 
 ;;
 ;; C* Types
