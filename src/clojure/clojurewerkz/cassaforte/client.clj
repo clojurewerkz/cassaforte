@@ -297,16 +297,15 @@
 
 (defn set-callbacks
   "Set callbacks on a result future"
-  [^ResultSetFuture future {:keys [success failure]}]
+  [^ResultSetFuture fut {:keys [success failure]}]
   {:pre [(not (nil? success))]}
-  (Futures/addCallback
-   future
-   (reify FutureCallback
-     (onSuccess [_ result]
-       (success
-        (conv/to-clj (.get future))))
-     (onFailure [_ result]
-       (failure result)))))
+  (future (when-let [res @fut]
+            (if (= (type res) Exception)
+              (if (nil? failure)
+                (throw res)
+                (failure res))
+              (success res))))
+  fut)
 
 (defn get-result
   "Get result from Future. Optional `timeout-ms` should be specified in milliseconds."
