@@ -259,7 +259,7 @@
         (reify FutureCallback
           (onSuccess [_ result]
             (when-not (nil? result)
-              (Thread/sleep 0)
+              (Thread/sleep 1)
               (success (conv/to-clj result))))
           (onFailure [_ result]
             (when-not (nil? result)
