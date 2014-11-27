@@ -310,14 +310,17 @@
 ;; Result Handling
 ;;
 
-(defmacro with-callbacks
-  "Redefine callbacks for async methods"
-  [body {:keys [success failure]}]
-  (let [on-success (or success #())
-        on-failure (or failure #())]
-    `(binding [success-cb ~on-success
-               failure-cb ~on-failure]
-       ~@body)))
+(defn set-callbacks
+  "Set callbacks on a result future"
+  [^ResultSetFuture fut {:keys [success failure]}]
+  {:pre [(not (nil? success))]}
+  (future (when-let [res @fut]
+            (if (= (type res) Exception)
+              (if (nil? failure)
+                (throw res)
+                (failure res))
+              (success res))))
+  fut)
 
 (defn get-result
   "Get result from Future. Optional `timeout-ms` should be specified in milliseconds."

@@ -10,6 +10,7 @@
 (ns clojurewerkz.cassaforte.conversion
   (:import [com.datastax.driver.core ResultSet Host Row ColumnDefinitions ColumnDefinitions
             ColumnDefinitions$Definition]
+           [com.datastax.driver.core.exceptions DriverException]
            [java.nio ByteBuffer]
            [java.util Map List Set])
   (:require [clojurewerkz.cassaforte.bytes :as b]))
@@ -45,8 +46,11 @@
 
   List
   (to-clj [^List input]
-    (into [] input)))
+    (into [] input))
 
+  DriverException
+  (to-clj [^DriverException error]
+    (Exception. (.getMessage error))))
 
 ;;
 ;; C* Types
