@@ -238,9 +238,6 @@
               "Query is meant to be executed as prepared, but no values were supplied.")))
     (build-statement query)))
 
-(defn ^:dynamic success-cb [_])
-(defn ^:dynamic failure-cb [_])
-
 (defn ^ResultSetFuture execute-async
   "Executes a pre-built query and returns a future.
 
@@ -251,19 +248,7 @@
      (execute-async session query {}))
   ([^Session session query {:keys [prepared]}]
      (let [^Statement statement (statement-for session query prepared)
-           ^ResultSetFuture fut (.executeAsync session statement)
-           success success-cb
-           failure failure-cb]
-       (Futures/addCallback
-        fut
-        (reify FutureCallback
-          (onSuccess [_ result]
-            (when-not (nil? result)
-              (Thread/sleep 1)
-              (success (conv/to-clj result))))
-          (onFailure [_ result]
-            (when-not (nil? result)
-              (failure (conv/to-clj result))))))
+           ^ResultSetFuture fut (.executeAsync session statement)]
        (future (conv/to-clj (.getUninterruptibly fut))))))
 
 (defn execute
