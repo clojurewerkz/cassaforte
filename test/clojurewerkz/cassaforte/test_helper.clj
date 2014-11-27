@@ -34,6 +34,13 @@
                                      :user_count  :counter
                                      :primary-key [:name]}))
 
+  (create-table session :events_by_device_id_and_date
+                (column-definitions {:date        :varchar
+                                     :device_id   :varchar
+                                     :created_at  :timeuuid
+                                     :payload     :text
+                                     :primary-key [[:device_id :date] :created_at]}))
+
   (f)
   (try
     (drop-keyspace session :new_cql_keyspace)

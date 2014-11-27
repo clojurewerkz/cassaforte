@@ -10,7 +10,8 @@
             [qbits.hayt.dsl.statement :as hs]
             [qbits.hayt.dsl.clause :as hc]
             [qbits.hayt.fns :as fns]
-            [clj-time.core :refer [seconds ago before? date-time]]
+            [clj-time.core :refer [seconds ago before? date-time] :as tc]
+            [clj-time.format :as tf]
             [clj-time.coerce :as cc]))
 
 (let [s (client/connect ["127.0.0.1"])]
@@ -68,6 +69,34 @@
                        (where {:username "user1"
                                :post_id "post1"}))
                [0 :body]))))))
+
+  (deftest test-update-with-compound-key
+    (let [t   :events_by_device_id_and_date
+          fmt (tf/formatter "yyyy-MM-dd")
+          id  "device-000000001"
+          qc [[=  :device_id id]
+              [=  :date "2014-11-13"]
+              [=  :created_at (uuids/start-of (cc/to-long (date-time 2014 11 13 12)))]]]
+      (testing "Bulk update"
+        (truncate s t)
+         (is (= 0 (perform-count s t)))
+         (doseq [i  (range 1 15)]
+           (let [dt (date-time 2014 11 i 12)
+                 td (uuids/start-of (cc/to-long dt))]
+
+             (insert s t {:created_at td
+                          :device_id  id
+                          :date       (tf/unparse fmt dt)
+                          :payload    (str "body" i)})))
+         (is (= 14 (perform-count s t)))
+         (is (= 14 (count (select s t))))
+         (is (= 1  (count (select s t (where qc)))))
+         (update s t
+                 {:payload "updated payload"}
+                 (where qc))
+         (let [x (first (select s t (where qc)))]
+           (is (= "updated payload" (:payload x))))
+         (truncate s t))))
 
   (deftest test-insert-with-atomic-batch
     (th/test-combinations

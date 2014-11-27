@@ -261,8 +261,9 @@
      (execute session query {}))
   ([^Session session query {:keys [prepared]}]
      (let [^Statement statement (statement-for session query prepared)
-           ^ResultSetFuture fut (.executeAsync session statement)]
-       (conv/to-clj (.getUninterruptibly fut)))))
+           ^ResultSetFuture fut (.executeAsync session statement)
+           res                  (.getUninterruptibly fut)]
+       (conv/to-clj res))))
 
 (defn ^String export-schema
   "Exports the schema as a string"
