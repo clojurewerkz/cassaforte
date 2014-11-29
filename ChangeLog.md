@@ -1,3 +1,32 @@
+## Changes between 2.0.0-rc1 and 2.0.0-rc2
+
+### Fixes Race Condition in Async Operations
+
+Async database operations no longer suffer from a race condition between
+issueing them and definiting callbacks on the returned future value.
+
+Contributed by Kirill Chernyshov.
+
+### Compression Option
+
+`:compression` is a new option that can be used when connecting:
+
+``` clojure
+(require '[clojurewerkz.cassaforte.client :as client])
+
+(let [s (client/connect ["127.0.0.1"] "my-keyspace" {:compression :snappy})]
+  )
+```
+
+Valid compression values are:
+
+ * `:snappy`
+ * `:lz4`
+ * `:none` (or `nil`)
+
+Contirbuted by Max Barnash (DataStax).
+
+
 ## Changes between 2.0.0-beta9 and 2.0.0-rc1
 
 ### Clojure 1.4 and 1.5 Support Dropped
