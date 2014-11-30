@@ -73,7 +73,7 @@ With Maven:
 
 ## Supported Clojure Versions
 
-Cassaforte supports Clojure 1.4+.
+Cassaforte supports Clojure 1.6+.
 
 
 ## Supported Apache Cassandra Versions
