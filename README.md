@@ -22,8 +22,7 @@ guide.
 ## Project Maturity
 
 Cassaforte is a relatively young project. It took about a year to
-reach `1.0`. It is used heavily in a monitoring and event collection
-solution that processes fairly large amount of data.
+reach `1.0`. It is known to be used by dozens of companies, small and large.
 
 Cassaforte is based on the now stable new [DataStax Java driver for Cassandra](https://github.com/datastax/java-driver)
 and [Hayt](https://github.com/mpenet/hayt), a fairly battle tested CQL
