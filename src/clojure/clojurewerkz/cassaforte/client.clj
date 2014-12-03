@@ -69,7 +69,8 @@
            ssl-options
            kerberos
            protocol-version
-           compression]}]
+           compression]
+    :or {protocol-version 2}}]
   (when force-prepared-queries
     (alter-var-root (var hayt/*prepared-statement*)
                     (constantly true)))
