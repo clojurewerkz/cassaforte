@@ -1,3 +1,10 @@
+## Changes between 2.0.0-rc3 and 2.0.0-rc4
+
+### Hayt 2.0
+
+Hayt dependency has been upgraded to `2.0` (GA).
+
+
 ## Changes between 2.0.0-rc2 and 2.0.0-rc3
 
 ### Fetch Size Support
