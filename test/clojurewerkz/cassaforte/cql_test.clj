@@ -339,6 +339,15 @@
 
      (is (= "Munich" (get-in (select s :users (where {:name "Alex"})) [0 :city])))))
 
+  (deftest test-select-where-without-fetch
+    (th/test-combinations
+     (insert s :users {:name "Alex"   :city "Munich"        :age (int 19)})
+     (insert s :users {:name "Robert" :city "Berlin"        :age (int 25)})
+     (insert s :users {:name "Sam"    :city "San Francisco" :age (int 21)})
+
+     (is (= "Munich" (get-in (client/with-fetch-size Integer/MAX_VALUE
+                               (select s :users (where {:name "Alex"}))) [0 :city])))))
+
   (deftest test-select-in
     (th/test-combinations
      (insert s :users {:name "Alex"   :city "Munich"        :age (int 19)})

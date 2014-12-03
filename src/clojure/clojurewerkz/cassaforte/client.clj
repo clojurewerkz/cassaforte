@@ -30,6 +30,8 @@
 
 (declare build-ssl-options select-compression)
 
+(def ^:dynamic *fetch-size*)
+
 (defprotocol DummySession
   (executeAsync [_ query]))
 
@@ -170,16 +172,18 @@
   [^Cluster cluster]
   (.close cluster))
 
-;;
-;; Query, Prepared statements
-;;
-
 (defmacro prepared
   "Same as cassaforte.policies/forcing-prepared-statements. Kept for backwards
    compatibility."
   [& body]
   `(binding [hayt/*prepared-statement* true
              hayt/*param-stack*        (atom [])]
+     (do ~@body)))
+
+(defmacro with-fetch-size
+  "Temporarily alters fetch size."
+  [^Integer n# & body]
+  `(binding [*fetch-size* ~n#]
      (do ~@body)))
 
 (defn- set-statement-options-
@@ -259,8 +263,10 @@
        explicitly, because `execute` is considered to be a low-level function."
   ([^Session session query]
      (execute session query {}))
-  ([^Session session query {:keys [prepared]}]
+  ([^Session session query {:keys [prepared fetch-size]}]
      (let [^Statement statement (statement-for session query prepared)
+           _                    (when fetch-size
+                                  (.setFetchSize statement fetch-size))
            ^ResultSetFuture fut (.executeAsync session statement)
            res                  (.getUninterruptibly fut)]
        (conv/to-clj res))))
