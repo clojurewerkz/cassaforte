@@ -1,3 +1,29 @@
+## Changes between 2.0.0-rc2 and 2.0.0-rc3
+
+### Fetch Size Support
+
+(Internal to the client) automatic paging of result set rows now can be configured
+or disabled altogether, e.g. when running into problems similar to [CASSANDRA-6722](https://issues.apache.org/jira/browse/CASSANDRA-6722).
+
+`clojurewerkz.cassaforte.client/with-fetch-size` is a macro that does that:
+
+``` clojure
+(require '[clojurewerkz.cassaforte.client :as cc])
+
+;; alter page size
+(cc/with-fetch-size 8192
+  (comment "SELECT queries go here"))
+
+;; disable internal client paging
+(cc/with-fetch-size Integer/MAX_VALUE
+  (comment "SELECT queries go here"))
+```
+
+Default fetch size is unaltered (Cassaforte relies on the Java driver default). This setting
+only makes sense for a certain subset of `SELECT` queries.
+
+
+
 ## Changes between 2.0.0-rc1 and 2.0.0-rc2
 
 ### Fixes Race Condition in Async Operations
