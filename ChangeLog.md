@@ -1,5 +1,12 @@
 ## Changes between 2.0.0-rc3 and 2.0.0-rc4
 
+### Cassandra Native Protocol v2 as Default
+
+To preserve Cassandra 2.0 compatibility yet continue using the most recent Cassandra Java driver
+Cassaforte now uses native protocol v2 by default. v3 can be opted into
+using the `:protocol-version` connection option (with value of `3`).
+
+
 ### Hayt 2.0
 
 Hayt dependency has been upgraded to `2.0` (GA).
