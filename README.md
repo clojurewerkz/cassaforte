@@ -129,7 +129,7 @@ Cassaforte uses [Leiningen 2](https://github.com/technomancy/leiningen/blob/mast
 sure you have it installed and then run tests against all supported Clojure versions using
 
 ```
-lein2 all test
+lein all test
 ```
 
 Then create a branch and make your changes on it. Once you are done with your changes and all
