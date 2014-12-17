@@ -117,8 +117,8 @@ Cassaforte is part of the [group of libraries known as ClojureWerkz](http://cloj
 
 ## Continuous Integration
 
-[![Continuous Integration status](https://secure.travis-ci.org/clojurewerkz/cassaforte.png)](http://travis-ci.org/clojurewerkz/cassaforte)
-[![Dependencies Status](http://jarkeeper.com/clojurewerkz/cassaforte/status.png)](http://jarkeeper.com/clojurewerkz/cassaforte)
+[![Continuous Integration status](https://secure.travis-ci.org/clojurewerkz/cassaforte.svg)](http://travis-ci.org/clojurewerkz/cassaforte)
+[![Dependencies Status](http://jarkeeper.com/clojurewerkz/cassaforte/status.svg)](http://jarkeeper.com/clojurewerkz/cassaforte)
 
 CI is hosted by [travis-ci.org](http://travis-ci.org)
 
