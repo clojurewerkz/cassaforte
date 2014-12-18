@@ -1,3 +1,13 @@
+## Changes between 2.0.0-rc4 and 2.0.0-rc5
+
+### Correct Deserialisation of Empty Strings
+
+Empty string values are now correctly deserialised (previously they
+were returned as `nil`).
+
+GH issue: [#91](https://github.com/clojurewerkz/cassaforte/issues/91).
+
+
 ## Changes between 2.0.0-rc3 and 2.0.0-rc4
 
 ### Cassandra Native Protocol v2 as Default
