@@ -1,3 +1,11 @@
+## Changes between 2.0.0-rc5 and 2.0.0
+
+There were no code changes in 2.0 GA. The project
+now includes Apache Software License 2.0 headers.
+License files for both APL2 and EPL1 are included
+in the distribution.
+
+
 ## Changes between 2.0.0-rc4 and 2.0.0-rc5
 
 ### Correct Deserialisation of Empty Strings
