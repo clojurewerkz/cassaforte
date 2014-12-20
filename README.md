@@ -63,9 +63,9 @@ With Maven:
 ## Supported Features
 
  * Connection to a single node or a cluster
- * _All_ CQL operations
- * CQL 3.0 queries, including queries with placeholders (?, a la JDBC)
- * Nice CQL query DSL for Clojure
+ * _All_ CQL 3.1 operations
+ * CQL queries, including prepared statements
+ * Nice query DSL for Clojure
  * Automatic deserialization of column names and values according to the schema
  * TLS connections, Kerberos authentication (DataStax Enterprise)
 
@@ -78,9 +78,7 @@ Cassaforte supports Clojure 1.6+.
 ## Supported Apache Cassandra Versions
 
 Cassaforte is built from the ground up for CQL.
-
-Cassaforte 1.3 and later versions target Cassandra 2.x.
-Cassaforte 1.2 targets Cassandra 1.2.x
+2.0 and later versions target Cassandra 2.x.
 
 
 ## Documentation & Examples
