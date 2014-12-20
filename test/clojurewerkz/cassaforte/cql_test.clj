@@ -25,22 +25,6 @@
        (is (= r (first (select s :users))))
        (truncate s :users))))
 
-  (deftest test-insert-batch-with-ttl
-    (th/test-combinations
-     (let [input [[{:name "Alex" :city "Munich" :age (int 19)} (using :ttl (int 350))]
-                  [{:name "Alex" :city "Munich" :age (int 19)} (using :ttl (int 350))]]]
-       (insert-batch s :users input)
-       (is (= (first (first input)) (first (select s :users))))
-       (truncate s :users))))
-
-  (deftest test-insert-batch-plain
-    (th/test-combinations
-     (let [input [{:name "Alex" :city "Munich" :age (int 19)}
-                  {:name "Alex" :city "Munich" :age (int 19)}]]
-       (insert-batch s :users input)
-       (is (= (first input) (first (select s :users))))
-       (truncate s :users))))
-
   (deftest test-update
     (testing "Simple updates"
       (th/test-combinations
@@ -97,14 +81,6 @@
          (let [x (first (select s t (where qc)))]
            (is (= "updated payload" (:payload x))))
          (truncate s t))))
-
-  (deftest test-insert-with-atomic-batch
-    (th/test-combinations
-     (cql/atomic-batch s (queries
-                          (hs/insert :users (values {:name "Alex" :city "Munich" :age (int 19)}))
-                          (hs/insert :users (values {:name "Fritz" :city "Hamburg" :age (int 28)}))))
-     (is (= "Munich" (-> (select s :users) first :city)))
-     (truncate s :users)))
 
   (deftest test-delete
     (th/test-combinations
