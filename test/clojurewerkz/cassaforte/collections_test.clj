@@ -111,6 +111,18 @@
          (is (= {"a" "b" "c" "d"} (get-in (select s :users_map)
                                           [0 :test_map])))
          (truncate s :users_map)))
+
+      (testing "Deleting"
+        (th/test-combinations
+         (insert s :users_map
+                 {:name "user1"
+                  :test_map {"a" "b" "c" "d"}})
+         (delete s :users_map
+                 (columns {:test_map "c"})
+                 (where [[= :name "user1"]]))
+         (is (= {"a" "b"} (get-in (select s :users_map)
+                                  [0 :test_map])))
+         (truncate s :users_map)))
       (drop-table s :users_map))
 
 
