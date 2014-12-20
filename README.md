@@ -21,12 +21,12 @@ guide.
 
 ## Project Maturity
 
-Cassaforte is a relatively young project. It took about a year to
-reach `1.0`. It is known to be used by dozens of companies, small and large.
+Cassaforte is a moderately mature project. Started in June 2012, it
+has reached `1.0` in July 2013 and `2.0` in December 2014.  It is
+known to be used by dozens of companies, small and large.
 
-Cassaforte is based on the now stable new [DataStax Java driver for Cassandra](https://github.com/datastax/java-driver)
-and [Hayt](https://github.com/mpenet/hayt), a fairly battle tested CQL
-generation DSL library.
+Cassaforte is based on the official [DataStax Java driver for Cassandra](https://github.com/datastax/java-driver)
+as well as [Hayt](https://github.com/mpenet/hayt), a battle tested CQL generation DSL library.
 
 
 
@@ -47,7 +47,7 @@ definition to your `pom.xml`:
 With Leiningen:
 
 ``` clojure
-[clojurewerkz/cassaforte "2.0.0-rc2"]
+[clojurewerkz/cassaforte "2.0.0"]
 ```
 
 With Maven:
@@ -56,7 +56,7 @@ With Maven:
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>2.0.0-rc2</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
