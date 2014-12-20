@@ -88,6 +88,7 @@ reached.
    :three ConsistencyLevel/THREE
    :quorum ConsistencyLevel/QUORUM
    :all ConsistencyLevel/ALL
+   :serial ConsistencyLevel/SERIAL
    :local-quorum ConsistencyLevel/LOCAL_QUORUM
    :each-quorum ConsistencyLevel/EACH_QUORUM})
 
