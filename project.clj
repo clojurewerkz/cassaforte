@@ -19,7 +19,7 @@
                          :plugins [[codox "0.8.10"]]
                          :dependencies [[com.codahale.metrics/metrics-core "3.0.2"]
                                         [org.xerial.snappy/snappy-java     "1.1.0.1"]
-                                        [org.clojure/tools.trace           "0.7.6"]
+                                        [org.clojure/tools.trace           "0.7.8"]
                                         [clj-time                          "0.9.0-beta1"]]}}
   :aliases        {"all" ["with-profile" "dev:dev,1.7:dev,master"]}
   :test-selectors {:focus   :focus
