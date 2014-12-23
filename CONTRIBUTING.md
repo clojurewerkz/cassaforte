@@ -1,11 +1,11 @@
 ## Pre-requisites
 
-The project uses [Leiningen 2](https://leiningen.org) and **does not** require Cassandra to be running
-locally (an embedded node is used for tests).
+The project uses [Leiningen 2](https://leiningen.org) and **does** require Cassandra 2.0+ to be running
+locally.
 
 Make sure you have Leiningen 2 installed and then run tests against all supported Clojure versions using
 
-    lein2 all do clean, javac, test
+    lein all do clean, javac, test
 
 ## Pull Requests
 
