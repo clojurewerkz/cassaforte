@@ -16,7 +16,8 @@
                                         "-Xmx2048m"
                                         "-javaagent:lib/jamm-0.2.5.jar"]
                          :resource-paths ["resources"]
-                         :plugins [[codox "0.8.10"]]
+                         :plugins [[codox           "0.8.10"]
+                                   [jonase/eastwood "0.2.1"]]
                          :dependencies [[com.codahale.metrics/metrics-core "3.0.2"]
                                         [org.xerial.snappy/snappy-java     "1.1.1.6"]
                                         [org.clojure/tools.trace           "0.7.8"]
