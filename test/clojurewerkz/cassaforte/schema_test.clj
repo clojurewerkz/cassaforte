@@ -58,7 +58,8 @@
                   (column-definitions {:name        :varchar
                                        :title       :varchar
                                        :birth_date  :timestamp
-                                       :primary-key [:name]}))
+                                       :primary-key [:name]})
+                  (if-not-exists))
 
     (let [td      (describe-table s "new_cql_keyspace" "people")
           columns (describe-columns s "new_cql_keyspace" "people")]
