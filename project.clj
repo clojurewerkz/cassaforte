@@ -1,5 +1,5 @@
 (defproject clojurewerkz/cassaforte "2.1.0-SNAPSHOT"
-  :min-lein-version "2.5.0"
+  :min-lein-version "2.5.1"
   :description "A Clojure client for Apache Cassandra"
   :url "http://clojurecassandra.info"
   :license {:name "Eclipse Public License"
