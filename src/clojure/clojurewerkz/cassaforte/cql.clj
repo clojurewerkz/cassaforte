@@ -38,8 +38,8 @@
 (defn drop-keyspace
   "Drops a keyspace: results in immediate, irreversible removal of an existing keyspace,
    including all column families in it, and all data contained in those column families."
-  [^Session session ks]
-  (execute- session [ks] q/drop-keyspace-query))
+  [^Session session ks & query-params]
+  (execute- session (cons ks query-params) q/drop-keyspace-query))
 
 (defn create-keyspace
   "Creates a new top-level keyspace. A keyspace is a namespace that
