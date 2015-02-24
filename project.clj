@@ -1,5 +1,5 @@
 (defproject clojurewerkz/cassaforte "2.1.0-SNAPSHOT"
-  :min-lein-version "2.5.0"
+  :min-lein-version "2.5.1"
   :description "A Clojure client for Apache Cassandra"
   :url "http://clojurecassandra.info"
   :license {:name "Eclipse Public License"
@@ -10,7 +10,7 @@
                  [com.datastax.cassandra/cassandra-driver-dse  "2.1.4"]]
   :source-paths      ["src/clojure"]
   :java-source-paths ["src/java"]
-  :profiles       {:1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha4"]]}
+  :profiles       {:1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha5"]]}
                    :master {:dependencies [[org.clojure/clojure "1.7.0-master-SNAPSHOT"]]}
                    :dev {:jvm-opts     ["-Dlog4j.configuration=log4j.properties.unit"
                                         "-Xmx2048m"
