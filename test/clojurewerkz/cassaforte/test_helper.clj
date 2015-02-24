@@ -6,9 +6,7 @@
 
 (defn with-temporary-keyspace
   [session f]
-  (try
-    (drop-keyspace session :new_cql_keyspace)
-    (catch Exception _ nil))
+  (drop-keyspace session :new_cql_keyspace (if-exists))
 
   (create-keyspace session "new_cql_keyspace"
                    (with {:replication
@@ -42,9 +40,7 @@
                                      :primary-key [[:device_id :date] :created_at]}))
 
   (f)
-  (try
-    (drop-keyspace session :new_cql_keyspace)
-    (catch Exception _ nil)))
+  (drop-keyspace session :new_cql_keyspace))
 
 (defmacro test-combinations
   "Run given queries in both plain and prepared modes."
