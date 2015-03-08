@@ -5,7 +5,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure                          "1.6.0"]
-                 [cc.qbits/hayt                                "2.0.0"]
+                 [cc.qbits/hayt                                "2.1.0"]
                  [com.datastax.cassandra/cassandra-driver-core "2.1.4"]
                  [com.datastax.cassandra/cassandra-driver-dse  "2.1.4"]]
   :source-paths      ["src/clojure"]
@@ -21,7 +21,7 @@
                          :dependencies [[com.codahale.metrics/metrics-core "3.0.2"]
                                         [org.xerial.snappy/snappy-java     "1.1.1.6"]
                                         [org.clojure/tools.trace           "0.7.8"]
-                                        [clj-time                          "0.9.0-beta1"]]}}
+                                        [clj-time                          "0.9.0"]]}}
   :aliases        {"all" ["with-profile" "dev:dev,1.7:dev,master"]}
   :test-selectors {:focus   :focus
                    :client  :client
