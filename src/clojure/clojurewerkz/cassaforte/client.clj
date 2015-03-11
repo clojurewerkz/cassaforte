@@ -31,7 +31,8 @@
            [com.google.common.util.concurrent Futures FutureCallback]
            java.net.URI
            [javax.net.ssl TrustManagerFactory KeyManagerFactory SSLContext]
-           [java.security KeyStore SecureRandom]))
+           [java.security KeyStore SecureRandom]
+           [com.datastax.driver.core.exceptions DriverException]))
 
 (declare build-ssl-options select-compression)
 
@@ -139,10 +140,21 @@
     :lz4 ProtocolOptions$Compression/LZ4
     ProtocolOptions$Compression/NONE))
 
+(defn- connect-or-close
+  "Attempts to connect to the cluster or closes the cluster and reraises any errors."
+  [^Cluster cluster & [keyspace]]
+  (try
+    (if keyspace
+      (.connect cluster keyspace)
+      (.connect cluster))
+    (catch DriverException e
+      (.close cluster)
+      (throw e))))
+
 (defn ^Session connect
   "Connects to the Cassandra cluster. Use `build-cluster` to build a cluster."
   ([hosts]
-   (.connect (build-cluster {:hosts hosts})))
+   (connect-or-close (build-cluster {:hosts hosts})))
   ([hosts keyspace-or-opts]
     (if (string? keyspace-or-opts)
       (connect hosts keyspace-or-opts {})
@@ -150,10 +162,10 @@
             opts (dissoc keyspace-or-opts :keyspace)]
         (if keyspace
           (connect hosts keyspace opts)
-          (.connect (-> opts (merge {:hosts hosts}) build-cluster))))))
+          (connect-or-close (-> opts (merge {:hosts hosts}) build-cluster))))))
   ([hosts keyspace opts]
    (let [c (build-cluster (merge opts {:hosts hosts}))]
-     (.connect c (name keyspace)))))
+     (connect-or-close c (name keyspace)))))
 
 (defn ^Session connect-with-uri
   ([^String uri]
