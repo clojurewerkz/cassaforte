@@ -1,5 +1,13 @@
 ## Changes between 2.0.0 and 2.1.0
 
+### Cluster Resource Leak Plugged
+
+The client now properly releases all resources
+associated with cluster connection(s) and state.
+
+Contributed by Philip Doctor (DataStax).
+
+
 ### DataStax Java Driver Update
 
 DataStax Java driver has been updated to `2.1.4`.
