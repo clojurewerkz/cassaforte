@@ -1,10 +1,8 @@
 language: clojure
 lein: lein2
 before_install:
-  - "ulimit -u 4096"
+  - "ulimit -u 4096 && pip install ccm"
 script: lein2 all do clean, javac, test
-services:
-  - cassandra
 jdk:
   - oraclejdk7
   - oraclejdk8
