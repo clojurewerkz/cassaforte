@@ -1,20 +1,23 @@
 (ns clojurewerkz.cassaforte.cql-test
   (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.test-helper :as th]
-            [clojurewerkz.cassaforte.client :as client]
-            [clojurewerkz.cassaforte.policies :as cp]
-            [clojurewerkz.cassaforte.cql :as cql :refer :all]
-            [clojurewerkz.cassaforte.uuids :as uuids]
-            [clojure.test :refer :all]
-            [clojurewerkz.cassaforte.query :refer :all]
-            [qbits.hayt.dsl.statement :as hs]
-            [qbits.hayt.dsl.clause :as hc]
-            [qbits.hayt.fns :as fns]
-            [clj-time.core :refer [seconds ago before? date-time] :as tc]
-            [clj-time.format :as tf]
-            [clj-time.coerce :as cc]))
+            [clojurewerkz.cassaforte.client      :as client]
+            [clojurewerkz.cassaforte.policies    :as cp]
+            [clojurewerkz.cassaforte.uuids       :as uuids]
 
-(let [s (client/connect ["127.0.0.1"])]
+            [qbits.hayt.fns                      :as fns]
+
+            [clj-time.format                     :as tf]
+            [clj-time.coerce                     :as cc]
+            [clj-time.core                       :refer [seconds ago before? date-time] :as tc]
+
+            [clojurewerkz.cassaforte.query       :refer :all]
+            [clojurewerkz.cassaforte.cql         :refer :all]
+
+            [clojure.test                        :refer :all]
+            ))
+
+(let [s (th/maybe-connect)]
   (use-fixtures :each (fn [f]
                         (th/with-temporary-keyspace s f)))
 

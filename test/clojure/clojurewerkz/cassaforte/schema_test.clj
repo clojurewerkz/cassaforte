@@ -18,7 +18,7 @@
   (f)
   (is (= to (f2))))
 
-(let [s (client/connect ["127.0.0.1"])]
+(let [s (th/maybe-connect)]
   (use-fixtures :each (fn [f]
                         (try
                           (drop-keyspace s "new_cql_keyspace")

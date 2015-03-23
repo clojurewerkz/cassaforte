@@ -14,7 +14,7 @@
             [clj-time.format :as tf]
             [clj-time.coerce :as cc]))
 
-(let [s (client/connect ["127.0.0.1"])]
+(let [s (th/maybe-connect)]
   (use-fixtures :each (fn [f]
                         (th/with-temporary-keyspace s f)))
 
