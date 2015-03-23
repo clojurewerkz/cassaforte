@@ -16,13 +16,6 @@
   "Debug utilities"
   (:require [clojure.stacktrace :refer :all]))
 
-(defmacro output-debug
-  "Prints debugging statements out."
-  [q]
-  `(do
-     (println "Built query: " ~q)
-     ~q))
-
 (defmacro catch-exceptions
   "Catches driver exceptions and outputs stacktrace."
   [& forms]
