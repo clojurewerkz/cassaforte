@@ -13,16 +13,16 @@
   :java-source-paths ["test/java" ]
   :profiles       {:1.7 {:dependencies [[org.clojure/clojure "1.7.0-alpha5"]]}
                    :master {:dependencies [[org.clojure/clojure "1.7.0-master-SNAPSHOT"]]}
-                   :dev {:jvm-opts     ["-Dlog4j.configuration=log4j.properties.unit"
-                                        "-Xmx2048m"
-                                        "-javaagent:lib/jamm-0.2.5.jar"]
+                   :dev {:jvm-opts       ["-Dlog4j.configuration=log4j.properties.unit"
+                                          "-Xmx2048m"
+                                          "-javaagent:lib/jamm-0.2.5.jar"]
                          :resource-paths ["resources"]
-                         :plugins [[codox           "0.8.10"]
-                                   [jonase/eastwood "0.2.1"]]
-                         :dependencies [[com.codahale.metrics/metrics-core "3.0.2"]
-                                        [org.xerial.snappy/snappy-java     "1.1.1.6"]
-                                        [org.clojure/tools.trace           "0.7.8"]
-                                        [clj-time                          "0.9.0"]]}}
+                         :plugins        [[codox           "0.8.10"]
+                                          [jonase/eastwood "0.2.1"]]
+                         :dependencies   [[com.codahale.metrics/metrics-core "3.0.2"]
+                                          [org.xerial.snappy/snappy-java     "1.1.1.6"]
+                                          [org.clojure/tools.trace           "0.7.8"]
+                                          [clj-time                          "0.9.0"]]}}
   :aliases        {"all" ["with-profile" "dev:dev,1.7:dev,master"]}
   :test-selectors {:focus   :focus
                    :client  :client
