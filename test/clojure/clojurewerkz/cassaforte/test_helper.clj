@@ -1,29 +1,12 @@
 (ns clojurewerkz.cassaforte.test-helper
   (:refer-clojure :exclude [update])
-  (:import [com.datastax.driver.core CCMBridge Cluster]
-           [com.datastax.driver.core.exceptions NoHostAvailableException])
   (:require [clojurewerkz.cassaforte.client :as client]
             [clojurewerkz.cassaforte.cql :refer :all]
             [clojurewerkz.cassaforte.query :refer :all]))
 
-(defonce ___lock (Object.))
-
-(defn maybe-connect
+(defn make-test-session
   []
-  (locking ___lock
-    (try
-      (let [session (client/connect ["127.0.0.1"])]
-        (.addShutdownHook (Runtime/getRuntime) (Thread. (fn [& _]
-                                                          (client/disconnect session))))
-        session)
-      (catch NoHostAvailableException e
-        (let [bridged-cluster (CCMBridge/buildCluster (int 1) (Cluster/builder))
-              session         (client/connect ["127.0.0.1"])]
-          (.addShutdownHook (Runtime/getRuntime) (Thread. (fn [& _]
-                                                            (client/disconnect session)
-                                                            (.discard bridged-cluster))))
-          session
-          )))))
+  (client/connect ["127.0.0.1"]))
 
 (defn with-temporary-keyspace
   [session f]

@@ -18,7 +18,7 @@
   (f)
   (is (= to (f2))))
 
-(let [s (th/maybe-connect)]
+(let [s (th/make-test-session)]
   (use-fixtures :each (fn [f]
                         (try
                           (drop-keyspace s "new_cql_keyspace")

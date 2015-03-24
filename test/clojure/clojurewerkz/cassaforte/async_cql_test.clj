@@ -7,7 +7,7 @@
             [clojure.test :refer :all]
             [clojurewerkz.cassaforte.query :refer :all]))
 
-(let [s (th/maybe-connect)]
+(let [s (th/make-test-session)]
   (use-fixtures :each (fn [f]
                         (th/with-temporary-keyspace s f)))
 

@@ -14,7 +14,7 @@
             [clj-time.format :as tf]
             [clj-time.coerce :as cc]))
 
-(let [s (th/maybe-connect)]
+(let [s (th/make-test-session)]
   (use-fixtures :each (fn [f]
                         (th/with-temporary-keyspace s f)))
 
