@@ -19,9 +19,7 @@
                          :resource-paths ["resources"]
                          :plugins [[codox           "0.8.10"]
                                    [jonase/eastwood "0.2.1"]]
-                         :dependencies [[org.testng/testng                 "6.8.8"]
-                                        [org.scassandra/java-client        "0.4.1"]
-                                        [com.codahale.metrics/metrics-core "3.0.2"]
+                         :dependencies [[com.codahale.metrics/metrics-core "3.0.2"]
                                         [org.xerial.snappy/snappy-java     "1.1.1.6"]
                                         [org.clojure/tools.trace           "0.7.8"]
                                         [clj-time                          "0.9.0"]]}}
