@@ -1,7 +1,7 @@
 language: clojure
 lein: lein2
 before_install:
-  - "ulimit -u 4096 && sudo pip install ccm"
+  - "ulimit -u 4096 && sudo pip install ccm && ccm create test -n 1 -s -i 127.0.0. -b -v 2.1.3 --config-dir=/tmp/ttt"
 script: lein2 all do clean, javac, test
 jdk:
   - oraclejdk7
