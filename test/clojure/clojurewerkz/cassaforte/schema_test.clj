@@ -1,10 +1,9 @@
 (ns clojurewerkz.cassaforte.schema-test
   (:refer-clojure :exclude [update])
-  (:require [clojurewerkz.cassaforte.client :as client]
-            [clojurewerkz.cassaforte.test-helper :as th]
-            [clojurewerkz.cassaforte.cql :refer :all]
-            [clojure.test :refer :all]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.test-helper :as th]
+            [clojurewerkz.cassaforte.cql         :refer :all]
+            [clojure.test                        :refer :all]
+            [clojurewerkz.cassaforte.query       :refer :all]))
 
 (defn changes-by
   [f f2 n]
