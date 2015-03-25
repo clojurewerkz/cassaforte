@@ -22,7 +22,7 @@
     (th/test-combinations
      (let [input [[{:name "Alex" :city "Munich" :age (int 19)} (using :ttl (int 350))]
                   [{:name "Alex" :city "Munich" :age (int 19)} (using :ttl (int 350))]]]
-       (insert-batch-async s :users input)
+       @(insert-batch-async s :users input)
        (is (= (first (first input)) (first @(select-async s :users))))
        (truncate s :users))))
 
@@ -64,8 +64,11 @@
 
   (deftest test-delete
     (th/test-combinations
-     (dotimes [i 3]
-       (insert-async s :users {:name (str "name" i) :age (int i)}))
+     (->> (range 0 3)
+          (map #(insert-async s :users {:name (str "name" %) :age (int %)}))
+          (map deref)
+          doall) ;; Better deref before couting, otherwise there's a good chance it's not even inserted yet
+
      (is (= 3 (perform-count s :users)))
      (delete-async s :users
                    (where {:name "name1"}))
