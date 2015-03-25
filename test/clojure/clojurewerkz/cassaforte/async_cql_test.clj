@@ -1,11 +1,11 @@
 (ns clojurewerkz.cassaforte.async-cql-test
   (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.test-helper :as th]
-            [clojurewerkz.cassaforte.client :as client]
-            [clojurewerkz.cassaforte.policies :as cp]
-            [clojurewerkz.cassaforte.cql :refer :all]
-            [clojure.test :refer :all]
-            [clojurewerkz.cassaforte.query :refer :all]))
+            [clojurewerkz.cassaforte.client      :as client]
+            [clojurewerkz.cassaforte.policies    :as cp]
+            [clojurewerkz.cassaforte.cql         :refer :all]
+            [clojure.test                        :refer :all]
+            [clojurewerkz.cassaforte.query       :refer :all]))
 
 (let [s (th/make-test-session)]
   (use-fixtures :each (fn [f]
@@ -93,7 +93,7 @@
 
   (deftest test-select-async-with-callbacks
     (th/test-combinations
-     (let [r {:name "Alex" :city "Munich" :age (int 19)}
+     (let [r       {:name "Alex" :city "Munich" :age (int 19)}
            success (fn [res]
                      (is (= r (first res)))
                      (truncate s :users))]
