@@ -70,24 +70,24 @@
           doall) ;; Better deref before couting, otherwise there's a good chance it's not even inserted yet
 
      (is (= 3 (perform-count s :users)))
-     (delete-async s :users
+     @(delete-async s :users
                    (where {:name "name1"}))
      (is (= 2 (perform-count s :users)))
      (truncate s :users))
 
     (th/test-combinations
-     (insert-async s :users {:name "name1" :age (int 19)})
-     (delete-async s :users
-                   (columns :age)
-                   (where {:name "name1"}))
+     @(insert-async s :users {:name "name1" :age (int 19)})
+     @(delete-async s :users
+                    (columns :age)
+                    (where {:name "name1"}))
      (is (nil? (:age @(select-async s :users))))
      (truncate s :users)))
 
   (deftest test-insert-with-timestamp
     (th/test-combinations
      (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-       (insert-async s :users r
-                     (using :timestamp (.getTime (java.util.Date.))))
+       @(insert-async s :users r
+                      (using :timestamp (.getTime (java.util.Date.))))
        (is (= r (first @(select-async s :users))))
        (truncate s :users))))
 
@@ -95,7 +95,6 @@
     (th/test-combinations
      (let [r       {:name "Alex" :city "Munich" :age (int 19)}
            success (fn [res]
-                     (is (= r (first res)))
-                     (truncate s :users))]
+                     (is (= r (first res))))]
        (is (= [] @(insert-async s :users r)))
        (client/set-callbacks (select-async s :users) {:success success})))))
