@@ -1,13 +1,11 @@
 language: clojure
 lein: lein2
 before_install:
-  - "ulimit -u 4096"
-script:
-  - jdk_switcher use oraclejdk7
-  - make start_one_node_cluster
-  - lein2 all do clean, test
-  - jdk_switcher use oraclejdk8
-  - lein2 all do clean, test
+  - "ulimit -u 4096 && make start_one_node_cluster"
+script: lein2 all do clean, test
+jdk:
+  - oraclejdk7
+  - oraclejdk8
 branches:
   only:
     - master
