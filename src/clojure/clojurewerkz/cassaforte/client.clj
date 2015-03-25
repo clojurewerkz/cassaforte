@@ -159,7 +159,7 @@
     (if (string? keyspace-or-opts)
       (connect hosts keyspace-or-opts {})
       (let [keyspace (:keyspace keyspace-or-opts)
-            opts (dissoc keyspace-or-opts :keyspace)]
+            opts     (dissoc keyspace-or-opts :keyspace)]
         (if keyspace
           (connect hosts keyspace opts)
           (connect-or-close (-> opts (merge {:hosts hosts}) build-cluster))))))
