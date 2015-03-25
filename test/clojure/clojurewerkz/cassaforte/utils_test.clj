@@ -1,11 +1,11 @@
 (ns clojurewerkz.cassaforte.utils-test
   (:refer-clojure :exclude [update])
-  (:require [clojurewerkz.cassaforte.client :as client]
+  (:require [clojurewerkz.cassaforte.client      :as client]
             [clojurewerkz.cassaforte.test-helper :as th]
-            [clojurewerkz.cassaforte.cql :refer :all]
-            [clojure.test :refer :all]
-            [clojurewerkz.cassaforte.query :refer :all]
-            [clojurewerkz.cassaforte.utils :refer :all]))
+            [clojurewerkz.cassaforte.cql         :refer :all]
+            [clojure.test                        :refer :all]
+            [clojurewerkz.cassaforte.query       :refer :all]
+            [clojurewerkz.cassaforte.utils       :refer :all]))
 
 (let [s (th/make-test-session)]
   (use-fixtures :each (fn [f]
