@@ -40,12 +40,12 @@
                                        :releases {:checksum :fail :update :always}}}
   :global-vars {*warn-on-reflection* true}
   :pedantic :warn
-  :codox {:src-dir-uri "https://github.com/clojurewerkz/cassaforte/blob/master/"
-          :sources ["src/clojure/"]
+  :codox {:src-dir-uri               "https://github.com/clojurewerkz/cassaforte/blob/master/"
+          :sources                   ["src/clojure/"]
           :src-linenum-anchor-prefix "L"
-          :exclude [clojurewerkz.cassaforte.conversion
-                    clojurewerkz.cassaforte.aliases
-                    clojurewerkz.cassaforte.metrics
-                    clojurewerkz.cassaforte.debug
-                    clojurewerkz.cassaforte.bytes]
-          :output-dir "doc/api"})
+          :exclude                   [clojurewerkz.cassaforte.conversion
+                                      clojurewerkz.cassaforte.aliases
+                                      clojurewerkz.cassaforte.metrics
+                                      clojurewerkz.cassaforte.debug
+                                      clojurewerkz.cassaforte.bytes]
+          :output-dir                "doc/api"})
