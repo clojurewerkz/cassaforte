@@ -16,8 +16,8 @@
   "Main namespace for working with CQL, prepared statements. Convenience functions
    for key operations built on top of CQL."
   (:refer-clojure :exclude [update])
-  (:require [qbits.hayt.cql :as hayt]
-            [clojurewerkz.cassaforte.query :as q]
+  (:require [qbits.hayt.cql                 :as hayt]
+            [clojurewerkz.cassaforte.query  :as q]
             [clojurewerkz.cassaforte.client :as cc])
   (:import com.datastax.driver.core.Session))
 
