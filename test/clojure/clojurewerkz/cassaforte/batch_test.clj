@@ -5,11 +5,14 @@
             [clojurewerkz.cassaforte.policies :as cp]
             [clojurewerkz.cassaforte.cql :as cql :refer :all]
             [clojurewerkz.cassaforte.uuids :as uuids]
-            [clojure.test :refer :all]
             [clojurewerkz.cassaforte.query :refer :all]
+
+            [clojure.test :refer :all]
+
             [qbits.hayt.dsl.statement :as hs]
             [qbits.hayt.dsl.clause :as hc]
             [qbits.hayt.fns :as fns]
+
             [clj-time.core :refer [seconds ago before? date-time] :as tc]
             [clj-time.format :as tf]
             [clj-time.coerce :as cc]))
