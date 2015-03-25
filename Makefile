@@ -1,6 +1,8 @@
-CCM_DIR      := ./ccm
-CONFIG_DIR   := /tmp/cassaforte-data
-CLUSTER_NAME := cassaforte_cluster
+CCM_DIR           := ./ccm
+CONFIG_DIR        := /tmp/cassaforte-data
+CLUSTER_NAME      := cassaforte_cluster
+CASSANDRA_VERSION := binary:2.1.3
+
 maybe_install_ccm:
 	test -s ccm || { git clone https://github.com/pcmanus/ccm.git $(CCM_DIR) ; cd $(CCM_DIR) ; sudo ./setup.py install ; }
 
@@ -13,10 +15,10 @@ prepare_aliases:
 	sudo ifconfig lo0 alias 127.0.0.2 up
 
 start_one_node_cluster: maybe_install_ccm prepare_tmp_dir
-	ccm create $(CLUSTER_NAME) -n 1 -s -i 127.0.0. -b -v 2.1.3 --config-dir=$(CONFIG_DIR)
+	ccm create $(CLUSTER_NAME) -n 1 -s -i 127.0.0. -b -v $(CASSANDRA_VERSION) --config-dir=$(CONFIG_DIR)
 
 start_three_node_cluster: maybe_install_ccm prepare_tmp_dir
-	ccm create $(CLUSTER_NAME) -n 3 -s -i 127.0.0. -b -v 2.1.3 --config-dir=$(CONFIG_DIR)
+	ccm create $(CLUSTER_NAME) -n 3 -s -i 127.0.0. -b -v $(CASSANDRA_VERSION) --config-dir=$(CONFIG_DIR)
 
 .PHONY: clean
 stop_cluster:
