@@ -20,10 +20,10 @@
    * tuning load balancing, retries, reconnection strategies and consistency settings
    * preparing and executing queries constructed via DSL
    * working with executing results"
-  (:require [clojure.java.io :as io]
-            [clojurewerkz.cassaforte.policies :as cp]
+  (:require [clojure.java.io                    :as io]
+            [clojurewerkz.cassaforte.policies   :as cp]
             [clojurewerkz.cassaforte.conversion :as conv]
-            [qbits.hayt.cql :as hayt])
+            [qbits.hayt.cql                     :as hayt])
   (:import [com.datastax.driver.core Statement ResultSet ResultSetFuture Host Session Cluster
             Cluster$Builder SimpleStatement PreparedStatement HostDistance PoolingOptions
             SSLOptions ProtocolOptions$Compression]
