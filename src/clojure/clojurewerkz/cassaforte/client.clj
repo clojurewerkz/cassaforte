@@ -118,12 +118,12 @@
 
 (defn- ^SSLOptions build-ssl-options
   [{:keys [keystore-path keystore-password cipher-suites]}]
-  (let [keystore-stream (io/input-stream keystore-path)
-        keystore (KeyStore/getInstance "JKS")
-        ssl-context (SSLContext/getInstance "SSL")
-        keymanager (KeyManagerFactory/getInstance (KeyManagerFactory/getDefaultAlgorithm))
-        trustmanager (TrustManagerFactory/getInstance (TrustManagerFactory/getDefaultAlgorithm))
-        password (char-array keystore-password)
+  (let [keystore-stream   (io/input-stream keystore-path)
+        keystore          (KeyStore/getInstance "JKS")
+        ssl-context       (SSLContext/getInstance "SSL")
+        keymanager        (KeyManagerFactory/getInstance (KeyManagerFactory/getDefaultAlgorithm))
+        trustmanager      (TrustManagerFactory/getInstance (TrustManagerFactory/getDefaultAlgorithm))
+        password          (char-array keystore-password)
         ssl-cipher-suites (if cipher-suites
                             (into-array String cipher-suites)
                             SSLOptions/DEFAULT_SSL_CIPHER_SUITES)]
