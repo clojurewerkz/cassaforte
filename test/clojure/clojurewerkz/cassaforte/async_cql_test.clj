@@ -14,7 +14,7 @@
   (deftest test-insert
     (th/test-combinations
      (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-       (insert-async s :users r)
+       @(insert-async s :users r)
        (is (= r (first @(select-async s :users))))
        (truncate s :users))))
 
@@ -30,7 +30,7 @@
     (th/test-combinations
      (let [input [{:name "Alex" :city "Munich" :age (int 19)}
                   {:name "Alex" :city "Munich" :age (int 19)}]]
-       (insert-batch-async s :users input)
+       @(insert-batch-async s :users input)
        (is (= (first input) (first @(select-async s :users))))
        (truncate s :users))))
 
@@ -38,7 +38,7 @@
     (testing "Simple updates"
       (th/test-combinations
        (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-         (insert-async s :users r)
+         @(insert-async s :users r)
          (is (= r (first @(select-async s :users))))
          (update s :users
                  {:age (int 25)}
