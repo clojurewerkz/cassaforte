@@ -96,15 +96,15 @@ reached.
 (def ^:dynamic *consistency-level* :one)
 
 (def consistency-levels
-  {:any ConsistencyLevel/ANY
-   :one ConsistencyLevel/ONE
-   :two ConsistencyLevel/TWO
-   :three ConsistencyLevel/THREE
-   :quorum ConsistencyLevel/QUORUM
-   :all ConsistencyLevel/ALL
-   :serial ConsistencyLevel/SERIAL
+  {:any          ConsistencyLevel/ANY
+   :one          ConsistencyLevel/ONE
+   :two          ConsistencyLevel/TWO
+   :three        ConsistencyLevel/THREE
+   :quorum       ConsistencyLevel/QUORUM
+   :all          ConsistencyLevel/ALL
+   :serial       ConsistencyLevel/SERIAL
    :local-quorum ConsistencyLevel/LOCAL_QUORUM
-   :each-quorum ConsistencyLevel/EACH_QUORUM})
+   :each-quorum  ConsistencyLevel/EACH_QUORUM})
 
 (defn consistency-level
   [cl]
