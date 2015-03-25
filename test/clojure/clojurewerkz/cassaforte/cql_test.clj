@@ -61,9 +61,9 @@
     (let [t   :events_by_device_id_and_date
           fmt (tf/formatter "yyyy-MM-dd")
           id  "device-000000001"
-          qc [[=  :device_id id]
-              [=  :date "2014-11-13"]
-              [=  :created_at (uuids/start-of (cc/to-long (date-time 2014 11 13 12)))]]]
+          qc  [[=  :device_id id]
+               [=  :date "2014-11-13"]
+               [=  :created_at (uuids/start-of (cc/to-long (date-time 2014 11 13 12)))]]]
       (testing "Bulk update"
         (truncate s t)
          (is (= 0 (perform-count s t)))
