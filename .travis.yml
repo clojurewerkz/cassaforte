@@ -2,13 +2,7 @@ language: clojure
 lein: lein2
 before_install:
   - "ulimit -u 4096"
-script:
-  - make start_one_node_cluster
-  - lein2 all do clean, test
-  - make stop_cluster
-  - make start_one_node_cluster CASSANDRA_VERSION=binary:2.0.13
-  - lein2 test
-  - make stop_cluster
+script: ./bin/ci.sh
 jdk:
   - oraclejdk7
   - oraclejdk8
