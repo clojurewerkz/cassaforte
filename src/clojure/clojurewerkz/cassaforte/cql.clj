@@ -16,20 +16,35 @@
   "Main namespace for working with CQL, prepared statements. Convenience functions
    for key operations built on top of CQL."
   (:refer-clojure :exclude [update])
-  (:require [qbits.hayt.cql                 :as hayt]
-            [clojurewerkz.cassaforte.query  :as q]
+  (:require [clojurewerkz.cassaforte.query  :as q]
+            [qbits.hayt.cql                 :as hayt]
             [clojurewerkz.cassaforte.client :as cc])
   (:import com.datastax.driver.core.Session))
 
+(defn ^:private compile-query-
+  "Compiles query from given `builder` and `query-params`"
+  [query-params builder]
+  (apply builder (flatten query-params)))
+
+(defn ^:private render-query-
+  "Renders compiled query"
+  [query-params]
+  (let [renderer (if hayt/*prepared-statement*
+                   hayt/->prepared
+                   hayt/->raw)]
+    (renderer query-params)))
+
 (defn ^:private execute-
   [^Session session query-params builder]
-  (let [rendered-query (cc/render-query (cc/compile-query query-params builder))]
-    (cc/execute session rendered-query {:prepared hayt/*prepared-statement*})))
+  (let [rendered-query (render-query- (compile-query- query-params builder))]
+    (cc/execute rendered-query session)
+    ))
 
 (defn ^:private execute-async-
   [^Session session query-params builder]
-  (let [rendered-query (cc/render-query (cc/compile-query query-params builder))]
-    (cc/execute-async session rendered-query {:prepared hayt/*prepared-statement*})))
+  (comment ;;; doesnt work yet
+    (let [rendered-query (render-query- (compile-query- query-params builder))]
+      (cc/execute-async rendered-query session))))
 
 ;;
 ;; Schema operations
@@ -147,7 +162,7 @@
        (map (comp (partial apply (partial q/insert-query table)) flatten vector))
        (apply q/queries)
        q/batch-query
-       cc/render-query))
+       render-query-))
 
 (defn insert-batch
   "Performs a batch insert (inserts multiple records into a table at the same time).
@@ -155,19 +170,19 @@
   and the clauses in a vector"
   [^Session session table records]
   (let [query (batch-query-from table records)]
-    (cc/execute session query {:prepared hayt/*prepared-statement*})))
+    (execute- session query)))
 
 (defn insert-batch-async
   "Same as insert-batch but returns a future"
   [^Session session table records]
   (let [query (batch-query-from table records)]
-    (cc/execute-async session query {:prepared hayt/*prepared-statement*})))
+    (execute-async- session query)))
 
 (defn atomic-batch
   "Executes a group of operations as an atomic batch (BEGIN BATCH ... APPLY BATCH)"
   [^Session session & clauses]
-  (let [q (cc/render-query (cc/compile-query clauses q/batch-query))]
-    (cc/execute session q {:prepared hayt/*prepared-statement*})))
+  (let [q (render-query- (compile-query- clauses q/batch-query))]
+    (execute- session q)))
 
 (defn update
   "Updates one or more columns for a given row in a table. The `where` clause
