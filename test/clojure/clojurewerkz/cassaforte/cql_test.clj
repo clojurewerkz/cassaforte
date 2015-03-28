@@ -38,7 +38,7 @@
                 r        {:name "Alex" :city "Munich" :age (int 19)}]
             (println
              (client/execute
-              (client/bind prepared (to-array ["Alex" "Munich" (int 19)]))
+              (client/bind prepared ["Alex" "Munich" (int 19)])
               s))
             (is (= r (first (select s :users))))
             )
