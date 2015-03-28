@@ -17,6 +17,7 @@
    that `cql` namespace is too limiting for you."
   (:require [qbits.hayt.dsl.statement        :as statement]
             [qbits.hayt.dsl.clause           :as clause]
+            [qbits.hayt.utils                :as utils]
             [clojurewerkz.cassaforte.aliases :refer :all]))
 
 (doseq [module '(dsl.clause fns utils)]
