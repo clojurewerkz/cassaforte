@@ -1,5 +1,23 @@
 ## Changes between 2.0.0 and 2.1.0
 
+### clojurewerkz.cassanforte.cql/copy-table
+
+`clojurewerkz.cassanforte.cql/copy-table` is a new function that
+copies all rows from one table to another, applying a transforming
+function (`clojure.core/identity` by default):
+
+``` clojure
+(require '[clojurewerkz.cassanforte.cql :as cql])
+
+;; copies all rows from people to people2, using clojure.core/identity
+;; to transform rows, 16384 rows at a time
+(cql/copy-table session "people" "people2" :id identity 16384)
+```
+
+This function is primarily helpful when migration Cassandra
+schema but can also be useful in test environments.
+
+
 ### Cluster Resource Leak Plugged
 
 The client now properly releases all resources
