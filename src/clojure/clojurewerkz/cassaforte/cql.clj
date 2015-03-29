@@ -26,18 +26,10 @@
   [query-params builder]
   (apply builder (flatten query-params)))
 
-(defn ^:private render-query-
-  "Renders compiled query"
-  [query-params]
-  (let [renderer (if hayt/*prepared-statement*
-                   hayt/->prepared
-                   hayt/->raw)]
-    (renderer query-params)))
-
 (defn ^:private execute-
   [^Session session query-params builder]
-  (let [rendered-query (render-query- (compile-query- query-params builder))]
-    (cc/execute rendered-query session)
+  (let [compiled-query (compile-query- query-params builder)]
+    (cc/execute session compiled-query)
     ))
 
 (defn ^:private execute-async-
@@ -161,8 +153,7 @@
   (->> records
        (map (comp (partial apply (partial q/insert-query table)) flatten vector))
        (apply q/queries)
-       q/batch-query
-       render-query-))
+       q/batch-query))
 
 (defn insert-batch
   "Performs a batch insert (inserts multiple records into a table at the same time).
@@ -181,7 +172,7 @@
 (defn atomic-batch
   "Executes a group of operations as an atomic batch (BEGIN BATCH ... APPLY BATCH)"
   [^Session session & clauses]
-  (let [q (render-query- (compile-query- clauses q/batch-query))]
+  (let [q (compile-query- clauses q/batch-query)]
     (execute- session q)))
 
 (defn update
