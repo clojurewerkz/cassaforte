@@ -243,35 +243,36 @@
   ([^Session session query]
      (execute-async session query {}))
   ([^Session session query {:keys [prepared]}]
-     (let [^Statement statement (statement-for session query prepared)
-           ^ResultSetFuture fut (.executeAsync session statement)]
-       (future (conv/to-clj (.getUninterruptibly fut))))))
+     (comment
+       (let [^Statement statement (statement-for session query prepared)
+             ^ResultSetFuture fut (.executeAsync session statement)]
+         (future (conv/to-clj (.getUninterruptibly fut)))))))
 
-(defprotocol Execute
-  (execute [query session]))
+(defprotocol BuildStatement
+  (build-statement [query]))
 
-(extend-protocol Execute
+(extend-protocol BuildStatement
   String
-  (execute [query ^Session session]
-    (execute (SimpleStatement. query) session))
+  (build-statement [query]
+    (build-statement (SimpleStatement. query)))
 
-  clojure.lang.PersistentVector
-  (execute [[^String query _] ^Session session]
-    ;; Works only in combination with (prepare ...)
-    (.prepare session query))
+  clojure.lang.IPersistentMap
+  (build-statement [raw-statement]
+    (build-statement (hayt/->raw raw-statement)))
 
-  BoundStatement
-  (execute [bound-statement ^Session session]
-    (-> session
-        (.executeAsync bound-statement)
-        (.getUninterruptibly)
-        (conv/to-clj)))
-  SimpleStatement
-  (execute [simple-statement ^Session session]
-    (-> session
-        (.executeAsync simple-statement)
-        (.getUninterruptibly)
-        (conv/to-clj))))
+  Statement
+  (build-statement [s]
+    s))
+
+(defn execute
+  [^Session session query]
+  (if hayt/*prepared-statement*
+    (let [^String q (hayt/->raw query)]
+      (.prepare session q))
+
+    (let [^Statement built-statement (build-statement query)]
+      (-> (.execute session built-statement)
+          (conv/to-clj)))))
 
 (comment
   (defn execute
