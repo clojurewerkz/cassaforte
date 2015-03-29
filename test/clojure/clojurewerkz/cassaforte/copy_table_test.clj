@@ -15,6 +15,7 @@
       (dotimes [i n]
         (insert s :users {:name (str "name_" i) :city (str "city" i) :age (int i)}))
 
+      (truncate s :users2)
       (is (= 0 (perform-count s :users2)))
       (copy-table s :users :users2 :name identity 16384)
       (is (= n (perform-count s :users2)))
