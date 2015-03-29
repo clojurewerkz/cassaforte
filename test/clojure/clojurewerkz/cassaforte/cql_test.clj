@@ -17,34 +17,30 @@
             [clojure.test                        :refer :all]
             ))
 
+
+(use-fixtures :each th/with-temporary-keyspace)
+
+
+
 (let [s (th/make-test-session)]
-  (use-fixtures :each (fn [f]
-                        (th/with-temporary-keyspace s f)))
 
   (deftest test-insert
-    (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+    (let [s (th/make-test-session)
+          r {:name "Alex" :city "Munich" :age (int 19)}]
       (insert s :users r)
       (is (= r (first (select s :users))))
       (truncate s :users)))
 
   (deftest test-insert-prepare
-    (let [s        (th/make-test-session)]
-      (th/with-temporary-keyspace s
-        (fn []
-          (let [prepared (client/prepare (insert s :users
-                                                 {:name ?
-                                                  :city ?
-                                                  :age  ?}))
-                r        {:name "Alex" :city "Munich" :age (int 19)}]
-            (println
-             (client/execute
-              (client/bind prepared ["Alex" "Munich" (int 19)])
-              s))
-            (is (= r (first (select s :users))))
-            )
-          ))
-
-      ))
+    (let [prepared (client/prepare (insert s :users
+                                           {:name ?
+                                            :city ?
+                                            :age  ?}))
+          r        {:name "Alex" :city "Munich" :age (int 19)}]
+      (client/execute s
+                      (client/bind prepared ["Alex" "Munich" (int 19)])
+                      )
+      (is (= r (first (select s :users))))))
 
   (deftest test-update
     (testing "Simple updates"
@@ -103,21 +99,21 @@
 
   (deftest test-delete
     (testing "Delete whole row"
-     (dotimes [i 3]
-       (insert s :users {:name (str "name" i) :age (int i)}))
-     (is (= 3 (perform-count s :users)))
-     (delete s :users
-             (where {:name "name1"}))
-     (is (= 2 (perform-count s :users)))
-     (truncate s :users))
+      (dotimes [i 3]
+        (insert s :users {:name (str "name" i) :age (int i)}))
+      (is (= 3 (perform-count s :users)))
+      (delete s :users
+              (where {:name "name1"}))
+      (is (= 2 (perform-count s :users)))
+      (truncate s :users))
 
     (testing "Delete a column"
-     (insert s :users {:name "name1" :age (int 19)})
-     (delete s :users
-             (columns :age)
-             (where {:name "name1"}))
-     (is (nil? (:age (select s :users))))
-     (truncate s :users)))
+      (insert s :users {:name "name1" :age (int 19)})
+      (delete s :users
+              (columns :age)
+              (where {:name "name1"}))
+      (is (nil? (:age (select s :users))))
+      (truncate s :users)))
 
   (deftest test-insert-with-timestamp
     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
