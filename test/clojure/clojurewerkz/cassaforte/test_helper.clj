@@ -24,6 +24,12 @@
                                      :age  :int
                                      :city :varchar
                                      :primary-key [:name]}))
+  ;; same as users, used for copying data and such
+  (create-table session :users2
+                (column-definitions {:name :varchar
+                                     :age  :int
+                                     :city :varchar
+                                     :primary-key [:name]}))
 
   (create-table session :user_posts
                 (column-definitions {:username :varchar
