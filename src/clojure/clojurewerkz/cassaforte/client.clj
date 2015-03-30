@@ -28,7 +28,7 @@
             Cluster$Builder SimpleStatement PreparedStatement BoundStatement HostDistance PoolingOptions
             SSLOptions ProtocolOptions$Compression]
            [com.datastax.driver.auth DseAuthProvider]
-           [com.google.common.util.concurrent Futures FutureCallback]
+           [com.google.common.util.concurrent ListenableFuture Futures FutureCallback]
            java.net.URI
            [javax.net.ssl TrustManagerFactory KeyManagerFactory SSLContext]
            [java.security KeyStore SecureRandom]
@@ -247,6 +247,23 @@
   (build-statement [s]
     s))
 
+(defprotocol Listenable
+  (add-listener [_ runnable executor]))
+(deftype AsyncResult [fut]
+  clojure.lang.IDeref
+  (deref [_]
+    (conv/to-clj @fut))
+
+  clojure.lang.IBlockingDeref
+  (deref [_ time-period time-unit]
+    (conv/to-clj (deref fut time-period time-unit)))
+
+  Listenable
+  (add-listener [_ runnable executor]
+    (.addListener fut runnable executor)
+    )
+  )
+
 (defn execute
   [^Session session query]
   (if hayt/*prepared-statement*
@@ -254,16 +271,7 @@
       (.prepare session q))
     (let [^Statement built-statement (build-statement query)]
       (if *async*
-        (let [async-result (.executeAsync session built-statement)]
-          (proxy [clojure.lang.IDeref
-                  clojure.lang.IBlockingDeref] []
-            (deref
-              ([]
-                 (conv/to-clj @async-result))
-              ([time-period time-unit]
-                 (conv/to-clj (deref async-result time-period time-unit))))
-            ))
-
+        (AsyncResult. (.executeAsync session built-statement))
         (-> (.execute session built-statement)
             (conv/to-clj))
         ))))
@@ -294,27 +302,3 @@
 ;; defn get-keyspace
 ;; defn get-keyspaces
 ;; defn rebuild-schema
-
-;;
-;; Result Handling
-;;
-
-(defn set-callbacks
-  "Set callbacks on a result future"
-  [^ResultSetFuture fut {:keys [success failure]}]
-  {:pre [(not (nil? success))]}
-  (future (when-let [res @fut]
-            (if (= (type res) Exception)
-              (if (nil? failure)
-                (throw res)
-                (failure res))
-              (success res))))
-  fut)
-
-(defn get-result
-  "Get result from Future. Optional `timeout-ms` should be specified in milliseconds."
-  ([^ResultSetFuture future]
-     (conv/to-clj (.get future)))
-  ([^ResultSetFuture future ^long timeout-ms]
-     (conv/to-clj (.get future timeout-ms
-                        java.util.concurrent.TimeUnit/MILLISECONDS))))
