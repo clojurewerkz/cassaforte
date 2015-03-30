@@ -193,6 +193,14 @@
              hayt/*param-stack*        (atom [])]
      (do ~body)))
 
+(def ^:dynamic *async* false)
+
+(defmacro async
+  "Prepare a single statement, return prepared statement"
+  [body]
+  `(binding [*async* true]
+     (do ~body)))
+
 (defmacro with-fetch-size
   "Temporarily alters fetch size."
   [^Integer n# & body]
@@ -223,20 +231,6 @@
   [^PreparedStatement statement values]
   (.bind statement (to-array values)))
 
-(defn ^ResultSetFuture execute-async
-  "Executes a pre-built query and returns a future.
-
-   Options
-     * prepared - whether the query should or should not be executed as prepared, always passed
-       explicitly, because `execute` is considered to be a low-level function."
-  ([^Session session query]
-     (execute-async session query {}))
-  ([^Session session query {:keys [prepared]}]
-     (comment
-       (let [^Statement statement (statement-for session query prepared)
-             ^ResultSetFuture fut (.executeAsync session statement)]
-         (future (conv/to-clj (.getUninterruptibly fut)))))))
-
 (defprotocol BuildStatement
   (build-statement [query]))
 
@@ -258,10 +252,21 @@
   (if hayt/*prepared-statement*
     (let [^String q (hayt/->raw query)]
       (.prepare session q))
-
     (let [^Statement built-statement (build-statement query)]
-      (-> (.execute session built-statement)
-          (conv/to-clj)))))
+      (if *async*
+        (let [async-result (.executeAsync session built-statement)]
+          (proxy [clojure.lang.IDeref
+                  clojure.lang.IBlockingDeref] []
+            (deref
+              ([]
+                 (conv/to-clj @async-result))
+              ([time-period time-unit]
+                 (conv/to-clj (deref async-result time-period time-unit))))
+            ))
+
+        (-> (.execute session built-statement)
+            (conv/to-clj))
+        ))))
 
 (defn ^String export-schema
   "Exports the schema as a string"
