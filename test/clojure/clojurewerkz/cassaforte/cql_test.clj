@@ -20,8 +20,6 @@
 
 (use-fixtures :each th/with-temporary-keyspace)
 
-
-
 (let [s (th/make-test-session)]
 
   (deftest test-insert
@@ -38,8 +36,7 @@
                                             :age  ?}))
           r        {:name "Alex" :city "Munich" :age (int 19)}]
       (client/execute s
-                      (client/bind prepared ["Alex" "Munich" (int 19)])
-                      )
+                      (client/bind prepared ["Alex" "Munich" (int 19)]))
       (is (= r (first (select s :users))))))
 
   (deftest test-update
