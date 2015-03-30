@@ -6,10 +6,9 @@
             [clojure.test :refer :all]
             [clojurewerkz.cassaforte.query :refer :all]))
 
-(let [s (client/connect ["127.0.0.1"])]
-  (use-fixtures :each (fn [f]
-                        (th/with-temporary-keyspace s f)))
-
+(use-fixtures :each (fn [f]
+                      (th/with-temporary-keyspace f)))
+(let [s (th/make-test-session)]
   (deftest test-iterate-table-with-natural-iteration-termination
     (let [n 100000]
       (dotimes [i n]
