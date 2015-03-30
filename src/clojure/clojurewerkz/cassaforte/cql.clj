@@ -268,16 +268,24 @@
 (defn get-one
   "Executes query to get exactly one result. Does not add `limit` clause to the query, this is
    a convenience function only. Please use `limit` clause if you execute queries that potentially
-   return more than a single result."
+   return more than a single result.
+
+   Doesn't work as a prepared query."
   [^Session session & query-params]
-  (first (execute- session query-params q/select-query)))
+  (assert (not hayt/*prepared-statement*) "get-one query can't be executed as a prepared query")
+  (first
+   (cc/execute session
+               (compile-query- q/select-query query-params))))
 
 (defn perform-count
   "Helper function to perform count on a table with given query. Count queries are slow in Cassandra,
    in order to get a rough idea of how many items you have in certain table, use `nodetool cfstats`,
    for more complex cases, you can wither do a full table scan or perform a count with this function,
-   please note that it does not have any performance guarantees and is potentially expensive."
+   please note that it does not have any performance guarantees and is potentially expensive.
+
+   Doesn't work as a prepared query."
   [^Session session table & query-params]
+  (assert (not hayt/*prepared-statement*) "Count query can't be executed as a prepared query")
   (:count
    (first
     (select session table
@@ -292,6 +300,7 @@
 (defn describe-keyspace
   "Returns a keyspace description, taken from `system.schema_keyspaces`."
   [^Session session ks]
+  (assert (not hayt/*prepared-statement*) "Describe Keyspace query can't be executed as a prepared query")
   (first
    (select session :system.schema_keyspaces
            (q/where {:keyspace_name (name ks)}))))
@@ -299,6 +308,7 @@
 (defn describe-table
   "Returns a table description, taken from `system.schema_columnfamilies`."
   [^Session session ks table]
+  (assert (not hayt/*prepared-statement*) "Describe Table query can't be executed as a prepared query")
   (first
    (select session :system.schema_columnfamilies
            (q/where {:keyspace_name (name ks)
@@ -307,6 +317,7 @@
 (defn describe-columns
   "Returns table columns description, taken from `system.schema_columns`."
   [^Session session ks table]
+  (assert (not hayt/*prepared-statement*) "Describe Columns query can't be executed as a prepared query")
   (select session :system.schema_columns
           (q/where {:keyspace_name (name ks)
                     :columnfamily_name (name table)})))
