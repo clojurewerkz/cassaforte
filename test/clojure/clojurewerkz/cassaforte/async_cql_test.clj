@@ -105,11 +105,4 @@
       @(insert-async s :users r
                      (using :timestamp (.getTime (java.util.Date.))))
       (is (= r (first @(select-async s :users))))
-      (truncate s :users)))
-
-  (deftest test-select-async-with-callbacks
-    (let [r       {:name "Alex" :city "Munich" :age (int 19)}
-          success (fn [res]
-                    (is (= r (first res))))]
-      (is (= [] @(insert-async s :users r)))
-      (client/set-callbacks (select-async s :users) {:success success}))))
+      (truncate s :users))))
