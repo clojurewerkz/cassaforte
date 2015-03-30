@@ -51,10 +51,3 @@
 
     (f)
     (drop-keyspace session :new_cql_keyspace)))
-
-(defmacro test-combinations
-  "Run given queries in both plain and prepared modes."
-  [& body]
-  `(do
-     ~@body
-     (client/prepared ~@body)))
