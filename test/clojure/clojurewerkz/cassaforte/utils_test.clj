@@ -7,10 +7,9 @@
             [clojurewerkz.cassaforte.query       :refer :all]
             [clojurewerkz.cassaforte.utils       :refer :all]))
 
+(use-fixtures :each (fn [f]
+                        (th/with-temporary-keyspace f)))
 (let [s (th/make-test-session)]
-  (use-fixtures :each (fn [f]
-                        (th/with-temporary-keyspace s f)))
-
   (deftest test-transform-dynamic-table
     (create-table s :time_series
                   (column-definitions {:metric       :varchar

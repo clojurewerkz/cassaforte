@@ -25,10 +25,10 @@
             [clojurewerkz.cassaforte.conversion :as conv]
             [qbits.hayt.cql                     :as hayt])
   (:import [com.datastax.driver.core Statement ResultSet ResultSetFuture Host Session Cluster
-            Cluster$Builder SimpleStatement PreparedStatement HostDistance PoolingOptions
+            Cluster$Builder SimpleStatement PreparedStatement BoundStatement HostDistance PoolingOptions
             SSLOptions ProtocolOptions$Compression]
            [com.datastax.driver.auth DseAuthProvider]
-           [com.google.common.util.concurrent Futures FutureCallback]
+           [com.google.common.util.concurrent ListenableFuture Futures FutureCallback]
            java.net.URI
            [javax.net.ssl TrustManagerFactory KeyManagerFactory SSLContext]
            [java.security KeyStore SecureRandom]
@@ -56,7 +56,7 @@
      * max-connections-per-host: maximum number of connections per host.
      * retry-policy: configures the retry policy to use for the new cluster.
      * load-balancing-policy: configures the load balancing policy to use for the new cluster.
-     * force-prepared-queries: forces all queries to be executed as prepared by default
+
      * consistency-level: default consistency level for all queires to be executed against this cluster
      * ssl: ssl options in the form {:keystore-path path :keystore-password password} Also accepts :cipher-suites with a Seq of cipher suite specs.
      * ssl-options: pre-built SSLOptions object (overrides :ssl)
@@ -70,16 +70,12 @@
            retry-policy
            reconnection-policy
            load-balancing-policy
-           force-prepared-queries
            ssl
            ssl-options
            kerberos
            protocol-version
            compression]
     :or {protocol-version 2}}]
-  (when force-prepared-queries
-    (alter-var-root (var hayt/*prepared-statement*)
-                    (constantly true)))
   (when consistency-level
     (alter-var-root (var cp/*consistency-level*)
                     (constantly (cp/resolve-consistency-level consistency-level))))
@@ -190,13 +186,20 @@
   [^Cluster cluster]
   (.close cluster))
 
-(defmacro prepared
-  "Same as cassaforte.policies/forcing-prepared-statements. Kept for backwards
-   compatibility."
-  [& body]
+(defmacro prepare
+  "Prepare a single statement, return prepared statement"
+  [body]
   `(binding [hayt/*prepared-statement* true
              hayt/*param-stack*        (atom [])]
-     (do ~@body)))
+     (do ~body)))
+
+(def ^:dynamic *async* false)
+
+(defmacro async
+  "Prepare a single statement, return prepared statement"
+  [body]
+  `(binding [*async* true]
+     (do ~body)))
 
 (defmacro with-fetch-size
   "Temporarily alters fetch size."
@@ -212,7 +215,7 @@
     (.setConsistencyLevel statement (cp/resolve-consistency-level cp/*consistency-level*)))
   statement)
 
-(defn- build-statement
+(defn ^:private build-statement-
   "Builds a Prepare or Simple statement out of given params.
 
    Arities:
@@ -224,70 +227,54 @@
   ([^String string-query]
      (set-statement-options- (SimpleStatement. string-query))))
 
-(defn ^PreparedStatement prepare
-  "Prepares the provided query on C* server for futher execution.
+(defn bind
+  [^PreparedStatement statement values]
+  (.bind statement (to-array values)))
 
-   This assumes that query is valid. Returns the prepared statement corresponding to the query."
-  ([^Session session ^String query]
-     (.prepare ^Session session query)))
+(defprotocol BuildStatement
+  (build-statement [query]))
 
-(defn render-query
-  "Renders compiled query"
-  [query-params]
-  (let [renderer (if hayt/*prepared-statement*
-                   hayt/->prepared
-                   hayt/->raw)]
-    (renderer query-params)))
+(extend-protocol BuildStatement
+  String
+  (build-statement [query]
+    (build-statement (SimpleStatement. query)))
 
-(defn compile-query
-  "Compiles query from given `builder` and `query-params`"
-  [query-params builder]
-  (apply builder (flatten query-params)))
+  clojure.lang.IPersistentMap
+  (build-statement [raw-statement]
+    (build-statement (hayt/->raw raw-statement)))
 
-(defn as-prepared
-  "Helper method to create prepared query from `query` string with `?` placeholders and values
-   to be bound to the query."
-  [query & values]
-  (vector query values))
+  Statement
+  (build-statement [s]
+    s))
 
-(defn- ^Statement statement-for
-  [^Session session query prepared?]
-  (if prepared?
-    (if (coll? query)
-      (build-statement (prepare session (first query))
-                       (second query))
-      (throw (IllegalArgumentException.
-              "Query is meant to be executed as prepared, but no values were supplied.")))
-    (build-statement query)))
+(defprotocol Listenable
+  (add-listener [_ runnable executor]))
+(deftype AsyncResult [fut]
+  clojure.lang.IDeref
+  (deref [_]
+    (conv/to-clj @fut))
 
-(defn ^ResultSetFuture execute-async
-  "Executes a pre-built query and returns a future.
+  clojure.lang.IBlockingDeref
+  (deref [_ time-period time-unit]
+    (conv/to-clj (deref fut time-period time-unit)))
 
-   Options
-     * prepared - whether the query should or should not be executed as prepared, always passed
-       explicitly, because `execute` is considered to be a low-level function."
-  ([^Session session query]
-     (execute-async session query {}))
-  ([^Session session query {:keys [prepared]}]
-     (let [^Statement statement (statement-for session query prepared)
-           ^ResultSetFuture fut (.executeAsync session statement)]
-       (future (conv/to-clj (.getUninterruptibly fut))))))
+  Listenable
+  (add-listener [_ runnable executor]
+    (.addListener fut runnable executor)
+    )
+  )
 
 (defn execute
-  "Executes a pre-built query.
-
-   Options
-     * prepared - whether the query should or should not be executed as prepared, always passed
-       explicitly, because `execute` is considered to be a low-level function."
-  ([^Session session query]
-     (execute session query {}))
-  ([^Session session query {:keys [prepared fetch-size]}]
-     (let [^Statement statement (statement-for session query prepared)
-           _                    (when fetch-size
-                                  (.setFetchSize statement fetch-size))
-           ^ResultSetFuture fut (.executeAsync session statement)
-           res                  (.getUninterruptibly fut)]
-       (conv/to-clj res))))
+  [^Session session query]
+  (if hayt/*prepared-statement*
+    (let [^String q (hayt/->raw query)]
+      (.prepare session q))
+    (let [^Statement built-statement (build-statement query)]
+      (if *async*
+        (AsyncResult. (.executeAsync session built-statement))
+        (-> (.execute session built-statement)
+            (conv/to-clj))
+        ))))
 
 (defn ^String export-schema
   "Exports the schema as a string"
@@ -315,27 +302,3 @@
 ;; defn get-keyspace
 ;; defn get-keyspaces
 ;; defn rebuild-schema
-
-;;
-;; Result Handling
-;;
-
-(defn set-callbacks
-  "Set callbacks on a result future"
-  [^ResultSetFuture fut {:keys [success failure]}]
-  {:pre [(not (nil? success))]}
-  (future (when-let [res @fut]
-            (if (= (type res) Exception)
-              (if (nil? failure)
-                (throw res)
-                (failure res))
-              (success res))))
-  fut)
-
-(defn get-result
-  "Get result from Future. Optional `timeout-ms` should be specified in milliseconds."
-  ([^ResultSetFuture future]
-     (conv/to-clj (.get future)))
-  ([^ResultSetFuture future ^long timeout-ms]
-     (conv/to-clj (.get future timeout-ms
-                        java.util.concurrent.TimeUnit/MILLISECONDS))))

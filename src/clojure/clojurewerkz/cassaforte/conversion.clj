@@ -15,10 +15,10 @@
 (ns clojurewerkz.cassaforte.conversion
   (:import [com.datastax.driver.core ResultSet Host Row ColumnDefinitions ColumnDefinitions
             ColumnDefinitions$Definition]
+           [com.datastax.driver.core DataType DataType$Name]
            [com.datastax.driver.core.exceptions DriverException]
            [java.nio ByteBuffer]
-           [java.util Map List Set])
-  (:require [clojurewerkz.cassaforte.bytes :as b]))
+           [java.util Map List Set]))
 
 ;; Protocol version 2, requires Cassandra 2.0+.
 (def ^:const protocol-version 2)
@@ -27,6 +27,9 @@
   (to-clj [input] "Converts any definition to a Clojure data structure"))
 
 
+(defn deserialize
+  [^DataType dt ^ByteBuffer bytes ^Integer protocol-version]
+  (.deserialize dt bytes protocol-version))
 ;;
 ;; Core JDK Types
 ;;
@@ -71,7 +74,7 @@
                     (let [^String n                      (.getName cd)
                           ^ByteBuffer bytes              (.getBytesUnsafe row n)]
                       [(keyword n) (when bytes
-                                     (let [v (b/deserialize (.getType cd) bytes protocol-version)]
+                                     (let [v (deserialize (.getType cd) bytes protocol-version)]
                                        (to-clj v)))]))))))
   Host
   (to-clj [^Host host]

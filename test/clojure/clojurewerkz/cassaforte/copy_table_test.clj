@@ -6,10 +6,10 @@
             [clojure.test :refer :all]
             [clojurewerkz.cassaforte.query :refer :all]))
 
-(let [s (client/connect ["127.0.0.1"])]
-  (use-fixtures :each (fn [f]
-                        (th/with-temporary-keyspace s f)))
+(use-fixtures :each (fn [f]
+                      (th/with-temporary-keyspace f)))
 
+(let [s (th/make-test-session)]
   (deftest test-copy-table-with-natural-iteration-termination
     (let [n 500]
       (dotimes [i n]
@@ -19,7 +19,7 @@
       (is (= 0 (perform-count s :users2)))
       (copy-table s :users :users2 :name identity 16384)
       (is (= n (perform-count s :users2)))
-      
+
       (dotimes [i n]
         (let [k (str "name_" i)
               a (first (select s :users  {:name k}))
