@@ -145,15 +145,14 @@
 (defn insert-async
   "Same as insert but returns a future"
   [^Session session & query-params]
-  (comment
-    (cc/executeasync- session query-params q/insert-query)))
+  (cc/async
+   (apply insert session query-params)))
 
 (defn ^:private batch-query-from-
   [table records]
   (->> records
        (map (comp (partial apply (partial q/insert-query table)) flatten vector))
-       (apply q/queries)
-       ))
+       (apply q/queries)))
 
 (defn insert-batch
   "Performs a batch insert (inserts multiple records into a table at the same time).
@@ -166,9 +165,8 @@
 (defn insert-batch-async
   "Same as insert-batch but returns a future"
   [^Session session table records]
-  (let [query (batch-query-from- table records)]
-    (comment
-      (cc/executeasync- session query))))
+  (cc/async
+   (insert-batch session table records)))
 
 (defn atomic-batch
   "Executes a group of operations as an atomic batch (BEGIN BATCH ... APPLY BATCH)"
@@ -187,8 +185,8 @@
 (defn update-async
   "Same as update but returns a future"
   [^Session session & query-params]
-  (comment
-    (cc/executeasync- session query-params q/update-query)))
+  (cc/async
+   (apply update session query-params)))
 
 (defn delete
   "Deletes columns and rows. If the `columns` clause is provided,
@@ -203,8 +201,8 @@
 (defn delete-async
   "Same as delete but returns a future"
   [^Session session table & query-params]
-  (comment
-    (cc/executeasync- session (cons table query-params) q/delete-query)))
+  (cc/async
+   (apply delete session table query-params)))
 
 (defn select
   "Retrieves one or more columns for one or more rows in a table.
@@ -216,8 +214,8 @@
 (defn select-async
   "Same as select but returns a future"
   [^Session session & query-params]
-  (comment
-    (cc/executeasync- session query-params q/select-query)))
+  (cc/async
+   (apply select session query-params)))
 
 (defn truncate
   "Truncates a table: permanently and irreversably removes all rows from the table,
