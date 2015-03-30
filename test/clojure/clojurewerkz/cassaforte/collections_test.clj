@@ -8,9 +8,10 @@
 
             [clojurewerkz.cassaforte.query       :refer :all]))
 
+(use-fixtures :each (fn [f]
+                      (th/with-temporary-keyspace f)))
+
 (let [s (th/make-test-session)]
-  (use-fixtures :each (fn [f]
-                        (th/with-temporary-keyspace f)))
   (deftest test-collection-conversion-on-load
     (let [t :users_collections]
       (create-table s t
