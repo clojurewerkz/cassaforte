@@ -23,20 +23,9 @@
 
 (defn ^:private compile-query-
   "Compiles query from given `builder` and `query-params`"
-  [query-params builder]
+  [builder query-params]
+  ;; TODO: mapcat identity here?
   (apply builder (flatten query-params)))
-
-(defn ^:private execute-
-  [^Session session query-params builder]
-  (let [compiled-query (compile-query- query-params builder)]
-    (cc/execute session compiled-query)
-    ))
-
-(defn ^:private execute-async-
-  [^Session session query-params builder]
-  (comment ;;; doesnt work yet
-    (let [rendered-query (render-query- (compile-query- query-params builder))]
-      (cc/execute-async rendered-query session))))
 
 ;;
 ;; Schema operations
@@ -46,7 +35,8 @@
   "Drops a keyspace: results in immediate, irreversible removal of an existing keyspace,
    including all column families in it, and all data contained in those column families."
   [^Session session ks & query-params]
-  (execute- session (cons ks query-params) q/drop-keyspace-query))
+  (cc/execute session
+              (compile-query- q/drop-keyspace-query (cons ks query-params))))
 
 (defn create-keyspace
   "Creates a new top-level keyspace. A keyspace is a namespace that
@@ -60,7 +50,8 @@
                           {:class \"SimpleStrategy\"
                            :replication_factor 1}}))"
   [^Session session & query-params]
-  (execute- session query-params q/create-keyspace-query))
+  (cc/execute session
+              (compile-query- q/create-keyspace-query query-params)))
 
 (defn create-index
   "Creates a new (automatic) secondary index for a given (existing)
@@ -74,7 +65,8 @@
                     (index-name :users_city)
                     (if-not-exists))"
   [^Session session & query-params]
-  (execute- session query-params q/create-index-query))
+  (cc/execute session
+              (compile-query- q/create-index-query query-params )))
 
 (defn drop-index
   "Drop an existing secondary index. The argument of the statement
@@ -84,7 +76,8 @@
 
        (drop-index th/session :users_city)"
   [^Session session & query-params]
-  (execute- session query-params q/drop-index-query))
+  (cc/execute session
+              (compile-query- q/drop-index-query query-params) ))
 
 (defn create-table
   "Creates a new table. A table is a set of rows (usually
@@ -101,7 +94,8 @@
                                      :city :varchar
                                      :primary-key [:name]}))"
   [^Session session & query-params]
-  (execute- session query-params q/create-table-query))
+  (cc/execute session
+              (compile-query- q/create-table-query query-params)))
 
 (def create-column-family create-table)
 
@@ -109,26 +103,30 @@
   "Drops a table: this results in the immediate, irreversible removal of a table, including
    all data in it."
   [^Session session ks]
-  (execute- session [ks] q/drop-table-query))
+  (cc/execute session
+              (q/drop-table-query ks)))
 
 (defn use-keyspace
   "Takes an existing keyspace name as argument and set it as the per-session current working keyspace.
    All subsequent keyspace-specific actions will be performed in the context of the selected keyspace,
    unless otherwise specified, until another USE statement is issued or the connection terminates."
   [^Session session ks]
-  (execute- session [ks] q/use-keyspace-query))
+  (cc/execute session
+              (q/use-keyspace-query ks)))
 
 (defn alter-table
   "Alters a table definition. Use it to add new
    columns, drop existing ones, change the type of existing columns, or update the table options."
   [^Session session & query-params]
-  (execute- session query-params q/alter-table-query))
+  (cc/execute session
+              (compile-query- q/alter-table-query query-params)))
 
 (defn alter-keyspace
   "Alters properties of an existing keyspace. The
    supported properties are the same that for `create-keyspace`"
   [^Session session & query-params]
-  (execute- session query-params q/alter-keyspace-query))
+  (cc/execute session
+              (compile-query- q/alter-keyspace-query query-params)))
 
 ;;
 ;; DB Operations
@@ -141,51 +139,56 @@
    specified. Also, since a row only exists when it contains one value for a column not part of
    the primary key, one such value must be specified too."
   [^Session session & query-params]
-  (execute- session query-params q/insert-query))
+  (cc/execute session
+              (compile-query- q/insert-query query-params)))
 
 (defn insert-async
   "Same as insert but returns a future"
   [^Session session & query-params]
-  (execute-async- session query-params q/insert-query))
+  (comment
+    (cc/executeasync- session query-params q/insert-query)))
 
-(defn ^{:private true} batch-query-from
+(defn ^:private batch-query-from-
   [table records]
   (->> records
        (map (comp (partial apply (partial q/insert-query table)) flatten vector))
        (apply q/queries)
-       q/batch-query))
+       ))
 
 (defn insert-batch
   "Performs a batch insert (inserts multiple records into a table at the same time).
   To specify additional clauses for a record (such as where or using), wrap that record
   and the clauses in a vector"
   [^Session session table records]
-  (let [query (batch-query-from table records)]
-    (execute- session query)))
+  (let [query-params (batch-query-from- table records)]
+    (cc/execute session (q/batch-query query-params))))
 
 (defn insert-batch-async
   "Same as insert-batch but returns a future"
   [^Session session table records]
-  (let [query (batch-query-from table records)]
-    (execute-async- session query)))
+  (let [query (batch-query-from- table records)]
+    (comment
+      (cc/executeasync- session query))))
 
 (defn atomic-batch
   "Executes a group of operations as an atomic batch (BEGIN BATCH ... APPLY BATCH)"
   [^Session session & clauses]
-  (let [q (compile-query- clauses q/batch-query)]
-    (execute- session q)))
+  (cc/execute session
+              (compile-query- q/batch-query clauses)))
 
 (defn update
   "Updates one or more columns for a given row in a table. The `where` clause
    is used to select the row to update and must include all columns composing the PRIMARY KEY.
    Other columns values are specified through assignment within the `set` clause."
   [^Session session & query-params]
-  (execute- session query-params q/update-query))
+  (cc/execute session
+              (compile-query- q/update-query query-params)))
 
 (defn update-async
   "Same as update but returns a future"
   [^Session session & query-params]
-  (execute-async- session query-params q/update-query))
+  (comment
+    (cc/executeasync- session query-params q/update-query)))
 
 (defn delete
   "Deletes columns and rows. If the `columns` clause is provided,
@@ -194,57 +197,69 @@
    are removed. The `where` allows to specify the key for the row(s) to delete. First argument
    for this function should always be table name."
   [^Session session table & query-params]
-  (execute- session (cons table query-params) q/delete-query))
+  (cc/execute session
+              (compile-query- q/delete-query (cons table query-params))))
 
 (defn delete-async
   "Same as delete but returns a future"
   [^Session session table & query-params]
-  (execute-async- session (cons table query-params) q/delete-query))
+  (comment
+    (cc/executeasync- session (cons table query-params) q/delete-query)))
 
 (defn select
   "Retrieves one or more columns for one or more rows in a table.
    It returns a result set, where every row is a collection of columns returned by the query."
   [^Session session & query-params]
-  (execute- session query-params q/select-query))
+  (cc/execute session
+              (compile-query- q/select-query query-params)))
 
 (defn select-async
   "Same as select but returns a future"
   [^Session session & query-params]
-  (execute-async- session query-params q/select-query))
+  (comment
+    (cc/executeasync- session query-params q/select-query)))
 
 (defn truncate
   "Truncates a table: permanently and irreversably removes all rows from the table,
    not removing the table itself."
   [^Session session table]
-  (execute- session [table] q/truncate-query))
+  (cc/execute session
+              (q/truncate-query table)))
 
 (defn create-user
   [^Session session & query-params]
-  (execute- session query-params q/create-user-query))
+  (cc/execute session
+              (compile-query- q/create-user-query query-params)))
 
 (defn alter-user
   [^Session session & query-params]
-  (execute- session query-params q/alter-user-query))
+  (cc/execute session
+              (compile-query- q/alter-user-query query-params)))
 
 (defn drop-user
   [^Session session & query-params]
-  (execute- session query-params q/drop-user-query))
+  (cc/execute session
+              (compile-query- q/drop-user-query query-params)))
 
 (defn grant
   [^Session session & query-params]
-  (execute- session query-params q/grant-query))
+  (cc/execute session
+              (compile-query- q/grant-query query-params)))
 
 (defn revoke
   [^Session session & query-params]
-  (execute- session query-params q/revoke-query))
+  (cc/execute session
+              (compile-query- q/revoke-query query-params)))
 
 (defn list-users
   [^Session session & query-params]
-  (execute- session query-params q/list-users-query))
+  (cc/execute session
+              (compile-query- q/list-users-query query-params)))
 
 (defn list-permissions
   [^Session session & query-params]
-  (execute- session query-params q/list-perm-query))
+  (cc/execute session
+              (compile-query- q/list-perm-query query-params)))
 
 ;;
 ;; Higher level DB functions
