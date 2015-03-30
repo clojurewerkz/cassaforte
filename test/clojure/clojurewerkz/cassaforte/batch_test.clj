@@ -17,10 +17,10 @@
             [clj-time.format :as tf]
             [clj-time.coerce :as cc]))
 
-(let [s (th/make-test-session)]
-  (use-fixtures :each (fn [f]
-                        (th/with-temporary-keyspace s f)))
+(use-fixtures :each (fn [f]
+                      (th/with-temporary-keyspace f)))
 
+(let [s (th/make-test-session)]
   (deftest test-insert-batch-with-ttl-without-prepared-statements
     (let [input [[{:name "Alex" :city "Munich" :age (int 19)} (using :ttl (int 350))]
                   [{:name "Alex" :city "Munich" :age (int 19)} (using :ttl (int 350))]]]
