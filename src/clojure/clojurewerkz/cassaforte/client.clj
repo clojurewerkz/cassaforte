@@ -223,17 +223,6 @@
   [^PreparedStatement statement values]
   (.bind statement (to-array values)))
 
-(comment
-  (defn- ^Statement statement-for
-    [^Session session query prepared?]
-    (if prepared?
-      (if (coll? query)
-        (build-statement- (prepare session (first query))
-                          (second query))
-        (throw (IllegalArgumentException.
-                "Query is meant to be executed as prepared, but no values were supplied.")))
-      (build-statement- query))))
-
 (defn ^ResultSetFuture execute-async
   "Executes a pre-built query and returns a future.
 
@@ -273,23 +262,6 @@
     (let [^Statement built-statement (build-statement query)]
       (-> (.execute session built-statement)
           (conv/to-clj)))))
-
-(comment
-  (defn execute
-    "Executes a pre-built query.
-
-   Options
-     * prepared - whether the query should or should not be executed as prepared, always passed
-       explicitly, because `execute` is considered to be a low-level function."
-    ([^Session session query]
-       (execute session query {}))
-    ([^Session session query {:keys [fetch-size]}]
-       (let [^Statement statement (statement-for session query prepared)
-             _                    (when fetch-size
-                                    (.setFetchSize statement fetch-size))
-             ^ResultSetFuture fut (.executeAsync session statement)
-             res                  (.getUninterruptibly fut)]
-         (conv/to-clj res)))))
 
 (defn ^String export-schema
   "Exports the schema as a string"
