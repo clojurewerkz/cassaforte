@@ -29,7 +29,7 @@
             SSLOptions ProtocolOptions$Compression]
            [com.datastax.driver.auth DseAuthProvider]
            [com.google.common.util.concurrent ListenableFuture Futures FutureCallback]
-           java.net.URI
+           [java.net URI]
            [javax.net.ssl TrustManagerFactory KeyManagerFactory SSLContext]
            [java.security KeyStore SecureRandom]
            [com.datastax.driver.core.exceptions DriverException]))
@@ -37,6 +37,38 @@
 (declare build-ssl-options select-compression)
 
 (def ^:dynamic *fetch-size*)
+(def ^:dynamic *async* false)
+
+;;
+;; Macros
+;;
+
+(defmacro async
+  "Prepare a single statement, return prepared statement"
+  [body]
+  `(binding [*async* true]
+     (do ~body)))
+
+(defmacro with-fetch-size
+  "Temporarily alters fetch size."
+  [^Integer n# & body]
+  `(binding [*fetch-size* ~n#]
+     (do ~@body)))
+
+(defmacro prepare
+  "Prepare a single statement, return prepared statement"
+  ([body]
+     `(binding [hayt/*prepared-statement* true
+                hayt/*param-stack*        (atom [])]
+        ~body))
+  ([session body]
+     `(binding [hayt/*prepared-statement* true
+                hayt/*param-stack*        (atom [])]
+        (.prepare ~session ~body))))
+
+;;
+;; Protocols
+;;
 
 (defprotocol DummySession
   (executeAsync [_ query]))
@@ -44,6 +76,42 @@
 (deftype DummySessionImpl []
   DummySession
   (executeAsync [_ query] (throw (Exception. "Not connected"))))
+
+(defprotocol BuildStatement
+  (build-statement [query]))
+
+(extend-protocol BuildStatement
+  String
+  (build-statement [query]
+    (build-statement (SimpleStatement. query)))
+
+  clojure.lang.IPersistentMap
+  (build-statement [raw-statement]
+    (build-statement (hayt/->raw raw-statement)))
+
+  Statement
+  (build-statement [s]
+    s))
+
+(defprotocol Listenable
+  (add-listener [_ runnable executor]))
+
+(deftype AsyncResult [fut]
+  clojure.lang.IDeref
+  (deref [_]
+    (conv/to-clj @fut))
+
+  clojure.lang.IBlockingDeref
+  (deref [_ time-period time-unit]
+    (conv/to-clj (deref fut time-period time-unit)))
+
+  Listenable
+  (add-listener [_ runnable executor]
+    (.addListener fut runnable executor)))
+
+;;
+;; Fns
+;;
 
 (defn ^Cluster build-cluster
   "Builds an instance of Cluster you can connect to.
@@ -186,28 +254,6 @@
   [^Cluster cluster]
   (.close cluster))
 
-(def ^:dynamic *async* false)
-
-(defmacro async
-  "Prepare a single statement, return prepared statement"
-  [body]
-  `(binding [*async* true]
-     (do ~body)))
-
-(defmacro with-fetch-size
-  "Temporarily alters fetch size."
-  [^Integer n# & body]
-  `(binding [*fetch-size* ~n#]
-     (do ~@body)))
-
-(defn- set-statement-options-
-  [^Statement statement]
-  (when cp/*retry-policy*
-    (.setRetryPolicy statement cp/*retry-policy*))
-  (when cp/*consistency-level*
-    (.setConsistencyLevel statement (cp/resolve-consistency-level cp/*consistency-level*)))
-  statement)
-
 (defn ^:private build-statement-
   "Builds a Prepare or Simple statement out of given params.
 
@@ -221,62 +267,43 @@
      (set-statement-options- (SimpleStatement. string-query))))
 
 (defn bind
+  "Binds prepared statement to values, for example:
+
+   With string statement:
+
+      (client/bind
+             (client/prepare s \"INSERT INTO users (name, city, age) VALUES (?, ?, ?);\")
+             [\"Alex\" \"Munich\" (int 19)])
+
+    With queries:
+
+      (let [prepared (client/prepare (insert s :users {:name ? :city ? :age  ?}))]
+        (client/execute s
+                (client/bind prepared [\"Alex\" \"Munich\" (int 19)]))"
   [^PreparedStatement statement values]
   (.bind statement (to-array values)))
 
-(defmacro prepare
-  "Prepare a single statement, return prepared statement"
-  ([body]
-     `(binding [hayt/*prepared-statement* true
-                hayt/*param-stack*        (atom [])]
-        ~body))
-  ([session body]
-     `(binding [hayt/*prepared-statement* true
-                hayt/*param-stack*        (atom [])]
-        (.prepare ~session ~body))))
-
-(defprotocol BuildStatement
-  (build-statement [query]))
-
-(extend-protocol BuildStatement
-  String
-  (build-statement [query]
-    (build-statement (SimpleStatement. query)))
-
-  clojure.lang.IPersistentMap
-  (build-statement [raw-statement]
-    (build-statement (hayt/->raw raw-statement)))
-
-  Statement
-  (build-statement [s]
-    s))
-
-(defprotocol Listenable
-  (add-listener [_ runnable executor]))
-
-(deftype AsyncResult [fut]
-  clojure.lang.IDeref
-  (deref [_]
-    (conv/to-clj @fut))
-
-  clojure.lang.IBlockingDeref
-  (deref [_ time-period time-unit]
-    (conv/to-clj (deref fut time-period time-unit)))
-
-  Listenable
-  (add-listener [_ runnable executor]
-    (.addListener fut runnable executor)))
-
 (defn execute
-  [^Session session query]
-  (if hayt/*prepared-statement*
-    (let [^String q (hayt/->raw query)]
-      (.prepare session q))
-    (let [^Statement built-statement (build-statement query)]
-      (if *async*
-        (AsyncResult. (.executeAsync session built-statement))
-        (-> (.execute session built-statement)
-            (conv/to-clj))))))
+  "Executes a statement"
+  ([^Session session query]
+     (if hayt/*prepared-statement*
+       (let [^String q (hayt/->raw query)]
+         (.prepare session q))
+       (let [^Statement built-statement (build-statement query)]
+         (if *async*
+           (AsyncResult. (.executeAsync session built-statement))
+           (-> (.execute session built-statement)
+               (conv/to-clj))))))
+  ([^Session session query & {:keys [retry-policy consistency-level]}]
+     (let [^Statement built-statement (build-statement query)]
+       (when retry-policy
+         (.setRetryPolicy built-statement retry-policy))
+       (when consistency-level
+         (.setConsistencyLevel built-statement consistency-level*))
+       (if *async*
+         (AsyncResult. (.executeAsync session built-statement))
+         (-> (.execute session built-statement)
+             (conv/to-clj))))))
 
 (defn ^String export-schema
   "Exports the schema as a string"
