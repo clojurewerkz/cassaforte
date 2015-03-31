@@ -20,6 +20,7 @@
 
 (use-fixtures :each th/with-temporary-keyspace)
 
+
 (let [s (th/make-test-session)]
 
   (deftest test-insert

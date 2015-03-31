@@ -11,10 +11,12 @@
 (use-fixtures :each (fn [f]
                       (th/with-temporary-keyspace f)))
 
+
 (let [s (th/make-test-session)]
   (deftest test-insert
     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-      @(insert-async s :users r)
+      (deref (client/async
+              (insert s :users r)))
       (is (= r (first @(select-async s :users))))
       (truncate s :users)))
 

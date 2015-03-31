@@ -60,14 +60,6 @@
   [^RetryPolicy policy]
   (LoggingRetryPolicy. policy))
 
-(def ^:dynamic *retry-policy* (retry-policy :default))
-
-(defmacro with-retry-policy
-  "Executes a query with the given retry policy"
-  [retry-policy & body]
-  `(binding [*retry-policy* ~retry-policy]
-     ~@body))
-
 ;;
 ;; Reconnection
 ;;
@@ -92,8 +84,6 @@ reached.
 ;;
 ;; Consistency Level
 ;;
-
-(def ^:dynamic *consistency-level* :one)
 
 (def consistency-levels
   {:any          ConsistencyLevel/ANY

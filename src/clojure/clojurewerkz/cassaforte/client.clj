@@ -144,9 +144,6 @@
            protocol-version
            compression]
     :or {protocol-version 2}}]
-  (when consistency-level
-    (alter-var-root (var cp/*consistency-level*)
-                    (constantly (cp/resolve-consistency-level consistency-level))))
   (let [^Cluster$Builder builder        (Cluster/builder)
         ^PoolingOptions pooling-options (PoolingOptions.)]
     (when port
