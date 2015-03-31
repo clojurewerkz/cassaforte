@@ -186,13 +186,6 @@
   [^Cluster cluster]
   (.close cluster))
 
-(defmacro prepare
-  "Prepare a single statement, return prepared statement"
-  [body]
-  `(binding [hayt/*prepared-statement* true
-             hayt/*param-stack*        (atom [])]
-     (do ~body)))
-
 (def ^:dynamic *async* false)
 
 (defmacro async
@@ -231,6 +224,17 @@
   [^PreparedStatement statement values]
   (.bind statement (to-array values)))
 
+(defmacro prepare
+  "Prepare a single statement, return prepared statement"
+  ([body]
+     `(binding [hayt/*prepared-statement* true
+                hayt/*param-stack*        (atom [])]
+        ~body))
+  ([session body]
+     `(binding [hayt/*prepared-statement* true
+                hayt/*param-stack*        (atom [])]
+        (.prepare ~session ~body))))
+
 (defprotocol BuildStatement
   (build-statement [query]))
 
@@ -249,6 +253,7 @@
 
 (defprotocol Listenable
   (add-listener [_ runnable executor]))
+
 (deftype AsyncResult [fut]
   clojure.lang.IDeref
   (deref [_]
@@ -260,9 +265,7 @@
 
   Listenable
   (add-listener [_ runnable executor]
-    (.addListener fut runnable executor)
-    )
-  )
+    (.addListener fut runnable executor)))
 
 (defn execute
   [^Session session query]
@@ -273,8 +276,7 @@
       (if *async*
         (AsyncResult. (.executeAsync session built-statement))
         (-> (.execute session built-statement)
-            (conv/to-clj))
-        ))))
+            (conv/to-clj))))))
 
 (defn ^String export-schema
   "Exports the schema as a string"
