@@ -402,23 +402,24 @@
         (truncate s :users))))
 
   (deftest test-raw-cql-insert
-    (comment
-      (testing "With default session"
-        (client/execute s "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
-        (is (= {:name "Alex" :city "Munich" :age (int 19)}
-               (first (client/execute s "SELECT * FROM users;"))))
-        (client/execute s "TRUNCATE users;"))
-      (testing "Prepared statement"
-        (client/execute s (client/as-prepared "INSERT INTO users (name, city, age) VALUES (?, ?, ?);"
-                                              "Alex" "Munich" (int 19))
-                        {:prepared true})
-        (is (= {:name "Alex" :city "Munich" :age (int 19)}
-               (first (client/execute s "SELECT * FROM users;"))))
-        (client/execute s "TRUNCATE users;"))))
+    (testing "With default session"
+      (client/execute s "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
+      (is (= {:name "Alex" :city "Munich" :age (int 19)}
+             (first (client/execute s "SELECT * FROM users;"))))
+      (client/execute s "TRUNCATE users;"))
+    (testing "Prepared statement"
+      (client/execute s
+                      (client/bind
+                       (client/prepare s "INSERT INTO users (name, city, age) VALUES (?, ?, ?);")
+                       ["Alex" "Munich" (int 19)]))
+      (is (= {:name "Alex" :city "Munich" :age (int 19)}
+             (first (client/execute s "SELECT * FROM users;"))))
+      (client/execute s "TRUNCATE users;")))
 
   (deftest test-insert-nils
-    (comment
-      (client/prepared
-       (let [r {:name "Alex" :city "Munich" :age nil}]
-         (insert s :users r)
-         (is (= r (first (select s :users)))))))))
+    (let [r {:name "Alex" :city "Munich" :age nil}]
+      (client/execute s
+                      (client/bind
+                       (client/prepare s "INSERT INTO users (name, city, age) VALUES (?, ?, ?);")
+                       ["Alex" "Munich" nil]))
+      (is (= r (first (select s :users)))))))
