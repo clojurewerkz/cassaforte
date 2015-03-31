@@ -1,5 +1,68 @@
 ## Changes between 2.0.0 and 2.1.0
 
+### Prepared statements
+
+It is now possible to prepare statements for later execution, for example:
+
+```clojure
+(require '[clojurewerkz.cassaforte.client :as client]
+         '[clojurewerkz.cassanforte.cql   :as cql])
+
+(def my-prepared-statement
+  (client/prepare (insert s :users {:name ?
+                                    :city ?
+                                    :age  ?})))
+
+(client/execute session
+                (client/bind my-prepared-statement ["Alex" "Munich" (int 19)]))
+```
+
+Alternatively, you can use string queries in prepare:
+
+```clojure
+(def my-prepared-statement 
+  (client/prepare session "INSERT INTO users (name, city, age) VALUES (?, ?, ?);"))
+```
+
+Old Prepared Statment API is deprecated.
+
+### Async Queries
+
+As earlier, you can keep using default async commands: `insert-async`, `update-async`
+`delete-async`, `select-async`. In addition, you can use `clojurewerkz.cassaforte.client/async`
+macro to execute any query asyncronously.
+
+In addition, you can add a listener, which will be called whenever the query is done
+```clojure
+(let [result-future (select-async s :users)]
+  (client/add-listener result-future
+                       (fn [] (println "DONE! Result: " @result-future))
+                       (Executors/newFixedThreadPool 1))
+  @result-future)
+```
+
+Also, you now can use `deref` operation and specify timeout:
+
+```clojure
+(deref (select-async s :users) 1 java.util.concurrent.TimeUnit/SECONDS)
+```
+
+### Retry Policy and Consistency Level overrides
+
+You can override `retry-policy` and `consistency-level` for each query you run:
+
+```clojure
+(require '[clojurewerkz.cassaforte.policies :as policies])
+
+(client/execute session
+                (client/build-statement "SELECT * FROM users")
+                :retry-policy (:downgrading-consistency policies/retry-policies)
+                :consistency-level (:any policies/consistency-levels))
+```
+
+You __have to__ build the statement manually for that (usually it's done under the hood), 
+or use prepared statements (advised).
+
 ### clojurewerkz.cassanforte.cql/copy-table
 
 `clojurewerkz.cassanforte.cql/copy-table` is a new function that
@@ -16,7 +79,6 @@ function (`clojure.core/identity` by default):
 
 This function is primarily helpful when migration Cassandra
 schema but can also be useful in test environments.
-
 
 ### Cluster Resource Leak Plugged
 
