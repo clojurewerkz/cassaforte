@@ -218,18 +218,18 @@
 (defn ^Session connect
   "Connects to the Cassandra cluster. Use `build-cluster` to build a cluster."
   ([hosts]
-   (connect-or-close (build-cluster {:hosts hosts})))
+     (connect-or-close (build-cluster {:hosts hosts})))
   ([hosts keyspace-or-opts]
-    (if (string? keyspace-or-opts)
-      (connect hosts keyspace-or-opts {})
-      (let [keyspace (:keyspace keyspace-or-opts)
-            opts     (dissoc keyspace-or-opts :keyspace)]
-        (if keyspace
-          (connect hosts keyspace opts)
-          (connect-or-close (-> opts (merge {:hosts hosts}) build-cluster))))))
+     (if (string? keyspace-or-opts)
+       (connect hosts keyspace-or-opts {})
+       (let [keyspace (:keyspace keyspace-or-opts)
+             opts     (dissoc keyspace-or-opts :keyspace)]
+         (if keyspace
+           (connect hosts keyspace opts)
+           (connect-or-close (-> opts (merge {:hosts hosts}) build-cluster))))))
   ([hosts keyspace opts]
-   (let [c (build-cluster (merge opts {:hosts hosts}))]
-     (connect-or-close c (name keyspace)))))
+     (let [c (build-cluster (merge opts {:hosts hosts}))]
+       (connect-or-close c (name keyspace)))))
 
 (defn ^Session connect-with-uri
   ([^String uri]
