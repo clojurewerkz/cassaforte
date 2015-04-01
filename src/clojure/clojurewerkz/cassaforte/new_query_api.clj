@@ -97,26 +97,26 @@
 
 (defn asc
   [^String column-name]
-  (QueryBuilder/asc column-name))
+  (QueryBuilder/asc (name column-name)))
 
 (defn desc
   [^String column-name]
   (QueryBuilder/desc column-name))
 
 (defn order-by
-  [& orderings]
-  [3 (fn order-by-query [^Select query-builder]
-       (.orderBy query-builder orderings))])
+  [orderings]
+  [2 (fn order-by-query [^Select query-builder]
+       (.orderBy query-builder (into-array orderings)))])
 
 (defn limit
-  [m]
-  [3 (fn order-by-query [^Select  query-builder]
-       )])
+  [lim]
+  [2 (fn order-by-query [^Select  query-builder]
+       (.limit query-builder (int lim)))])
 
 (defn allow-filtering
-  [m]
-  [3 (fn order-by-query [^Select  query-builder]
-       )])
+  []
+  [2 (fn order-by-query [^Select  query-builder]
+       (.allowFiltering query-builder))])
    ;; public Select orderBy(Ordering... orderings) {
    ;;  public Select limit(int limit) {
    ;;  public Select limit(BindMarker marker) {
@@ -129,7 +129,7 @@
        ;; (map println)
        (map second)
        (reduce (fn [builder statement]
-                 ;; (println builder statement)
+                 (println builder statement)
                  (statement builder))
                (QueryBuilder/select)
                )
