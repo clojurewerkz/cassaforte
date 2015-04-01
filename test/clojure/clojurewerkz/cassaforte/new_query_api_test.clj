@@ -24,6 +24,27 @@
                           [> :moo 3]
                           [:> :meh 4]
                           [:in :baz [5 6 7]]
-                          ]))
-          ))
+                          ]))))
+
+  (is (=  "SELECT * FROM foo WHERE foo='bar' ORDER BY foo ASC;"
+          (select :foo
+                  (all)
+                  (order-by [(asc :foo)])
+                  (where [[= :foo "bar"]]))))
+
+  (is (=  "SELECT * FROM foo WHERE foo='bar' ORDER BY foo ASC LIMIT 10;"
+          (select :foo
+                  (all)
+                  (order-by [(asc :foo)])
+                  (limit 10)
+                  (where [[= :foo "bar"]]))))
+
+  (is (=  "SELECT * FROM foo WHERE foo='bar' ORDER BY foo ASC LIMIT 10 ALLOW FILTERING;"
+          (select :foo
+                  (all)
+                  (where [[= :foo "bar"]])
+                  (order-by [(asc :foo)])
+                  (limit 10)
+                  (allow-filtering)
+                  )))
   )
