@@ -1,30 +1,36 @@
 (ns clojurewerkz.cassaforte.new-query-api
   "Functions for building dynamic CQL queries, in case you feel
    that `cql` namespace is too limiting for you."
-  (:import [com.datastax.driver.core.querybuilder QueryBuilder Select$Where Clause]
+  (:import [com.datastax.driver.core.querybuilder QueryBuilder
+            Select$Selection Select Select$Where
+
+            Clause]
            [com.datastax.driver.core.querybuilder ]))
 
 
+(def select-command-order
+  [QueryBuilder Select$Selection Select Select$Where])
 
 (defn from
-  [table-name]
-  [2 (fn from-query [builder]
-       (.from builder table-name)
+  [^String table-name]
+  [2 (fn from-query [^Select$Selection query-builder]
+       (.from query-builder (name table-name))
        )])
 
 (defn all
   []
-  [1 (fn all-query [query-builder] (.all query-builder))])
+  [1 (fn all-query [^Select$Selection query-builder]
+       (.all query-builder))])
 
 (defn column
   [column]
-  [1 (fn column-query [query-builder]
+  [1 (fn column-query [^Select$Selection query-builder]
        (.column query-builder column))])
 
 (defn columns
   [columns]
   [1 (fn [^Select$Selection query-builder]
-       (reduce (fn [builder column]
+       (reduce (fn [^Select$Selection builder column]
                  (.column builder column))
                query-builder
                columns))])
@@ -75,8 +81,7 @@
      (fn [^Select$Where builder [query-type column value]]
        (.and builder ((query-type-map query-type) (name column) value)))
      query-builder
-     construct)
-    )
+     construct))
   clojure.lang.IPersistentMap
   (build-where [construct ^Select$Where query-builder]
     (reduce
@@ -87,8 +92,35 @@
 
 (defn where
   [m]
-  [3 (fn where-query [query-builder]
+  [3 (fn where-query [^Select query-builder]
        (build-where m (.where query-builder)))])
+
+(defn asc
+  [^String column-name]
+  (QueryBuilder/asc column-name))
+
+(defn desc
+  [^String column-name]
+  (QueryBuilder/desc column-name))
+
+(defn order-by
+  [& orderings]
+  [3 (fn order-by-query [^Select query-builder]
+       (.orderBy query-builder orderings))])
+
+(defn limit
+  [m]
+  [3 (fn order-by-query [^Select  query-builder]
+       )])
+
+(defn allow-filtering
+  [m]
+  [3 (fn order-by-query [^Select  query-builder]
+       )])
+   ;; public Select orderBy(Ordering... orderings) {
+   ;;  public Select limit(int limit) {
+   ;;  public Select limit(BindMarker marker) {
+   ;;  public Select allowFiltering() {
 
 (defn select
   [table-name & statements]
@@ -97,7 +129,7 @@
        ;; (map println)
        (map second)
        (reduce (fn [builder statement]
-                 (println builder statement)
+                 ;; (println builder statement)
                  (statement builder))
                (QueryBuilder/select)
                )
@@ -124,8 +156,7 @@
 ;; String quote(String columnName)
 ;; String token(String columnName)
 ;; String token(String... columnNames)
-;; Ordering asc(String columnName)
-;; Ordering desc(String columnName)
+
 ;; Using timestamp(long timestamp)
 ;; Using timestamp(BindMarker marker)
 ;; Using ttl(int ttl)
