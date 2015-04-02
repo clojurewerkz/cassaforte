@@ -127,8 +127,6 @@
   []
   [2 (fn order-by-query [^Select  query-builder]
        (.allowFiltering query-builder))])
-   ;; public Select orderBy(Ordering... orderings) {
-   ;;  public Select limit(int limit) {
    ;;  public Select limit(BindMarker marker) {
    ;;  public Select allowFiltering() {
 
@@ -166,7 +164,6 @@
 ;; String quote(String columnName)
 ;; String token(String columnName)
 ;; String token(String... columnNames)
-
 ;; Using timestamp(long timestamp)
 ;; Using timestamp(BindMarker marker)
 ;; Using ttl(int ttl)
@@ -197,8 +194,6 @@
 ;; Assignment put(String name, Object key, Object value)
 ;; Assignment putAll(String name, Map<?, ?> map)
 ;; Assignment putAll(String name, BindMarker map)
-;; BindMarker bindMarker()
-;; BindMarker bindMarker(String name)
 ;; Object raw(String str)
 ;; Object fcall(String name, Object... parameters)
 ;; Object column(String name)
