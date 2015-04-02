@@ -3,10 +3,15 @@
    that `cql` namespace is too limiting for you."
   (:import [com.datastax.driver.core.querybuilder QueryBuilder
             Select$Selection Select Select$Where
-
+            BindMarker
             Clause]
            [com.datastax.driver.core.querybuilder ]))
 
+(defn ?
+  ([]
+     (QueryBuilder/bindMarker))
+  ([name]
+     (QueryBuilder/bindMarker name)))
 
 (def select-command-order
   [QueryBuilder Select$Selection Select Select$Where])
