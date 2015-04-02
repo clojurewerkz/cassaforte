@@ -72,9 +72,11 @@
    :>  gt
    >   gt
    :>= gte
+   >=  gte
    :<  lt
    <   lt
-   :<= lte})
+   :<= lte
+   <=  lte})
 
 (defprotocol WhereBuilder
   (build-where [construct query-builder]))
@@ -84,7 +86,10 @@
   (build-where [construct ^Select$Where query-builder]
     (reduce
      (fn [^Select$Where builder [query-type column value]]
-       (.and builder ((query-type-map query-type) (name column) value)))
+       (if-let [eq-type (query-type-map query-type)]
+         (.and builder ((query-type-map query-type) (name column) value))
+         (throw (IllegalArgumentException. (str query-type " is not a valid Clause")))
+         ))
      query-builder
      construct))
   clojure.lang.IPersistentMap
