@@ -7,6 +7,10 @@
             Clause]
            [com.datastax.driver.core.querybuilder ]))
 
+;;
+;; Static QB Methods
+;;
+
 (defn ?
   ([]
      (QueryBuilder/bindMarker))
@@ -182,8 +186,7 @@
 ;; Truncate truncate(String keyspace, String table)
 ;; Truncate truncate(TableMetadata table)
 ;; String quote(String columnName)
-;; String token(String columnName)
-;; String token(String... columnNames)
+
 ;; Using timestamp(long timestamp)
 ;; Using timestamp(BindMarker marker)
 ;; Using ttl(int ttl)
