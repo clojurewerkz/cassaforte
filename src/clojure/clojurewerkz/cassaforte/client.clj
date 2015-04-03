@@ -284,8 +284,18 @@
            (AsyncResult. (.executeAsync session built-statement))
            (-> (.execute session built-statement)
                (conv/to-clj))))))
-  ([^Session session query & {:keys [retry-policy consistency-level]}]
+  ([^Session session query & {:keys [retry-policy
+                                     consistency-level
+                                     fetch-size
+                                     enable-tracing
+                                     default-timestamp]}]
      (let [^Statement built-statement (build-statement query)]
+       (when default-timestamp
+         (.setDefaultTimestamp built-statement))
+       (when enable-tracing
+         (.enableTracing built-statement))
+       (when fetch-size
+         (.setFetchSize built-statement (int fetch-size)))
        (when retry-policy
          (.setRetryPolicy built-statement retry-policy))
        (when consistency-level
