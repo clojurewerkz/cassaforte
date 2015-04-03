@@ -55,6 +55,15 @@
                           [> :c "a"]
                           [<= :c "z"]])
                   )))
+  (println (select :foo
+                   (columns [(-> "asd"
+                                 distinct*
+                                 (as "bsd"))]
+
+                            )))
+  ;; "SELECT DISTINCT longName AS a,ttl(longName) AS ttla FROM foo LIMIT :limit;";
+;; select().distinct().column("longName").as("a").ttl("longName").as("ttla").from("foo").limit(bindMarker("limit"));
+
   )
 
 ;;
@@ -72,8 +81,6 @@
 ;; select().writeTime("a").ttl("a").from("foo").allowFiltering();
 
 
-;; "SELECT DISTINCT longName AS a,ttl(longName) AS ttla FROM foo LIMIT :limit;";
-;; select().distinct().column("longName").as("a").ttl("longName").as("ttla").from("foo").limit(bindMarker("limit"));
 
 ;; "SELECT DISTINCT longName AS a,ttl(longName) AS ttla FROM foo WHERE k IN () LIMIT :limit;";
 ;; select().distinct().column("longName").as("a").ttl("longName").as("ttla").from("foo").where(in("k")).limit(bindMarker("limit"));
