@@ -13,6 +13,10 @@
   ([name]
      (QueryBuilder/bindMarker name)))
 
+(defn token
+  [& column-names]
+  (QueryBuilder/token (into-array column-names)))
+
 (def select-command-order
   [QueryBuilder Select$Selection Select Select$Where])
 
