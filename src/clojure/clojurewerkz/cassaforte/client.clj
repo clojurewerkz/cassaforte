@@ -36,7 +36,6 @@
 
 (declare build-ssl-options select-compression)
 
-(def ^:dynamic *fetch-size*)
 (def ^:dynamic *async* false)
 
 ;;
@@ -48,12 +47,6 @@
   [body]
   `(binding [*async* true]
      (do ~body)))
-
-(defmacro with-fetch-size
-  "Temporarily alters fetch size."
-  [^Integer n# & body]
-  `(binding [*fetch-size* ~n#]
-     (do ~@body)))
 
 (defmacro prepare
   "Prepare a single statement, return prepared statement"
