@@ -26,21 +26,37 @@
        (.from query-builder (name table-name))
        )])
 
+(defn distinct*
+  [column]
+  (fn distinct-query [query-builder]
+    (.distinct (.column query-builder column))))
+
+(defn as
+  [wrapper alias]
+  (fn distinct-query [query-builder]
+    (.as (wrapper query-builder) alias)))
+
 (defn all
   []
   [1 (fn all-query [^Select$Selection query-builder]
-       (.all query-builder))])
+       (.all query-builder))]
+  )
 
 (defn column
-  [column]
+  [column & {:keys [as]}]
   [1 (fn column-query [^Select$Selection query-builder]
-       (.column query-builder column))])
+       (let [c (.column query-builder column)]
+         (if as
+           (.as c as)
+           c)))])
 
 (defn columns
   [columns]
   [1 (fn [^Select$Selection query-builder]
        (reduce (fn [^Select$Selection builder column]
-                 (.column builder column))
+                 (if (string? column)
+                   (.column builder column)
+                   (column builder)))
                query-builder
                columns))])
 
