@@ -24,47 +24,9 @@
 (def select-command-order
   [QueryBuilder Select$Selection Select Select$Where])
 
-(defn from
-  [^String table-name]
-  [2 (fn from-query [^Select$Selection query-builder]
-       (.from query-builder (name table-name))
-       )])
 
-(defn distinct*
-  [column]
-  (fn distinct-query [query-builder]
-    (.distinct (.column query-builder column))))
 
-(defn as
-  [wrapper alias]
-  (fn distinct-query [query-builder]
-    (.as (wrapper query-builder) alias)))
 
-(defn all
-  []
-  [1 (fn all-query [^Select$Selection query-builder]
-       (.all query-builder))]
-  )
-
-(defn column
-  [column & {:keys [as]}]
-  [1 (fn column-query [^Select$Selection query-builder]
-       (let [c (.column query-builder column)]
-         (if as
-           (.as c as)
-           c)))])
-
-(defn columns
-  [columns]
-  [1 (fn [^Select$Selection query-builder]
-       (reduce (fn [^Select$Selection builder column]
-                 (if (string? column)
-                   (.column builder column)
-                   (column builder)))
-               query-builder
-               columns))])
-
-;; Clause eq(String name, Object value)
 (defn- ^Clause eq
   [^String column ^Object value]
   (QueryBuilder/eq column value))
@@ -88,6 +50,14 @@
 (defn- ^Clause gte
   [^String column ^Object value]
   (QueryBuilder/gte column value))
+
+(defn asc
+  [^String column-name]
+  (QueryBuilder/asc (name column-name)))
+
+(defn desc
+  [^String column-name]
+  (QueryBuilder/desc column-name))
 
 (def ^:private query-type-map
   {:in in
