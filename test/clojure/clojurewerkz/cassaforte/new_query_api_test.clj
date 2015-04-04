@@ -19,7 +19,6 @@
 
   (is (=  "SELECT * FROM foo WHERE foo='bar' AND moo>3 AND meh>4 AND baz IN (5,6,7);"
           (select :foo
-                  (all)
                   (where [[= :foo "bar"]
                           [> :moo 3]
                           [:> :meh 4]
@@ -28,20 +27,17 @@
 
   (is (=  "SELECT * FROM foo WHERE foo='bar' ORDER BY foo ASC;"
           (select :foo
-                  (all)
                   (order-by [(asc :foo)])
                   (where [[= :foo "bar"]]))))
 
   (is (=  "SELECT * FROM foo WHERE foo='bar' ORDER BY foo ASC LIMIT 10;"
           (select :foo
-                  (all)
                   (order-by [(asc :foo)])
                   (limit 10)
                   (where [[= :foo "bar"]]))))
 
   (is (=  "SELECT * FROM foo WHERE foo='bar' ORDER BY foo ASC LIMIT 10 ALLOW FILTERING;"
           (select :foo
-                  (all)
                   (where [[= :foo "bar"]])
                   (order-by [(asc :foo)])
                   (limit 10)
@@ -50,19 +46,22 @@
 
   (is (=  "SELECT * FROM foo WHERE k=4 AND c>'a' AND c<='z';";
           (select :foo
-                  (all)
                   (where [[= :k 4]
                           [> :c "a"]
                           [<= :c "z"]])
                   )))
-  (println (select :foo
-                   (columns [(-> "asd"
-                                 distinct*
-                                 (as "bsd"))]
 
-                            )))
+  (is (= "SELECT DISTINCT asd AS bsd FROM foo;")
+      (select :foo
+              (columns [(-> "asd"
+                            distinct*
+                            (as "bsd"))])))
+
+
+
+
   ;; "SELECT DISTINCT longName AS a,ttl(longName) AS ttla FROM foo LIMIT :limit;";
-;; select().distinct().column("longName").as("a").ttl("longName").as("ttla").from("foo").limit(bindMarker("limit"));
+  ;; select().distinct().column("longName").as("a").ttl("longName").as("ttla").from("foo").limit(bindMarker("limit"));
 
   )
 
