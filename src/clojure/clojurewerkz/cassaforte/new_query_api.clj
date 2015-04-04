@@ -128,7 +128,7 @@
     (.as (wrapper query-builder) alias)))
 
 (defn columns
-  [columns]
+  [& columns]
   [:what (fn [^Select$Selection query-builder]
            (reduce (fn [^Select$Selection builder column]
                      (if (string? column)
@@ -162,7 +162,7 @@
   [lim]
   [:limit
    (fn order-by-query [^Select  query-builder]
-     (.limit query-builder (int lim)))])
+     (.limit query-builder lim))])
 
 (defn allow-filtering
   []
