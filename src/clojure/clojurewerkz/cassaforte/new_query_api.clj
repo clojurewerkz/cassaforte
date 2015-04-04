@@ -94,40 +94,101 @@
      query-builder
      construct)))
 
+(def ^:private select-order
+  {:what      1
+   :from      2
+   :where     3
+   :order     4
+   :limit     4
+   :filtering 5})
+
+
+;;
+;; Columns
+;;
+
+(defn ttl
+  [column]
+  (fn ttl-query [query-builder]
+    (.ttl query-builder column)))
+
+(defn distinct*
+  [column]
+  (fn distinct-query [query-builder]
+    (.distinct (.column query-builder column))))
+
+(defn all
+  []
+  (fn all-query [query-builder]
+    (.all query-builder))
+  )
+(defn as
+  [wrapper alias]
+  (fn distinct-query [query-builder]
+    (.as (wrapper query-builder) alias)))
+
+(defn columns
+  [columns]
+  [:what (fn [^Select$Selection query-builder]
+           (reduce (fn [^Select$Selection builder column]
+                     (if (string? column)
+                       (.column builder column)
+                       (column builder)))
+                   query-builder
+                   columns))])
+
+
+(defn column
+  [column & {:keys [as]}]
+  [:what (fn column-query [^Select$Selection query-builder]
+           (let [c (.column query-builder column)]
+             (if as
+               (.as c as)
+               c)))])
+
 (defn where
   [m]
-  [3 (fn where-query [^Select query-builder]
-       (build-where m (.where query-builder)))])
-
-(defn asc
-  [^String column-name]
-  (QueryBuilder/asc (name column-name)))
-
-(defn desc
-  [^String column-name]
-  (QueryBuilder/desc column-name))
+  [:where
+   (fn where-query [^Select query-builder]
+     (build-where m (.where query-builder)))])
 
 (defn order-by
   [orderings]
-  [2 (fn order-by-query [^Select query-builder]
-       (.orderBy query-builder (into-array orderings)))])
+  [:order
+   (fn order-by-query [^Select$Where query-builder]
+     (.orderBy query-builder (into-array orderings)))])
 
 (defn limit
   [lim]
-  [2 (fn order-by-query [^Select  query-builder]
-       (.limit query-builder (int lim)))])
+  [:limit
+   (fn order-by-query [^Select  query-builder]
+     (.limit query-builder (int lim)))])
 
 (defn allow-filtering
   []
-  [2 (fn order-by-query [^Select  query-builder]
-       (.allowFiltering query-builder))])
-   ;;  public Select limit(BindMarker marker) {
-   ;;  public Select allowFiltering() {
+  [:filtering
+   (fn order-by-query [^Select  query-builder]
+     (.allowFiltering query-builder))])
+
+(defn- from
+  [^String table-name]
+  [:from (fn from-query [^Select$Selection query-builder]
+           (.from query-builder (name table-name))
+           )])
+
+(defn- complete-select-query
+  [statements]
+  (let [query-map (into {} statements)]
+    (if (nil? (:what query-map))
+      (conj query-map
+            [:what (all)])
+      statements)))
 
 (defn select
   [table-name & statements]
   (->> (conj statements (from (name table-name)))
-       (sort-by first)
+       (complete-select-query)
+       (sort-by #(get select-order (first %)))
        ;; (map println)
        (map second)
        (reduce (fn [builder statement]
@@ -137,8 +198,6 @@
                )
        (.toString)
        ))
-
-
 
 ;; Select.Builder select(String... columns)
 ;; Select.Selection select()
