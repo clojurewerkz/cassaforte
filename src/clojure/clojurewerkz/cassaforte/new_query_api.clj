@@ -57,7 +57,11 @@
 
 (defn desc
   [^String column-name]
-  (QueryBuilder/desc column-name))
+  (QueryBuilder/desc (name column-name)))
+
+(defn quote*
+  [s]
+  (QueryBuilder/quote (name s)))
 
 (def ^:private query-type-map
   {:in in
@@ -153,7 +157,7 @@
      (build-where m (.where query-builder)))])
 
 (defn order-by
-  [orderings]
+  [& orderings]
   [:order
    (fn order-by-query [^Select$Where query-builder]
      (.orderBy query-builder (into-array orderings)))])
