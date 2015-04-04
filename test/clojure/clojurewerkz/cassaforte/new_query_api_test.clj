@@ -79,11 +79,16 @@
                  (limit (int 42)))))
 
 
+  (is (= "SELECT writetime(a),ttl(a) FROM foo ALLOW FILTERING;"
+         (select :foo
+          (columns (write-time :a)
+                   (ttl :a))
+          (allow-filtering))))
 
   )
 
 
-;; "SELECT writetime(a),ttl(a) FROM foo ALLOW FILTERING;";
+;;
 ;; select().writeTime("a").ttl("a").from("foo").allowFiltering();
 
 
