@@ -111,10 +111,15 @@
 ;; Columns
 ;;
 
+(defn write-time
+  [column]
+  (fn writetime-query [query-builder]
+    (.writeTime query-builder (name column))))
+
 (defn ttl
   [column]
   (fn ttl-query [query-builder]
-    (.ttl query-builder column)))
+    (.ttl query-builder (name column))))
 
 (defn distinct*
   [column]
@@ -219,11 +224,8 @@
 ;; Truncate truncate(String keyspace, String table)
 ;; Truncate truncate(TableMetadata table)
 ;; String quote(String columnName)
-
 ;; Using timestamp(long timestamp)
 ;; Using timestamp(BindMarker marker)
-;; Using ttl(int ttl)
-;; Using ttl(BindMarker marker)
 ;; Assignment set(String name, Object value)
 ;; Assignment incr(String name)
 ;; Assignment incr(String name, long value)
