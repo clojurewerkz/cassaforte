@@ -1,5 +1,6 @@
 (ns clojurewerkz.cassaforte.new-query-api-test
   (:refer-clojure :exclude [update])
+  (:import [com.datastax.driver.core.utils Bytes])
   (:require [clojure.test                          :refer :all]
             [clojurewerkz.cassaforte.new-query-api :refer :all]
             ))
@@ -17,6 +18,11 @@
          (select "table-name"
                  (columns "first" "second"))))
 
+  (is (= "SELECT * FROM foo WHERE foo=1 AND bar=2;"
+         (select :foo
+                 ;; Normally, hashmap can be used. Array map is used here to guarantee order.
+                 (where (array-map :foo 1
+                                   :bar 2)))))
   (is (=  "SELECT * FROM foo WHERE foo='bar' AND moo>3 AND meh>4 AND baz IN (5,6,7);"
           (select :foo
                   (where [[:= :foo "bar"]
@@ -118,34 +124,51 @@
                         (cname "b")))))
 
 
+  (is (= "SELECT * FROM foo WHERE k>42 LIMIT 42;";
+         (select :foo
+                 (where [[:> :k 42]])
+                 (limit 42))))
+
+  (is (= "SELECT * FROM foo WHERE token(k)>token(42);"
+         (select :foo
+                 (where [[:> (token "k") (function-call "token" 42)]]))))
+
+  (is (= "SELECT * FROM foo2 WHERE token(a,b)>token(42,101);";
+         (select :foo2
+                 (where [[:> (token "a" "b") (function-call "token" 42 101)]]))))
+
+  (is (= "SELECT * FROM words WHERE w='):,ydL ;O,D';"
+         (select :words
+                 (where {:w "):,ydL ;O,D"}))))
+
+  (is (= "SELECT * FROM words WHERE w='WA(!:gS)r(UfW';"
+         (select :words
+                 (where {:w "WA(!:gS)r(UfW"}))))
+
+  (is (= "SELECT * FROM foo WHERE d=1234325;"
+         (select :foo
+                 (where {:d (java.util.Date. 1234325)}))))
+
+  (is (= "SELECT * FROM foo WHERE b=0xcafebabe;"
+         (select :foo
+                 (where {:b (Bytes/fromHexString "0xCAFEBABE")}))))
+
+  (is (thrown? java.lang.IllegalStateException
+       (select :foo
+               (count-all)
+               (order-by (asc "a") (desc "b"))
+               (order-by (asc "a") (desc "b")))))
+
+  (is (thrown? java.lang.IllegalArgumentException
+               (select :foo
+                       (limit -42))))
+
+  (is (thrown? java.lang.IllegalStateException
+               (select :foo
+                       (limit 42)
+                       (limit 42))))
   )
 
-
-;;
-;; select().fcall("intToBlob", column("b")).from("foo");
-
-;; "SELECT * FROM foo WHERE k>42 LIMIT 42;";
-;; select().all().from("foo").where(gt("k", 42)).limit(42);
-
-;; "SELECT * FROM foo WHERE token(k)>token(42);";
-;; select().all().from("foo").where(gt(token("k"), fcall("token", 42)));
-
-;; "SELECT * FROM foo2 WHERE token(a,b)>token(42,101);";
-;; select().all().from("foo2").where(gt(token("a", "b"), fcall("token", 42, 101)));
-
-;; "SELECT * FROM words WHERE w='):,ydL ;O,D';";
-;; select().all().from("words").where(eq("w", "):,ydL ;O,D"));
-
-;; "SELECT * FROM words WHERE w='WA(!:gS)r(UfW';";
-;; select().all().from("words").where(eq("w", "WA(!:gS)r(UfW"));
-
-;; Date date = new Date();
-;; date.setTime(1234325);
-;; "SELECT * FROM foo where d=1234325";
-;; select().all().from("foo").where(eq("d", date));
-
-;; "SELECT * FROM foo where b=0xCAFEBABE";
-;; select().all().from("foo").where(eq("b", Bytes.fromHexString("0xCAFEBABE")));
 
 ;; select().countAll().from("foo").orderBy(asc("a"), desc("b")).orderBy(asc("a"), desc("b"));
 ;; select().column("a").all().from("foo");
