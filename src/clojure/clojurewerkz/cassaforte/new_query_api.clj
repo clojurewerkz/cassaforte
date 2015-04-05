@@ -21,6 +21,9 @@
   [& column-names]
   (QueryBuilder/token (into-array column-names)))
 
+(defn function-call
+  [name & args]
+  (QueryBuilder/fcall name (object-array args)))
 
 
 (defn asc
@@ -168,7 +171,7 @@
 (defn order-by
   [& orderings]
   [:order
-   (fn order-by-query [^Select$Where query-builder]
+   (fn order-by-query [query-builder]
      (.orderBy query-builder (into-array orderings)))])
 
 (defn limit
