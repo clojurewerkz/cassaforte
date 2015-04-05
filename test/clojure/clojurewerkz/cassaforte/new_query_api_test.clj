@@ -81,29 +81,39 @@
 
   (is (= "SELECT writetime(a),ttl(a) FROM foo ALLOW FILTERING;"
          (select :foo
-          (columns (write-time :a)
-                   (ttl :a))
-          (allow-filtering))))
+                 (columns (write-time :a)
+                          (ttl :a))
+                 (allow-filtering))))
+
+
+  (is (= "SELECT DISTINCT longName AS a,ttl(longName) AS ttla FROM foo WHERE k IN () LIMIT :limit;";
+         (select :foo
+                 (columns (-> "longName"
+                              (distinct*)
+                              (as "a"))
+                          (-> "longName"
+                              (ttl)
+                              (as "ttla")))
+                 (where [[:in :k []]])
+                 (limit (? "limit")))))
+
+  (is (= "SELECT * FROM foo WHERE bar=:barmark AND baz=:bazmark LIMIT :limit;"
+         (select :foo
+                 (where [[:= :bar (? "barmark")]
+                         [:= :baz (? "bazmark")]])
+                 (limit (? "limit")))))
+
+  (is (= "SELECT a FROM foo WHERE k IN ?;";
+         (select :foo
+                 (column :a)
+                 (where [[:in :k [(?)]]]))))
+
+  (is (= "SELECT count(*) FROM foo;";
+         (select :foo
+                 (count-all))))
 
   )
 
-
-;;
-;; select().writeTime("a").ttl("a").from("foo").allowFiltering();
-
-
-
-;; "SELECT DISTINCT longName AS a,ttl(longName) AS ttla FROM foo WHERE k IN () LIMIT :limit;";
-;; select().distinct().column("longName").as("a").ttl("longName").as("ttla").from("foo").where(in("k")).limit(bindMarker("limit"));
-
-;; "SELECT * FROM foo WHERE bar=:barmark AND baz=:bazmark LIMIT :limit;";
-;; select().all().from("foo").where().and(eq("bar", bindMarker("barmark"))).and(eq("baz", bindMarker("bazmark"))).limit(bindMarker("limit"));
-
-;; "SELECT a FROM foo WHERE k IN ();";
-;; select("a").from("foo").where(in("k"));
-
-;; "SELECT a FROM foo WHERE k IN ?;";
-;; select("a").from("foo").where(in("k", bindMarker()));
 
 ;; "SELECT count(*) FROM foo;";
 ;; select().countAll().from("foo");

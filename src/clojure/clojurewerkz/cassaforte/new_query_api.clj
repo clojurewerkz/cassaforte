@@ -32,7 +32,7 @@
   (QueryBuilder/eq column value))
 
 (defn- ^Clause in
-  [^String column ^java.util.List values]
+  [^String column values]
   (QueryBuilder/in column values))
 
 (defn- ^Clause lt
@@ -126,6 +126,11 @@
   (fn distinct-query [query-builder]
     (.distinct (.column query-builder column))))
 
+(defn count-all
+  []
+  [:what (fn count-all-query [query-builder]
+           (.countAll query-builder))])
+
 (defn all
   []
   (fn all-query [query-builder]
@@ -150,7 +155,7 @@
 (defn column
   [column & {:keys [as]}]
   [:what (fn column-query [^Select$Selection query-builder]
-           (let [c (.column query-builder column)]
+           (let [c (.column query-builder (name column))]
              (if as
                (.as c as)
                c)))])
