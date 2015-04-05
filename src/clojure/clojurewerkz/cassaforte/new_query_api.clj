@@ -21,35 +21,7 @@
   [& column-names]
   (QueryBuilder/token (into-array column-names)))
 
-(def select-command-order
-  [QueryBuilder Select$Selection Select Select$Where])
 
-
-
-
-(defn- ^Clause eq
-  [^String column ^Object value]
-  (QueryBuilder/eq column value))
-
-(defn- ^Clause in
-  [^String column values]
-  (QueryBuilder/in column values))
-
-(defn- ^Clause lt
-  [^String column ^Object value]
-  (QueryBuilder/lt column value))
-
-(defn- ^Clause gt
-  [^String column ^Object value]
-  (QueryBuilder/gt column value))
-
-(defn- ^Clause lte
-  [^String column ^Object value]
-  (QueryBuilder/lte column value))
-
-(defn- ^Clause gte
-  [^String column ^Object value]
-  (QueryBuilder/gte column value))
 
 (defn asc
   [^String column-name]
@@ -67,18 +39,36 @@
   [s]
   (QueryBuilder/quote (name s)))
 
-(def ^:private query-type-map
-  {:in in
-   :=  eq
-   =   eq
-   :>  gt
-   >   gt
-   :>= gte
-   >=  gte
-   :<  lt
-   <   lt
-   :<= lte
-   <=  lte})
+(let [eq  (fn [^String column ^Object value]
+            (QueryBuilder/eq column value))
+
+      in  (fn [^String column values]
+            (QueryBuilder/in column values))
+
+      lt  (fn [^String column ^Object value]
+            (QueryBuilder/lt column value))
+
+      gt  (fn [^String column ^Object value]
+            (QueryBuilder/gt column value))
+
+      lte (fn [^String column ^Object value]
+            (QueryBuilder/lte column value))
+
+      gte (fn [^String column ^Object value]
+            (QueryBuilder/gte column value))]
+
+  (def ^:private query-type-map
+    {:in in
+     :=  eq
+     =   eq
+     :>  gt
+     >   gt
+     :>= gte
+     >=  gte
+     :<  lt
+     <   lt
+     :<= lte
+     <=  lte}))
 
 (defprotocol WhereBuilder
   (build-where [construct query-builder]))
