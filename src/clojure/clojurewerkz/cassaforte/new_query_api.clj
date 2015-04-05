@@ -59,6 +59,10 @@
   [^String column-name]
   (QueryBuilder/desc (name column-name)))
 
+(defn cname
+  [^String column-name]
+  (QueryBuilder/column column-name))
+
 (defn quote*
   [s]
   (QueryBuilder/quote (name s)))
@@ -131,11 +135,16 @@
   [:what (fn count-all-query [query-builder]
            (.countAll query-builder))])
 
+(defn fcall
+  [name & args]
+  [:what (fn fcall-query [query-builder]
+           (.fcall query-builder name (to-array args)))])
+
 (defn all
   []
   (fn all-query [query-builder]
-    (.all query-builder))
-  )
+    (.all query-builder)))
+
 (defn as
   [wrapper alias]
   (fn distinct-query [query-builder]
@@ -258,5 +267,5 @@
 ;; Assignment putAll(String name, Map<?, ?> map)
 ;; Assignment putAll(String name, BindMarker map)
 ;; Object raw(String str)
-;; Object fcall(String name, Object... parameters)
-;; Object column(String name)
+;;
+;;

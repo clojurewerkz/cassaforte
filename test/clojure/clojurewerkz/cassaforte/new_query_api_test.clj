@@ -112,13 +112,16 @@
          (select :foo
                  (count-all))))
 
+  (is (= "SELECT intToBlob(b) FROM foo;"
+         (select :foo
+                 (fcall "intToBlob"
+                        (cname "b")))))
+
+
   )
 
 
-;; "SELECT count(*) FROM foo;";
-;; select().countAll().from("foo");
-
-;; "SELECT intToBlob(b) FROM foo;";
+;;
 ;; select().fcall("intToBlob", column("b")).from("foo");
 
 ;; "SELECT * FROM foo WHERE k>42 LIMIT 42;";
