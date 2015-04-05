@@ -196,7 +196,7 @@
   [statements]
   (let [query-map (into {} statements)]
     (if (nil? (:what query-map))
-      (conj query-map
+      (conj statements
             [:what (all)])
       statements)))
 
@@ -205,7 +205,6 @@
   (->> (conj statements (from (name table-name)))
        (complete-select-query)
        (sort-by #(get select-order (first %)))
-       ;; (map println)
        (map second)
        (reduce (fn [builder statement]
                  (println builder statement)
