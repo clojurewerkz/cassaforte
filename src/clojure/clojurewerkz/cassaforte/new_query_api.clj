@@ -214,6 +214,25 @@
        (.toString)
        ))
 
+(defn ^:private insert-order
+  {:values        1
+   :using         2
+   :if-not-exists 3})
+
+(defn insert
+  [table-name & statements]
+  (->> statements
+       (complete-select-query)
+       (sort-by #(get select-order (first %)))
+       (map second)
+       (reduce (fn [builder statement]
+                 (println builder statement)
+                 (statement builder))
+               (QueryBuilder/insertInto (name table-name))
+               )
+       (.toString)
+       ))
+
 ;; Insert insertInto(String table)
 ;; Insert insertInto(String keyspace, String table)
 ;; Insert insertInto(TableMetadata table)
