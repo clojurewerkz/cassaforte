@@ -95,14 +95,6 @@
      query-builder
      construct)))
 
-(def ^:private select-order
-  {:what      1
-   :from      2
-   :where     3
-   :order     4
-   :limit     4
-   :filtering 5})
-
 
 ;;
 ;; Columns
@@ -200,6 +192,14 @@
             [:what (all)])
       statements)))
 
+(def ^:private select-order
+  {:what      1
+   :from      2
+   :where     3
+   :order     4
+   :limit     4
+   :filtering 5})
+
 (defn select
   [table-name & statements]
   (->> (conj statements (from (name table-name)))
@@ -214,8 +214,6 @@
        (.toString)
        ))
 
-;; Select.Builder select(String... columns)
-;; Select.Selection select()
 ;; Insert insertInto(String table)
 ;; Insert insertInto(String keyspace, String table)
 ;; Insert insertInto(TableMetadata table)
