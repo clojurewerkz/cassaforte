@@ -69,7 +69,7 @@
                               distinct*
                               (as "a"))
                           (-> "longName"
-                              ttl
+                              ttl-column
                               (as "ttla")))
                  (limit (? "limit")))))
 
@@ -88,7 +88,7 @@
   (is (= "SELECT writetime(a),ttl(a) FROM foo ALLOW FILTERING;"
          (select :foo
                  (columns (write-time :a)
-                          (ttl :a))
+                          (ttl-column :a))
                  (allow-filtering))))
 
 
@@ -98,7 +98,7 @@
                               (distinct*)
                               (as "a"))
                           (-> "longName"
-                              (ttl)
+                              (ttl-column)
                               (as "ttla")))
                  (where [[:in :k []]])
                  (limit (? "limit")))))
@@ -154,10 +154,10 @@
                  (where {:b (Bytes/fromHexString "0xCAFEBABE")}))))
 
   (is (thrown? java.lang.IllegalStateException
-       (select :foo
-               (count-all)
-               (order-by (asc "a") (desc "b"))
-               (order-by (asc "a") (desc "b")))))
+               (select :foo
+                       (count-all)
+                       (order-by (asc "a") (desc "b"))
+                       (order-by (asc "a") (desc "b")))))
 
   (is (thrown? java.lang.IllegalArgumentException
                (select :foo
