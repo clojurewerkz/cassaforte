@@ -218,7 +218,29 @@
        (.toString)
        ))
 
-(defn ^:private insert-order
+(defn value
+  [key value]
+  [:values
+   (fn order-by-query [query-builder]
+     (.value query-builder key value))])
+
+(defn values
+  ([m]
+     [:values
+      (fn order-by-query [query-builder]
+        (.values query-builder (into-array (keys m)) (into-array (vals m))))])
+  ([key-seq value-seq]
+     [:values
+      (fn order-by-query [query-builder]
+        (.values query-builder (into-array key-seq) (into-array value-seq)))]))
+
+(defn using
+  [key value]
+  [:using
+   (fn order-by-query [query-builder]
+     (.using query-builder key value))])
+
+(def ^:private insert-order
   {:values        1
    :using         2
    :if-not-exists 3})
@@ -226,7 +248,6 @@
 (defn insert
   [table-name & statements]
   (->> statements
-       (complete-select-query)
        (sort-by #(get select-order (first %)))
        (map second)
        (reduce (fn [builder statement]
@@ -234,8 +255,7 @@
                  (statement builder))
                (QueryBuilder/insertInto (name table-name))
                )
-       (.toString)
-       ))
+       (.toString)))
 
 ;; Insert insertInto(String table)
 ;; Insert insertInto(String keyspace, String table)
