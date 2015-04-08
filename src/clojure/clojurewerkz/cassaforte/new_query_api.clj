@@ -17,6 +17,10 @@
   ([name]
      (QueryBuilder/bindMarker name)))
 
+(defn timestamp
+  [column-name]
+  (QueryBuilder/timestamp column-name))
+
 (defn token
   [& column-names]
   (QueryBuilder/token (into-array column-names)))
@@ -71,29 +75,29 @@
      :<  lt
      <   lt
      :<= lte
-     <=  lte}))
+     <=  lte})
 
-(defprotocol WhereBuilder
-  (build-where [construct query-builder]))
+  (defprotocol WhereBuilder
+    (build-where [construct query-builder]))
 
-(extend-protocol WhereBuilder
-  clojure.lang.IPersistentVector
-  (build-where [construct ^Select$Where query-builder]
-    (reduce
-     (fn [^Select$Where builder [query-type column value]]
-       (if-let [eq-type (query-type-map query-type)]
-         (.and builder ((query-type-map query-type) (name column) value))
-         (throw (IllegalArgumentException. (str query-type " is not a valid Clause")))
-         ))
-     query-builder
-     construct))
-  clojure.lang.IPersistentMap
-  (build-where [construct ^Select$Where query-builder]
-    (reduce
-     (fn [^Select$Where builder [column value]]
-       (.and builder (eq (name column) value)))
-     query-builder
-     construct)))
+  (extend-protocol WhereBuilder
+    clojure.lang.IPersistentVector
+    (build-where [construct ^Select$Where query-builder]
+      (reduce
+       (fn [^Select$Where builder [query-type column value]]
+         (if-let [eq-type (query-type-map query-type)]
+           (.and builder ((query-type-map query-type) (name column) value))
+           (throw (IllegalArgumentException. (str query-type " is not a valid Clause")))
+           ))
+       query-builder
+       construct))
+    clojure.lang.IPersistentMap
+    (build-where [construct ^Select$Where query-builder]
+      (reduce
+       (fn [^Select$Where builder [column value]]
+         (.and builder (eq (name column) value)))
+       query-builder
+       construct))))
 
 
 ;;
@@ -105,7 +109,7 @@
   (fn writetime-query [query-builder]
     (.writeTime query-builder (name column))))
 
-(defn ttl
+(defn ttl-column
   [column]
   (fn ttl-query [query-builder]
     (.ttl query-builder (name column))))
