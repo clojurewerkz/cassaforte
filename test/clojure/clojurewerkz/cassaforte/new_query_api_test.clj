@@ -196,8 +196,3 @@
   )
 
 
-;; select().countAll().from("foo").orderBy(asc("a"), desc("b")).orderBy(asc("a"), desc("b"));
-;; select().column("a").all().from("foo");
-;; select().column("a").countAll().from("foo");
-;; select().all().from("foo").limit(-42);
-;; select().all().from("foo").limit(42).limit(42);
