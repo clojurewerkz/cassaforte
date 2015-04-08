@@ -167,6 +167,19 @@
                (select :foo
                        (limit 42)
                        (limit 42))))
+
+  (is (= "INSERT INTO foo(asd) VALUES ('bsd');"
+         (insert :foo
+                 (value "asd" "bsd"))))
+  (is (= "INSERT INTO foo(asd) VALUES ('bsd');"
+         (insert :foo
+                 (values ["asd"] ["bsd"]))))
+
+  (is (= "INSERT INTO foo(asd) VALUES ('bsd');"
+         (insert :foo
+                 (values {"asd" "bsd"}))))
+
+
   )
 
 
