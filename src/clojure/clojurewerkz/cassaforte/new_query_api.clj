@@ -234,11 +234,15 @@
       (fn order-by-query [query-builder]
         (.values query-builder (into-array key-seq) (into-array value-seq)))]))
 
-(defn using
-  [key value]
-  [:using
-   (fn order-by-query [query-builder]
-     (.using query-builder key value))])
+(let [with-values {:timestamp #(QueryBuilder/timestamp %)
+                   :ttl       #(QueryBuilder/ttl %)}]
+  (defn using
+    [m]
+    [:using
+     (fn order-by-query [query-builder]
+       (doseq [[key value] m]
+         (.using query-builder ((get with-values key) value)))
+       query-builder)]))
 
 (def ^:private insert-order
   {:values        1
