@@ -191,8 +191,18 @@
                  (using (array-map :timestamp 42
                                    :ttl       24))
 
-                 )
-         ))
+                 )))
+
+  (is (= "INSERT INTO foo(a,b,\"C\",d) VALUES (123,'127.0.0.1','foo''bar',{'x':3,'y':2}) USING TIMESTAMP 42 AND TTL 24;"
+         (insert :foo
+                 (value "a" 123)
+                 (value "b" (java.net.InetAddress/getByName "127.0.0.1"))
+                 (value (quote* "C") "foo'bar")
+                 (value "d" {"x" 3 "y" 2})
+                 (using (array-map :timestamp 42
+                                   :ttl       24))
+                )))
+
   )
 
 
