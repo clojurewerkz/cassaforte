@@ -200,9 +200,22 @@
                  (value (quote* "C") "foo'bar")
                  (value "d" {"x" 3 "y" 2})
                  (using (array-map :timestamp 42
-                                   :ttl       24))
-                )))
+                                   :ttl       24)))))
 
+
+  (is (= "INSERT INTO foo(a,b) VALUES ({2,3,4},3.4) USING TIMESTAMP 42 AND TTL 24;"
+         (insert :foo
+                 (values ["a" "b"]
+                         (object-array
+                          [(doto (java.util.TreeSet.)
+                             (.add 2)
+                             (.add 3)
+                             (.add 4))
+                           3.4]))
+                 (using (array-map :timestamp 42
+                                   :ttl       24))
+                 )
+         ))
   )
 
 
