@@ -232,7 +232,7 @@
   ([key-seq value-seq]
      [:values
       (fn order-by-query [query-builder]
-        (.values query-builder (into-array key-seq) (into-array value-seq)))]))
+        (.values query-builder (into-array key-seq) (object-array value-seq)))]))
 
 (let [with-values {:timestamp #(QueryBuilder/timestamp %)
                    :ttl       #(QueryBuilder/ttl %)}]
@@ -257,13 +257,9 @@
        (reduce (fn [builder statement]
                  (println builder statement)
                  (statement builder))
-               (QueryBuilder/insertInto (name table-name))
-               )
+               (QueryBuilder/insertInto (name table-name)))
        (.toString)))
 
-;; Insert insertInto(String table)
-;; Insert insertInto(String keyspace, String table)
-;; Insert insertInto(TableMetadata table)
 ;; Update update(String table)
 ;; Update update(String keyspace, String table)
 ;; Update update(TableMetadata table)
@@ -275,8 +271,6 @@
 ;; Truncate truncate(String keyspace, String table)
 ;; Truncate truncate(TableMetadata table)
 ;; String quote(String columnName)
-;; Using timestamp(long timestamp)
-;; Using timestamp(BindMarker marker)
 ;; Assignment set(String name, Object value)
 ;; Assignment incr(String name)
 ;; Assignment incr(String name, long value)
