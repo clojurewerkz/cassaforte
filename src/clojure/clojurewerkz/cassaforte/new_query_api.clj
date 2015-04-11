@@ -261,8 +261,9 @@
 (defn value
   [key value]
   [:values
-   (fn order-by-query [query-builder]
-     (.value query-builder key value))])
+   (fn value-query [query-builder]
+     (.value query-builder (name key) value))])
+
 
 (defn values
   ([m]
@@ -279,7 +280,7 @@
   (defn using
     [m]
     [:using
-     (fn order-by-query [query-builder]
+     (fn using-query [query-builder]
        (doseq [[key value] m]
          (.using query-builder ((get with-values key) value)))
        query-builder)]))
