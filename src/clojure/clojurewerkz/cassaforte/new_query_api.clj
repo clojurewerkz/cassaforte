@@ -400,6 +400,42 @@
   [values]
   (fn [column-name]
     (QueryBuilder/putAll column-name values)))
+
+(def ^:private insert-order
+  {:where   1
+   :values  2
+   :only-if 4})
+
+(defn- make-assignment
+  [[k v]]
+  (if (fn? v)
+    (v (name k))
+    (set-column- (name k) v))
+  )
+
+
+
+(defn- update-records-statement
+  [m]
+  [:values (fn update-records-statement-inner [query-builder]
+             (let [first-pair    (first m)
+                   more-pairs    (rest m)
+                   query-builder (.with query-builder (make-assignment first-pair))]
+               (doseq [kvp more-pairs]
+                 (.and query-builder (make-assignment kvp)))
+               query-builder))])
+
+(defn update
+  [table-name records & statements]
+  (->> (conj statements (update-records-statement records))
+       (sort-by #(get insert-order (first %)))
+       (map second)
+       (reduce (fn [builder statement]
+                 (println statement builder)
+                 (statement builder))
+               (QueryBuilder/update (name table-name)))
+       (.toString)))
+
 ;; Delete.Builder delete(String... columns)
 ;; Delete.Selection delete()
 ;; Batch batch(RegularStatement... statements)
