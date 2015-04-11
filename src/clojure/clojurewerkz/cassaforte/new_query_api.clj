@@ -264,6 +264,11 @@
    (fn value-query [query-builder]
      (.value query-builder (name key) value))])
 
+(defn if-not-exists
+  []
+  [:if-not-exists
+   (fn if-not-exists [query-builder]
+     (.ifNotExists query-builder))])
 
 (defn values
   ([m]
