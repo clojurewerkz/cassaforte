@@ -304,14 +304,102 @@
        (sort-by #(get select-order (first %)))
        (map second)
        (reduce (fn [builder statement]
-                 (println builder statement)
                  (statement builder))
                (QueryBuilder/insertInto (name table-name)))
        (.toString)))
 
-;; Update update(String table)
-;; Update update(String keyspace, String table)
-;; Update update(TableMetadata table)
+;;
+;; Update Query
+;;
+
+(defn- set-column-
+  [^String column-name column-value]
+  (QueryBuilder/set column-name column-value))
+
+(defn increment
+  []
+  (fn [column-name]
+    (QueryBuilder/incr column-name)))
+
+(defn increment-by
+  [by-value]
+  (fn [column-name]
+    (QueryBuilder/incr column-name by-value)))
+
+(defn decrement
+  []
+  (fn [column-name]
+    (QueryBuilder/decr column-name)))
+
+(defn decrement-by
+  [by-value]
+  (fn [column-name]
+    (QueryBuilder/decr column-name by-value)))
+
+(defn prepend
+  [value]
+  (fn [column-name]
+    (QueryBuilder/prepend column-name value)))
+
+(defn prepend-all
+  [values]
+  (fn [column-name]
+    (QueryBuilder/prependAll column-name values)))
+
+(defn append
+  [value]
+  (fn [column-name]
+    (QueryBuilder/append column-name value)))
+
+(defn append-all
+  [values]
+  (fn [column-name]
+    (QueryBuilder/appendAll column-name values)))
+
+(defn discard
+  [value]
+  (fn [column-name]
+    (QueryBuilder/discard column-name value)))
+
+(defn discard-all
+  [values]
+  (fn [column-name]
+    (QueryBuilder/discardAll column-name values)))
+
+(defn set-idx
+  [idx value]
+  (fn [column-name]
+    (QueryBuilder/setIdx column-name idx value)))
+
+(defn add-tail
+  [value]
+  (fn [column-name]
+    (QueryBuilder/add column-name value)))
+
+(defn add-all-tail
+  [values]
+  (fn [column-name]
+    (QueryBuilder/addAll column-name values)))
+
+(defn remove-tail
+  [value]
+  (fn [column-name]
+    (QueryBuilder/remove column-name value)))
+
+(defn remove-all-tail
+  [column-name]
+  (fn [values]
+    (QueryBuilder/removeAll column-name values)))
+
+(defn put-value
+  [key value]
+  (fn [column-name]
+    (QueryBuilder/put column-name key value)))
+
+(defn put-values
+  [values]
+  (fn [column-name]
+    (QueryBuilder/putAll column-name values)))
 ;; Delete.Builder delete(String... columns)
 ;; Delete.Selection delete()
 ;; Batch batch(RegularStatement... statements)
