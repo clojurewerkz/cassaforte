@@ -273,12 +273,12 @@
 (defn values
   ([m]
      [:values
-      (fn order-by-query [query-builder]
-        (.values query-builder (into-array (keys m)) (into-array (vals m))))])
+      (fn values-query [query-builder]
+        (.values query-builder (into-array (map name (keys m))) (object-array (vals m))))])
   ([key-seq value-seq]
      [:values
       (fn order-by-query [query-builder]
-        (.values query-builder (into-array key-seq) (object-array value-seq)))]))
+        (.values query-builder (into-array (map name key-seq)) (object-array value-seq)))]))
 
 (let [with-values {:timestamp #(QueryBuilder/timestamp %)
                    :ttl       #(QueryBuilder/ttl %)}]
