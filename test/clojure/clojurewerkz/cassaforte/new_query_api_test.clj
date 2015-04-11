@@ -202,20 +202,53 @@
                  (using (array-map :timestamp 42
                                    :ttl       24)))))
 
-
   (is (= "INSERT INTO foo(a,b) VALUES ({2,3,4},3.4) USING TIMESTAMP 42 AND TTL 24;"
          (insert :foo
                  (values ["a" "b"]
-                         (object-array
-                          [(doto (java.util.TreeSet.)
-                             (.add 2)
-                             (.add 3)
-                             (.add 4))
-                           3.4]))
+                         [(doto (java.util.TreeSet.)
+                            (.add 2)
+                            (.add 3)
+                            (.add 4))
+                          3.4])
                  (using (array-map :timestamp 42
-                                   :ttl       24))
-                 )
-         ))
+                                   :ttl       24)))))
+
+  (is (= "INSERT INTO foo(a,b) VALUES ({2,3,4},3.4) USING TTL ? AND TIMESTAMP ?;"
+         (insert :foo
+                 (values [:a :b]
+                         [(doto (java.util.TreeSet.)
+                            (.add 2)
+                            (.add 3)
+                            (.add 4))
+                          3.4])
+                 (using (array-map :ttl       (?)
+                                   :timestamp (?))))))
+
+  (is (= "INSERT INTO foo(c,a,b) VALUES (123,{2,3,4},3.4) USING TIMESTAMP 42;"
+         (insert :foo
+                 (value :c 123)
+                 (values [:a :b]
+                         [(doto (java.util.TreeSet.)
+                            (.add 2)
+                            (.add 3)
+                            (.add 4))
+                          3.4]
+                         )
+                 (using {:timestamp 42}))))
+
+  (is (thrown? IllegalArgumentException
+               (insert :foo
+                       (values [:a :b]
+                               [1 2 3]))))
+
+  (is (= "INSERT INTO foo(k,x) VALUES (0,1) IF NOT EXISTS;";
+         (insert :foo
+                 (value :k 0)
+                 (value :x 1)
+                 (if-not-exists))))
+
+  (is (= "INSERT INTO foo(k,x) VALUES (0,(1));";
+         (insert :foo
+                 (value :k 0)
+                 (value :x (tuple-of [:int] [(int 1)])))))
   )
-
-
