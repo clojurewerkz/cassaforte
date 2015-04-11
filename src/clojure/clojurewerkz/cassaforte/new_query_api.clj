@@ -83,9 +83,9 @@
 
   (extend-protocol WhereBuilder
     clojure.lang.IPersistentVector
-    (build-where [construct ^Select$Where query-builder]
+    (build-where [construct query-builder]
       (reduce
-       (fn [^Select$Where builder [query-type column value]]
+       (fn [builder [query-type column value]]
          (if-let [eq-type (query-type-map query-type)]
            (.and builder ((query-type-map query-type) (name column) value))
            (throw (IllegalArgumentException. (str query-type " is not a valid Clause")))
@@ -93,9 +93,9 @@
        query-builder
        construct))
     clojure.lang.IPersistentMap
-    (build-where [construct ^Select$Where query-builder]
+    (build-where [construct query-builder]
       (reduce
-       (fn [^Select$Where builder [column value]]
+       (fn [builder [column value]]
          (.and builder (eq (name column) value)))
        query-builder
        construct))))
@@ -201,7 +201,7 @@
 (defn where
   [m]
   [:where
-   (fn where-query [^Select query-builder]
+   (fn where-query [query-builder]
      (build-where m (.where query-builder)))])
 
 (defn order-by
@@ -251,12 +251,15 @@
        (sort-by #(get select-order (first %)))
        (map second)
        (reduce (fn [builder statement]
-                 (println builder statement)
                  (statement builder))
                (QueryBuilder/select)
                )
        (.toString)
        ))
+
+;;
+;; Insert Query
+;;
 
 (defn value
   [key value]
