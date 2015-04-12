@@ -80,26 +80,29 @@
      <=  lte})
 
   (defprotocol WhereBuilder
-    (build-where [construct query-builder]))
+    (to-clauses [construct]))
 
   (extend-protocol WhereBuilder
     clojure.lang.IPersistentVector
-    (build-where [construct query-builder]
+    (to-clauses [construct]
       (reduce
-       (fn [builder [query-type column value]]
+       (fn [acc [query-type column value]]
          (if-let [eq-type (query-type-map query-type)]
-           (.and builder ((query-type-map query-type) (name column) value))
+           (conj acc ((query-type-map query-type) (name column) value))
            (throw (IllegalArgumentException. (str query-type " is not a valid Clause")))
            ))
-       query-builder
+       []
        construct))
     clojure.lang.IPersistentMap
-    (build-where [construct query-builder]
+    (to-clauses [construct]
       (reduce
-       (fn [builder [column value]]
-         (.and builder (eq (name column) value)))
-       query-builder
-       construct))))
+       (fn [acc [column value]]
+         (conj acc (eq- (name column) value)))
+       []
+       construct)))
+
+
+  )
 
 ;;
 ;; Tuples
