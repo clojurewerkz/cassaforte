@@ -47,10 +47,11 @@
   [s]
   (QueryBuilder/quote (name s)))
 
-(let [eq  (fn [^String column ^Object value]
-            (QueryBuilder/eq column value))
+(defn eq-
+  [^String column ^Object value]
+  (QueryBuilder/eq column value))
 
-      in  (fn [^String column values]
+(let [in  (fn [^String column values]
             (QueryBuilder/in column values))
 
       lt  (fn [^String column ^Object value]
@@ -67,8 +68,8 @@
 
   (def ^:private query-type-map
     {:in in
-     :=  eq
-     =   eq
+     :=  eq-
+     =   eq-
      :>  gt
      >   gt
      :>= gte
