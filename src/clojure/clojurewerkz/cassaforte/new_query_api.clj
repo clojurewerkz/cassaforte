@@ -206,7 +206,10 @@
   [m]
   [:where
    (fn where-query [query-builder]
-     (build-where m (.where query-builder)))])
+     (let [query-builder (.where query-builder)]
+       (doseq [clause (to-clauses m)]
+         (.and query-builder clause))
+       query-builder))])
 
 (defn order-by
   [& orderings]
@@ -391,8 +394,8 @@
     (QueryBuilder/remove column-name value)))
 
 (defn remove-all-tail
-  [column-name]
-  (fn [values]
+  [values]
+  (fn [column-name]
     (QueryBuilder/removeAll column-name values)))
 
 (defn put-value
@@ -417,17 +420,33 @@
     (set-column- (name k) v))
   )
 
+(defn only-if
+  [m]
+  [:only-if
+   (fn only-if-query [query-builder]
+     (let [[first & more] (to-clauses m)
+           query-builder  (.onlyIf query-builder first)]
+       (doseq [current more]
+         (.and query-builder current))
+       query-builder)
 
+
+     )])
 
 (defn- update-records-statement
   [m]
-  [:values (fn update-records-statement-inner [query-builder]
-             (let [first-pair    (first m)
-                   more-pairs    (rest m)
-                   query-builder (.with query-builder (make-assignment first-pair))]
-               (doseq [kvp more-pairs]
-                 (.and query-builder (make-assignment kvp)))
-               query-builder))])
+  [:values
+   (if (empty? m)
+     (fn update-records-statement-inner [query-builder]
+       query-builder)
+     (fn update-records-statement-inner [query-builder]
+       (let [first-pair    (first m)
+             more-pairs    (rest m)
+             query-builder (.with query-builder (make-assignment first-pair))]
+         (doseq [kvp more-pairs]
+           (.and query-builder (make-assignment kvp)))
+         query-builder))
+     )])
 
 (defn update
   [table-name records & statements]
