@@ -185,9 +185,7 @@
                  (value "a" 123)
                  (value "b" (java.net.InetAddress/getByName "127.0.0.1"))
                  (value (quote* "C") "foo'bar")
-                 (value "d" (doto (java.util.TreeMap.)
-                              (.put "x" 3)
-                              (.put "y" 2)))
+                 (value "d" (array-map "x" 3 "y" 2))
                  (using (array-map :timestamp 42
                                    :ttl       24))
 
@@ -205,22 +203,14 @@
   (is (= "INSERT INTO foo(a,b) VALUES ({2,3,4},3.4) USING TIMESTAMP 42 AND TTL 24;"
          (insert :foo
                  (values ["a" "b"]
-                         [(doto (java.util.TreeSet.)
-                            (.add 2)
-                            (.add 3)
-                            (.add 4))
-                          3.4])
+                         [(sorted-set 2 3 4) 3.4])
                  (using (array-map :timestamp 42
                                    :ttl       24)))))
 
   (is (= "INSERT INTO foo(a,b) VALUES ({2,3,4},3.4) USING TTL ? AND TIMESTAMP ?;"
          (insert :foo
                  (values [:a :b]
-                         [(doto (java.util.TreeSet.)
-                            (.add 2)
-                            (.add 3)
-                            (.add 4))
-                          3.4])
+                         [(sorted-set 2 3 4) 3.4])
                  (using (array-map :ttl       (?)
                                    :timestamp (?))))))
 
@@ -228,11 +218,7 @@
          (insert :foo
                  (value :c 123)
                  (values [:a :b]
-                         [(doto (java.util.TreeSet.)
-                            (.add 2)
-                            (.add 3)
-                            (.add 4))
-                          3.4]
+                         [(sorted-set 2 3 4) 3.4]
                          )
                  (using {:timestamp 42}))))
 
