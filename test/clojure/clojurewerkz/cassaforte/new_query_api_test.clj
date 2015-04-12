@@ -263,4 +263,62 @@
                  )))
 
 
-  )
+  (is (= "UPDATE foo SET b=[3]+b,c=c+['a'],d=d+[1,2,3],e=e-[1];"
+         (update :foo
+                 (array-map :b (prepend 3)
+                            :c (append "a")
+                            :d (append-all [1 2 3])
+                            :e (discard 1)))))
+
+  (is (= "UPDATE foo SET b=b-[1,2,3],c=c+{1},d=d+{4,3,2};"
+         (update :foo
+                 (array-map :b (discard-all [1 2 3])
+                            :c (add-tail 1)
+                            :d (add-all-tail #{2 3 4})))))
+
+  (is (= "UPDATE foo SET b=b-{2,3,4},c['k']='v',d=d+{'x':3,'y':2};"
+         (update :foo
+                 (array-map :b (remove-all-tail (sorted-set 2 3 4))
+                            :c (put-value "k" "v")
+                            :d (put-values (array-map "x" 3
+                                                      "y" 2))))))
+
+  (is (= "UPDATE foo USING TTL 400;"
+         (update :foo
+                 {}
+                 (using {:ttl 400}))))
+
+
+  (is (= (str "UPDATE foo SET a=" (BigDecimal. 3.2) ",b=42 WHERE k=2;")
+         (update :foo
+                 (array-map :a (BigDecimal. 3.2)
+                            :b (BigInteger. "42"))
+                 (where {:k 2}))))
+
+  (is (= "UPDATE foo USING TIMESTAMP 42 SET b=[3,2,1]+b WHERE k=2 AND l='foo';"
+         (update :foo
+                 (array-map :b (prepend-all [3 2 1]))
+                 (where (array-map :k 2
+                                   :l "foo"))
+                 (using {:timestamp 42}))))
+
+  (is (thrown? IllegalArgumentException
+               (update :foo
+                       {}
+                       (using {:ttl -400}))))
+
+  (is (= "UPDATE foo SET x=4 WHERE k=0 IF x=1;"
+         (update :foo
+                 {:x 4}
+                 (where {:k 0})
+                 (only-if {:x 1}))))
+
+  (is (= "UPDATE foo SET x=4 WHERE k=0 IF foo='bar' AND moo>3 AND meh>4 AND baz IN (5,6,7);"
+         (update :foo
+                 {:x 4}
+                 (where {:k 0})
+                 (only-if [[:= :foo "bar"]
+                           [:> :moo 3]
+                           [:> :meh 4]
+                           [:in :baz [5 6 7]]
+                           ])))))
