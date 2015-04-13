@@ -295,15 +295,13 @@
   [m]
   [:using m])
 
-(def ^:private insert-order
-  {:values        1
-   :value         1
-   :values-vector 1
-   :values-seq    1
-   :using         2
-   :if-not-exists 3})
-
-(let [with-values {:timestamp #(QueryBuilder/timestamp %)
+(let [order       {:values        1
+                   :value         1
+                   :values-vector 1
+                   :values-seq    1
+                   :using         2
+                   :if-not-exists 3}
+      with-values {:timestamp #(QueryBuilder/timestamp %)
                    :ttl       #(QueryBuilder/ttl %)}
       renderers
       {:value         (fn value-query [query-builder [key value]]
@@ -317,12 +315,11 @@
        :using         (fn using-query [query-builder m]
                         (doseq [[key value] m]
                           (.using query-builder ((get with-values key) value)))
-                        query-builder)
-       }]
+                        query-builder)}]
   (defn insert
     [table-name & statements]
     (->> statements
-         (sort-by #(get select-order (first %)))
+         (sort-by #(get order (first %)))
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (QueryBuilder/insertInto (name table-name)))
