@@ -160,18 +160,16 @@
 
 (defn count-all
   []
-  [:what (fn count-all-query [query-builder]
-           (.countAll query-builder))])
+  [:what-count nil])
 
 (defn fcall
   [name & args]
-  [:what (fn fcall-query [query-builder]
-           (.fcall query-builder name (to-array args)))])
+  [:what-fcall [name args]])
 
 (defn all
   []
-  (fn all-query [query-builder]
-    (.all query-builder)))
+  ;; TODO: resolve API inconsistency
+  [:what-all nil])
 
 (defn as
   [wrapper alias]
@@ -180,84 +178,100 @@
 
 (defn columns
   [& columns]
-  [:what (fn [^Select$Selection query-builder]
-           (reduce (fn [^Select$Selection builder column]
-                     (if (string? column)
-                       (.column builder column)
-                       (column builder)))
-                   query-builder
-                   columns))])
+  [:what-columns columns])
 
 
 (defn column
-  [column & {:keys [as]}]
-  [:what (fn column-query [^Select$Selection query-builder]
-           (let [c (.column query-builder (name column))]
-             (if as
-               (.as c as)
-               c)))])
+  [column & keys]
+  [:what-column [column keys]])
 
 (defn where
   [m]
-  [:where
-   (fn where-query [query-builder]
-     (let [query-builder (.where query-builder)]
-       (doseq [clause (to-clauses m)]
-         (.and query-builder clause))
-       query-builder))])
+  [:where m])
 
 (defn order-by
   [& orderings]
-  [:order
-   (fn order-by-query [query-builder]
-     (.orderBy query-builder (into-array orderings)))])
+  [:order orderings])
 
 (defn limit
   [lim]
-  [:limit
-   (fn order-by-query [^Select  query-builder]
-     (.limit query-builder lim))])
+  [:limit lim])
 
 (defn allow-filtering
   []
-  [:filtering
-   (fn order-by-query [^Select  query-builder]
-     (.allowFiltering query-builder))])
+  [:filtering nil])
 
 (defn- from
   [^String table-name]
-  [:from (fn from-query [^Select$Selection query-builder]
-           (.from query-builder (name table-name))
-           )])
+  [:from table-name])
 
 (defn- complete-select-query
   [statements]
   (let [query-map (into {} statements)]
-    (if (nil? (:what query-map))
-      (conj statements
-            [:what (all)])
+    (if (nil? (or (:what-columns query-map)
+                  (:what-column query-map)
+                  (:what-count query-map)
+                  (:what-fcall query-map)))
+      (conj statements (all))
       statements)))
 
-(def ^:private select-order
-  {:what      1
-   :from      2
-   :where     3
-   :order     4
-   :limit     4
-   :filtering 5})
+(let [order     {:what-count   1
+                 :what-fcall   1
+                 :what-columns 1
+                 :what-column  1
+                 :from         2
+                 :where        3
+                 :order        4
+                 :limit        4
+                 :filtering    5}
+      renderers
+      {:what-count   (fn count-all-query [query-builder _]
+                       (.countAll query-builder))
+       :what-fcall   (fn fcall-query [query-builder [name args]]
+                       (.fcall query-builder name (to-array args)))
+       :what-columns (fn [query-builder columns]
+                       (reduce (fn [builder column]
+                                 (if (string? column)
+                                   (.column builder column)
+                                   (column builder)))
+                               query-builder
+                               columns))
+       :what-column  (fn column-query [query-builder [column {:keys [as]}]]
+                       (let [c (.column query-builder (name column))]
+                         (if as
+                           (.as c as)
+                           c)))
+       :where        (fn where-query [query-builder m]
+                       (let [query-builder (.where query-builder)]
+                         (doseq [clause (to-clauses m)]
+                           (.and query-builder clause))
+                         query-builder))
+       :what-all     (fn all-query [query-builder _]
+                       (.all query-builder))
+       :order        (fn order-by-query [query-builder orderings]
+                       (.orderBy query-builder (into-array orderings)))
 
-(defn select
-  [table-name & statements]
-  (->> (conj statements (from (name table-name)))
-       (complete-select-query)
-       (sort-by #(get select-order (first %)))
-       (map second)
-       (reduce (fn [builder statement]
-                 (statement builder))
-               (QueryBuilder/select)
-               )
-       (.toString)
-       ))
+       :limit        (fn order-by-query [query-builder lim]
+                       (.limit query-builder lim))
+
+       :filtering    (fn order-by-query [query-builder _]
+                       (.allowFiltering query-builder))
+
+       :from         (fn from-query [query-builder table-name]
+                       (.from query-builder (name table-name)))
+       }]
+  (defn select
+    [table-name & statements]
+    (->> (conj statements (from (name table-name)))
+         (complete-select-query)
+         (sort-by #(get order (first %)))
+         ;; (map second)
+         (reduce (fn [builder [statement-name statement-args]]
+                   (println statement-name)
+                   ((get renderers statement-name) builder statement-args))
+                 (QueryBuilder/select))
+         (.toString)
+         )))
 
 ;;
 ;; Insert Query
