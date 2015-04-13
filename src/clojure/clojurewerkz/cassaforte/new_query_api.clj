@@ -97,10 +97,7 @@
        (fn [acc [column value]]
          (conj acc (eq (name column) value)))
        []
-       construct)))
-
-
-  )
+       construct))))
 
 ;;
 ;; Tuples
@@ -268,50 +265,54 @@
 
 (defn value
   [key value]
-  [:values
-   (fn value-query [query-builder]
-     (.value query-builder (name key) value))])
+  [:value [key value]])
 
 (defn if-not-exists
   []
-  [:if-not-exists
-   (fn if-not-exists [query-builder]
-     (.ifNotExists query-builder))])
+  [:if-not-exists nil])
 
 (defn values
   ([m]
-     [:values
-      (fn values-query [query-builder]
-        (.values query-builder (into-array (map name (keys m))) (object-array (vals m))))])
+     [:values-vector m])
   ([key-seq value-seq]
-     [:values
-      (fn order-by-query [query-builder]
-        (.values query-builder (into-array (map name key-seq)) (object-array value-seq)))]))
+     [:values-seq [key-seq value-seq]]))
 
-(let [with-values {:timestamp #(QueryBuilder/timestamp %)
-                   :ttl       #(QueryBuilder/ttl %)}]
-  (defn using
-    [m]
-    [:using
-     (fn using-query [query-builder]
-       (doseq [[key value] m]
-         (.using query-builder ((get with-values key) value)))
-       query-builder)]))
+(defn using
+  [m]
+  [:using m])
 
 (def ^:private insert-order
   {:values        1
+   :value         1
+   :values-vector 1
+   :values-seq    1
    :using         2
    :if-not-exists 3})
 
-(defn insert
-  [table-name & statements]
-  (->> statements
-       (sort-by #(get select-order (first %)))
-       (map second)
-       (reduce (fn [builder statement]
-                 (statement builder))
-               (QueryBuilder/insertInto (name table-name)))
-       (.toString)))
+(let [with-values {:timestamp #(QueryBuilder/timestamp %)
+                   :ttl       #(QueryBuilder/ttl %)}
+      renderers
+      {:value         (fn value-query [query-builder [key value]]
+                        (.value query-builder (name key) value))
+       :if-not-exists (fn value-query [query-builder _]
+                        (.value query-builder (name key) value))
+       :values-vector (fn values-query [query-builder m]
+                        (.values query-builder (into-array (map name (keys m))) (object-array (vals m))))
+       :values-seq    (fn order-by-query [query-builder [key-seq value-seq]]
+                        (.values query-builder (into-array (map name key-seq)) (object-array value-seq)))
+       :using         (fn using-query [query-builder m]
+                        (doseq [[key value] m]
+                          (.using query-builder ((get with-values key) value)))
+                        query-builder)
+       }]
+  (defn insert
+    [table-name & statements]
+    (->> statements
+         (sort-by #(get select-order (first %)))
+         (reduce (fn [builder [statement-name statement-args]]
+                   ((get renderers statement-name) builder statement-args))
+                 (QueryBuilder/insertInto (name table-name)))
+         (.toString))))
 
 ;;
 ;; Update Query
@@ -415,8 +416,7 @@
   [[k v]]
   (if (fn? v)
     (v (name k))
-    (set-column- (name k) v))
-  )
+    (set-column- (name k) v)))
 
 (defn only-if
   [m]
@@ -426,10 +426,7 @@
            query-builder  (.onlyIf query-builder first)]
        (doseq [current more]
          (.and query-builder current))
-       query-builder)
-
-
-     )])
+       query-builder))])
 
 (defn- update-records-statement
   [m]
