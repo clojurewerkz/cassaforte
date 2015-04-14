@@ -418,11 +418,6 @@
   (fn [column-name]
     (QueryBuilder/putAll column-name values)))
 
-(def ^:private insert-order
-  {:where   1
-   :values  2
-   :only-if 4})
-
 (defn- make-assignment
   [[k v]]
   (if (fn? v)
@@ -431,39 +426,60 @@
 
 (defn only-if
   [m]
-  [:only-if
-   (fn only-if-query [query-builder]
-     (let [[first & more] (to-clauses m)
-           query-builder  (.onlyIf query-builder first)]
-       (doseq [current more]
-         (.and query-builder current))
-       query-builder))])
+  [:only-if m])
 
 (defn- update-records-statement
   [m]
-  [:values
-   (if (empty? m)
-     (fn update-records-statement-inner [query-builder]
-       query-builder)
-     (fn update-records-statement-inner [query-builder]
-       (let [first-pair    (first m)
-             more-pairs    (rest m)
-             query-builder (.with query-builder (make-assignment first-pair))]
-         (doseq [kvp more-pairs]
-           (.and query-builder (make-assignment kvp)))
-         query-builder))
-     )])
+  [:values m])
 
-(defn update
-  [table-name records & statements]
-  (->> (conj statements (update-records-statement records))
-       (sort-by #(get insert-order (first %)))
-       (map second)
-       (reduce (fn [builder statement]
-                 (println statement builder)
-                 (statement builder))
-               (QueryBuilder/update (name table-name)))
-       (.toString)))
+(let [order {:where   1
+             :values  2
+             :only-if 4}
+      renderers
+      {:only-if (fn only-if-query [query-builder]
+                  (let [[first & more] (to-clauses m)
+                        query-builder  (.onlyIf query-builder first)]
+                    (doseq [current more]
+                      (.and query-builder current))
+                    query-builder))
+       :values  (if (empty? m)
+                  (fn update-records-statement-inner [query-builder]
+                    query-builder)
+                  (fn update-records-statement-inner [query-builder]
+                    (let [first-pair    (first m)
+                          more-pairs    (rest m)
+                          query-builder (.with query-builder (make-assignment first-pair))]
+                      (doseq [kvp more-pairs]
+                        (.and query-builder (make-assignment kvp)))
+                      query-builder)))
+       :where   (fn where-query [query-builder m]
+                  (let [query-builder (.where query-builder)]
+                    (doseq [clause (to-clauses m)]
+                      (.and query-builder clause))
+                    query-builder))
+       }
+      ]
+  (defn update
+    [table-name records & statements]
+    (->> (conj statements (update-records-statement records))
+         (sort-by #(get insert-order (first %)))
+         (map second)
+         (reduce (fn [builder statement]
+                   (println statement builder)
+                   (statement builder))
+                 (QueryBuilder/update (name table-name)))
+         (.toString))))
+
+;;
+;; Delete Query
+;;
+
+(comment
+  (defn delete
+    [table-name & ]
+    (->> statements)
+    ))
+
 
 ;; Delete.Builder delete(String... columns)
 ;; Delete.Selection delete()
