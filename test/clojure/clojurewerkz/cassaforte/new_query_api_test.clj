@@ -2,10 +2,10 @@
   (:refer-clojure :exclude [update])
   (:import [com.datastax.driver.core.utils Bytes])
   (:require [clojure.test                          :refer :all]
-            [clojurewerkz.cassaforte.new-query-api :refer :all]
-            ))
+            [clojurewerkz.cassaforte.new-query-api :refer :all]))
 
 (deftest test-select-query
+
   (is (= "SELECT asd FROM \"table-name\";"
          (select "table-name"
                  (column "asd"))))
@@ -233,10 +233,12 @@
                  (value :x 1)
                  (if-not-exists))))
 
+
   (is (= "INSERT INTO foo(k,x) VALUES (0,(1));";
          (insert :foo
                  (value :k 0)
                  (value :x (tuple-of [:int] [(int 1)])))))
+
 
   (is (= "UPDATE foo USING TIMESTAMP 42 SET a=12,b=[3,2,1],c=c+3 WHERE k=2;"
          (update :foo
@@ -246,10 +248,12 @@
                  (where {:k 2})
                  (using {:timestamp 42}))))
 
+
   (is (= "UPDATE foo SET b=null WHERE k=2;"
          (update :foo
                  (array-map :b nil)
                  (where {:k 2}))))
+
 
   (is (= "UPDATE foo SET a[2]='foo',b=[3,2,1]+b,c=c-{'a'} WHERE k=2 AND l='foo' AND m<4 AND n>=1;"
          (update :foo
@@ -321,4 +325,7 @@
                            [:> :moo 3]
                            [:> :meh 4]
                            [:in :baz [5 6 7]]
-                           ])))))
+                           ]))))
+
+
+  )
