@@ -267,7 +267,6 @@
          (sort-by #(get order (first %)))
          ;; (map second)
          (reduce (fn [builder [statement-name statement-args]]
-                   (println statement-name)
                    ((get renderers statement-name) builder statement-args))
                  (QueryBuilder/select))
          (.toString)
@@ -295,19 +294,20 @@
   [m]
   [:using m])
 
+(def ^:private with-values
+  {:timestamp #(QueryBuilder/timestamp %)
+   :ttl       #(QueryBuilder/ttl %)})
 (let [order       {:values        1
                    :value         1
                    :values-vector 1
                    :values-seq    1
                    :using         2
                    :if-not-exists 3}
-      with-values {:timestamp #(QueryBuilder/timestamp %)
-                   :ttl       #(QueryBuilder/ttl %)}
       renderers
       {:value         (fn value-query [query-builder [key value]]
                         (.value query-builder (name key) value))
        :if-not-exists (fn value-query [query-builder _]
-                        (.value query-builder (name key) value))
+                        (.ifNotExists query-builder))
        :values-vector (fn values-query [query-builder m]
                         (.values query-builder (into-array (map name (keys m))) (object-array (vals m))))
        :values-seq    (fn order-by-query [query-builder [key-seq value-seq]]
