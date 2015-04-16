@@ -201,7 +201,7 @@
   []
   [:filtering nil])
 
-(defn- from
+(defn from
   [^String table-name]
   [:from table-name])
 
@@ -477,10 +477,40 @@
 ;; Delete Query
 ;;
 
-(comment
+(let [order {:what-columns 1
+             :from         2
+             :where        3}
+      renderers
+      {:where        (fn where-query [query-builder m]
+                       (let [[first-clause & more-clauses] (to-clauses m)
+                             query-builder                  (.where query-builder first-clause)]
+                         (doseq [clause more-clauses]
+                           (.and query-builder clause))
+                         query-builder))
+
+       :from         (fn from-query [query-builder table-name]
+                       (println query-builder)
+                       (.from query-builder (name table-name)))
+
+       :what-columns (fn [query-builder columns]
+                       (reduce (fn [builder column]
+                                 (if (or (keyword? column) (string? column)) ;; Most likely same bug above
+                                   (.column builder (name column))
+                                   (column builder)))
+                               query-builder
+                               columns)
+
+                       )}]
+
   (defn delete
-    [table-name & ]
-    (->> statements)
+    [table-name & statements]
+    (->> (conj statements (from (name table-name)))
+         (sort-by #(get order (first %)))
+         (reduce (fn [builder [statement-name statement-args]]
+                   (println statement-name)
+                   ((get renderers statement-name) builder statement-args))
+                 (QueryBuilder/delete))
+         (.toString))
     ))
 
 
