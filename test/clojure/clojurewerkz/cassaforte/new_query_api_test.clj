@@ -327,5 +327,13 @@
                            [:in :baz [5 6 7]]
                            ]))))
 
+  (is (= "DELETE a,b,c FROM foo;"
+         (delete :foo
+                 (columns :a :b :c))))
 
+  (is (= "DELETE a,b,c FROM foo WHERE k=0;"
+         (delete :foo
+                 (columns :a :b :c)
+                 (where {:k 0})
+                 )))
   )
