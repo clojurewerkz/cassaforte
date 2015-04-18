@@ -336,4 +336,16 @@
                  (columns :a :b :c)
                  (where {:k 0})
                  )))
+
+  (is (= "DELETE a[3],b['foo'],c FROM foo WHERE k=1;"
+         (delete :foo
+                 (columns (list-elt :a 3)
+                          (map-elt :b "foo")
+                          :c)
+                 (where {:k 1}))))
+
+  (is (= "DELETE FROM foo USING TIMESTAMP 1240003134 WHERE k='value';"
+         (delete :foo
+                 (using {:timestamp 1240003134})
+                 (where {:k "value"}))))
   )
