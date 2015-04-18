@@ -477,9 +477,24 @@
 ;; Delete Query
 ;;
 
+;;
+;; Delete column types
+;;
+
+(defn list-elt
+  [column-name n]
+  (fn list-elt-statement [query-builder]
+    (.listElt query-builder (name column-name) n)))
+
+(defn map-elt
+  [column-name key]
+  (fn map-elt-statement [query-builder]
+    (.mapElt query-builder (name column-name) key)))
+
 (let [order {:what-columns 1
              :from         2
-             :where        3}
+             :where        3
+             :using        4}
       renderers
       {:where        (fn where-query [query-builder m]
                        (let [[first-clause & more-clauses] (to-clauses m)
