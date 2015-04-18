@@ -513,9 +513,13 @@
                                    (.column builder (name column))
                                    (column builder)))
                                query-builder
-                               columns)
+                               columns))
 
-                       )}]
+       :using         (fn using-query [query-builder m]
+                        (doseq [[key value] m]
+                          (.using query-builder ((get with-values key) value)))
+                        query-builder)
+       }]
 
   (defn delete
     [table-name & statements]
