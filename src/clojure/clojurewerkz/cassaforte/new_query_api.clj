@@ -481,6 +481,10 @@
 ;; Delete column types
 ;;
 
+(defn if-exists
+  []
+  [:if-exists nil])
+
 (defn list-elt
   [column-name n]
   (fn list-elt-statement [query-builder]
@@ -519,6 +523,9 @@
                         (doseq [[key value] m]
                           (.using query-builder ((get with-values key) value)))
                         query-builder)
+       :if-exists    (fn value-query [query-builder _]
+                       (.ifExists query-builder))
+
        }]
 
   (defn delete
