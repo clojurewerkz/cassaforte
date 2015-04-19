@@ -348,4 +348,20 @@
          (delete :foo
                  (using {:timestamp 1240003134})
                  (where {:k "value"}))))
+
+  (is (= "DELETE FROM foo WHERE k1='foo' IF EXISTS;"
+         (delete :foo
+                 (where {:k1 "foo"})
+                 (if-exists))))
+
+  (is (= "DELETE FROM foo WHERE k1='foo' IF a=1 AND b=2;"
+         (delete :foo
+                 (where {:k1 "foo"})
+                 (only-if (array-map :a 1
+                                     :b 2)))))
+
+  (is (= "DELETE FROM foo WHERE k1=:key;"
+         (delete :foo
+                 (where {:k1 (? "key")}))))
+
   )
