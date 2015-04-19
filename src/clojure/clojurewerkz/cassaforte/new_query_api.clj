@@ -498,7 +498,10 @@
 (let [order {:what-columns 1
              :from         2
              :where        3
-             :using        4}
+             :if-exists    4
+             :only-if      5
+             :using        6
+             }
       renderers
       {:where        (fn where-query [query-builder m]
                        (let [[first-clause & more-clauses] (to-clauses m)
@@ -519,13 +522,20 @@
                                query-builder
                                columns))
 
-       :using         (fn using-query [query-builder m]
-                        (doseq [[key value] m]
-                          (.using query-builder ((get with-values key) value)))
-                        query-builder)
+       :only-if      (fn only-if-query [query-builder m]
+                       (let [[first & more] (to-clauses m)
+                             query-builder  (.onlyIf query-builder first)]
+                         (doseq [current more]
+                           (.and query-builder current))
+                         query-builder))
+
        :if-exists    (fn value-query [query-builder _]
                        (.ifExists query-builder))
 
+       :using        (fn using-query [query-builder m]
+                       (doseq [[key value] m]
+                         (.using query-builder ((get with-values key) value)))
+                       query-builder)
        }]
 
   (defn delete
