@@ -299,7 +299,7 @@
        (when retry-policy
          (.setRetryPolicy built-statement retry-policy))
        (when consistency-level
-         (.setConsistencyLevel built-statement consistency-level*))
+         (.setConsistencyLevel built-statement consistency-level))
        (if *async*
          (AsyncResult. (.executeAsync session built-statement))
          (-> (.execute session built-statement)
