@@ -5,47 +5,17 @@
             Select$Selection Select Select$Where
             BindMarker
             Clause]
-           [com.datastax.driver.core TupleType DataType]
-           ))
+           )
+  (:require [clojurewerkz.cassaforte.aliases :as alias]
+            clojurewerkz.cassaforte.query.query-builder
+            clojurewerkz.cassaforte.query.types))
+
+(alias/alias-ns 'clojurewerkz.cassaforte.query.query-builder)
+(alias/alias-ns 'clojurewerkz.cassaforte.query.types)
 
 ;;
-;; Static QB Methods
+;; WHERE Statement
 ;;
-
-(defn ?
-  ([]
-     (QueryBuilder/bindMarker))
-  ([name]
-     (QueryBuilder/bindMarker name)))
-
-(defn timestamp
-  [column-name]
-  (QueryBuilder/timestamp column-name))
-
-(defn token
-  [& column-names]
-  (QueryBuilder/token (into-array column-names)))
-
-(defn function-call
-  [name & args]
-  (QueryBuilder/fcall name (object-array args)))
-
-
-(defn asc
-  [^String column-name]
-  (QueryBuilder/asc (name column-name)))
-
-(defn desc
-  [^String column-name]
-  (QueryBuilder/desc (name column-name)))
-
-(defn cname
-  [^String column-name]
-  (QueryBuilder/column column-name))
-
-(defn quote*
-  [s]
-  (QueryBuilder/quote (name s)))
 
 (let [eq  (fn [^String column ^Object value]
             (QueryBuilder/eq column value))
@@ -100,48 +70,11 @@
        construct))))
 
 ;;
-;; Tuples
+;; SELECT Statement
 ;;
 
-(def primitive-types
-  {:ascii     (DataType/ascii)
-   :bigint    (DataType/bigint)
-   :blob      (DataType/blob)
-   :boolean   (DataType/cboolean)
-   :counter   (DataType/counter)
-   :decimal   (DataType/decimal)
-   :double    (DataType/cdouble)
-   :float     (DataType/cfloat)
-   :inet      (DataType/inet)
-   :int       (DataType/cint)
-   :text      (DataType/text)
-   :timestamp (DataType/timestamp)
-   :uuid      (DataType/uuid)
-   :varchar   (DataType/varchar)
-   :varint    (DataType/varint)
-   :timeuuid  (DataType/timeuuid)})
 
-(defn list-type
-  [primitive-type]
-  (DataType/list (get primitive-types primitive-type)))
-
-(defn set-type
-  [primitive-type]
-  (DataType/set (get primitive-types primitive-type)))
-
-(defn map-type
-  [key-type value-type]
-  (DataType/map (get primitive-types key-type)
-                (get primitive-types value-type)))
-
-(defn tuple-of
-  [types values]
-  (.newValue (TupleType/of (into-array (map #(get primitive-types %) types)))
-             (object-array values)))
-
-;;
 ;; Columns
-;;
 
 (defn write-time
   [column]
@@ -158,6 +91,13 @@
   (fn distinct-query [query-builder]
     (.distinct (.column query-builder column))))
 
+(defn as
+  [wrapper alias]
+  (fn distinct-query [query-builder]
+    (.as (wrapper query-builder) alias)))
+
+;; Query Parts
+
 (defn count-all
   []
   [:what-count nil])
@@ -171,15 +111,9 @@
   ;; TODO: resolve API inconsistency
   [:what-all nil])
 
-(defn as
-  [wrapper alias]
-  (fn distinct-query [query-builder]
-    (.as (wrapper query-builder) alias)))
-
 (defn columns
   [& columns]
   [:what-columns columns])
-
 
 (defn column
   [column & keys]
@@ -202,8 +136,10 @@
   [:filtering nil])
 
 (defn from
-  [^String table-name]
-  [:from table-name])
+  [table-name]
+  [:from (name table-name)])
+
+;; Query
 
 (defn- complete-select-query
   [statements]
@@ -262,7 +198,7 @@
        }]
   (defn select
     [table-name & statements]
-    (->> (conj statements (from (name table-name)))
+    (->> (conj statements (from table-name))
          (complete-select-query)
          (sort-by #(get order (first %)))
          ;; (map second)
@@ -329,100 +265,11 @@
 ;; Update Query
 ;;
 
-(defn- set-column-
-  [^String column-name column-value]
-  (QueryBuilder/set column-name column-value))
-
-(defn increment
-  []
-  (fn [column-name]
-    (QueryBuilder/incr column-name)))
-
-(defn increment-by
-  [by-value]
-  (fn [column-name]
-    (QueryBuilder/incr column-name by-value)))
-
-(defn decrement
-  []
-  (fn [column-name]
-    (QueryBuilder/decr column-name)))
-
-(defn decrement-by
-  [by-value]
-  (fn [column-name]
-    (QueryBuilder/decr column-name by-value)))
-
-(defn prepend
-  [value]
-  (fn [column-name]
-    (QueryBuilder/prepend column-name value)))
-
-(defn prepend-all
-  [values]
-  (fn [column-name]
-    (QueryBuilder/prependAll column-name values)))
-
-(defn append
-  [value]
-  (fn [column-name]
-    (QueryBuilder/append column-name value)))
-
-(defn append-all
-  [values]
-  (fn [column-name]
-    (QueryBuilder/appendAll column-name values)))
-
-(defn discard
-  [value]
-  (fn [column-name]
-    (QueryBuilder/discard column-name value)))
-
-(defn discard-all
-  [values]
-  (fn [column-name]
-    (QueryBuilder/discardAll column-name values)))
-
-(defn set-idx
-  [idx value]
-  (fn [column-name]
-    (QueryBuilder/setIdx column-name idx value)))
-
-(defn add-tail
-  [value]
-  (fn [column-name]
-    (QueryBuilder/add column-name value)))
-
-(defn add-all-tail
-  [values]
-  (fn [column-name]
-    (QueryBuilder/addAll column-name values)))
-
-(defn remove-tail
-  [value]
-  (fn [column-name]
-    (QueryBuilder/remove column-name value)))
-
-(defn remove-all-tail
-  [values]
-  (fn [column-name]
-    (QueryBuilder/removeAll column-name values)))
-
-(defn put-value
-  [key value]
-  (fn [column-name]
-    (QueryBuilder/put column-name key value)))
-
-(defn put-values
-  [values]
-  (fn [column-name]
-    (QueryBuilder/putAll column-name values)))
-
 (defn- make-assignment
   [[k v]]
   (if (fn? v)
     (v (name k))
-    (set-column- (name k) v)))
+    (set-column (name k) v)))
 
 (defn only-if
   [m]
@@ -461,9 +308,7 @@
                        (let [query-builder (.where query-builder)]
                          (doseq [clause (to-clauses m)]
                            (.and query-builder clause))
-                         query-builder))
-       }
-      ]
+                         query-builder))}]
   (defn update
     [table-name records & statements]
     (->> (conj statements (update-records-statement records))
@@ -546,10 +391,11 @@
                    (println statement-name)
                    ((get renderers statement-name) builder statement-args))
                  (QueryBuilder/delete))
-         (.toString))
-    ))
+         (.toString))))
 
-
+;;
+;; Truncate
+;;
 
 (defn truncate
   ([table-name]
