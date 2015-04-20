@@ -244,18 +244,6 @@
   [^Cluster cluster]
   (.close cluster))
 
-(defn ^:private build-statement-
-  "Builds a Prepare or Simple statement out of given params.
-
-   Arities:
-     * query + args - for building prepared statements, `query` is a string with placeholders, `values`
-       are values to be bound to the built statement for execution.
-     * query - for building simple, not prepared statements."
-  ([^PreparedStatement query values]
-     (set-statement-options- (.bind query (to-array values))))
-  ([^String string-query]
-     (set-statement-options- (SimpleStatement. string-query))))
-
 (defn bind
   "Binds prepared statement to values, for example:
 
