@@ -364,4 +364,10 @@
          (delete :foo
                  (where {:k1 (? "key")}))))
 
+
+  (is (= "TRUNCATE a;"
+         (truncate :a)))
+
+  (is (= "TRUNCATE b.a;"
+         (truncate :a :b)))
   )
