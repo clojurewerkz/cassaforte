@@ -550,8 +550,13 @@
     ))
 
 
-;; Delete.Builder delete(String... columns)
-;; Delete.Selection delete()
+
+(defn truncate
+  ([table-name]
+     (.toString (QueryBuilder/truncate (name table-name))))
+  ([table-name keyspace]
+     (.toString (QueryBuilder/truncate (name keyspace) (name table-name)))))
+
 ;; Batch batch(RegularStatement... statements)
 ;; Batch unloggedBatch(RegularStatement... statements)
 ;; Truncate truncate(String table)
