@@ -370,4 +370,12 @@
 
   (is (= "TRUNCATE b.a;"
          (truncate :a :b)))
+
+  (println (batch
+            [(select "table-name"
+                      (column "asd"))
+              (select "table-name"
+                      (column "asd"))
+              (select "table-name"
+                      (column "asd"))]))
   )
