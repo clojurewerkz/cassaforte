@@ -10,6 +10,14 @@
             clojurewerkz.cassaforte.query.query-builder
             clojurewerkz.cassaforte.query.types))
 
+(def ^:dynamic *batch* false)
+
+(defn maybe-stringify
+  [statement]
+  (if *batch*
+    statement
+    (.toString statement)))
+
 (alias/alias-ns 'clojurewerkz.cassaforte.query.query-builder)
 (alias/alias-ns 'clojurewerkz.cassaforte.query.types)
 
@@ -205,7 +213,7 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (QueryBuilder/select))
-         (.toString)
+         (maybe-stringify)
          )))
 
 ;;
@@ -259,7 +267,7 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (QueryBuilder/insertInto (name table-name)))
-         (.toString))))
+         (maybe-stringify))))
 
 ;;
 ;; Update Query
@@ -316,7 +324,7 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (QueryBuilder/update (name table-name)))
-         (.toString))))
+         (maybe-stringify))))
 
 ;;
 ;; Delete Query
@@ -391,7 +399,7 @@
                    (println statement-name)
                    ((get renderers statement-name) builder statement-args))
                  (QueryBuilder/delete))
-         (.toString))))
+         (maybe-stringify))))
 
 ;;
 ;; Truncate
@@ -403,6 +411,14 @@
   ([table-name keyspace]
      (.toString (QueryBuilder/truncate (name keyspace) (name table-name)))))
 
+(defmacro batch
+  [statements]
+  `(binding [*batch* true]
+     (let [builder# (QueryBuilder/batch (into-array ~statements))]
+       (.toString builder#)
+       )
+    )
+  )
 ;; Batch batch(RegularStatement... statements)
 ;; Batch unloggedBatch(RegularStatement... statements)
 ;; Truncate truncate(String table)
