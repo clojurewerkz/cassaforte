@@ -106,12 +106,6 @@ reached.
     cl
     (consistency-level cl)))
 
-(defmacro with-consistency-level
-  "Executes a query with the given consistency level"
-  [consistency-level & body]
-  `(binding [*consistency-level* ~consistency-level]
-     ~@body))
-
 ;;
 ;; Prepared Statements
 ;;
