@@ -411,14 +411,26 @@
   ([table-name keyspace]
      (.toString (QueryBuilder/truncate (name keyspace) (name table-name)))))
 
-(defmacro batch
-  [statements]
-  `(binding [*batch* true]
-     (let [builder# (QueryBuilder/batch (into-array ~statements))]
-       (.toString builder#)
-       )
-    )
-  )
+(defmacro queries
+  [& statements]
+  [:queries `(binding [*batch* true]
+               ~(vec statements))])
+
+(let [order
+      {:queries 1}
+      renderers
+      {:queries (fn queries-renderer [query-builder queries]
+                  (QueryBuilder/batch (into-array queries))
+)}]
+  (defn batch
+    [& statements]
+    (->> statements
+         (sort-by #(get order (first %)))
+         (reduce (fn [builder [statement-name statement-args]]
+                   ((get renderers statement-name) builder statement-args))
+                 nil)
+         (maybe-stringify))))
+
 ;; Batch batch(RegularStatement... statements)
 ;; Batch unloggedBatch(RegularStatement... statements)
 ;; Truncate truncate(String table)
