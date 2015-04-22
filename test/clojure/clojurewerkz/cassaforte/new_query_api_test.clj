@@ -371,11 +371,15 @@
   (is (= "TRUNCATE b.a;"
          (truncate :a :b)))
 
-  (println (batch
-            [(select "table-name"
-                      (column "asd"))
-              (select "table-name"
-                      (column "asd"))
-              (select "table-name"
-                      (column "asd"))]))
-  )
+  (is (= "BEGIN BATCH INSERT INTO foo(asd) VALUES ('bsd');INSERT INTO foo(asd) VALUES ('bsd');INSERT INTO foo(asd) VALUES ('bsd');APPLY BATCH;"
+         (batch
+          (queries
+           (insert :foo
+                   (value "asd" "bsd"))
+           (insert :foo
+                   (value "asd" "bsd"))
+           (insert :foo
+                   (value "asd" "bsd"))))
+
+
+         )))
