@@ -428,24 +428,29 @@
                   (doseq [[key value] m]
                     (.using query-builder ((get with-values key) value)))
                   query-builder)}]
-  (defn batch
-    [& statements]
+  (defn- generic-batch
+    [batch-type statements]
     (->> statements
          (sort-by #(get order (first %)))
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
-                 (QueryBuilder/batch
-                  (make-array RegularStatement 0)))
-         (maybe-stringify))))
+                 batch-type)
+         (maybe-stringify)))
+
+  (defn batch
+    [& statements]
+    (generic-batch (QueryBuilder/batch
+                    (make-array RegularStatement 0))
+                   statements))
+
+  (defn unlogged-batch
+    [& statements]
+    (generic-batch (QueryBuilder/unloggedBatch
+                    (make-array RegularStatement 0))
+                   statements)))
 
 ;; Batch batch(RegularStatement... statements)
 ;; Batch unloggedBatch(RegularStatement... statements)
-;; Truncate truncate(String table)
-;; Truncate truncate(String keyspace, String table)
-;; Truncate truncate(TableMetadata table)
 ;; String quote(String columnName)
-;; Assignment set(String name, Object value)
-
-;; Object raw(String str)
 ;;
 ;;
