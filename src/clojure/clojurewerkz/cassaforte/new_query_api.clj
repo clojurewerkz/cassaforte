@@ -448,9 +448,3 @@
     (generic-batch (QueryBuilder/unloggedBatch
                     (make-array RegularStatement 0))
                    statements)))
-
-;; Batch batch(RegularStatement... statements)
-;; Batch unloggedBatch(RegularStatement... statements)
-;; String quote(String columnName)
-;;
-;;
