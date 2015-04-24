@@ -364,7 +364,6 @@
                          query-builder))
 
        :from         (fn from-query [query-builder table-name]
-                       (println query-builder)
                        (.from query-builder (name table-name)))
 
        :what-columns (fn [query-builder columns]
@@ -396,7 +395,6 @@
     (->> (conj statements (from (name table-name)))
          (sort-by #(get order (first %)))
          (reduce (fn [builder [statement-name statement-args]]
-                   (println statement-name)
                    ((get renderers statement-name) builder statement-args))
                  (QueryBuilder/delete))
          (maybe-stringify))))
