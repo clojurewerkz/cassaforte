@@ -5,6 +5,7 @@
             Select$Selection Select Select$Where
             BindMarker
             Clause]
+           [com.datastax.driver.core RegularStatement]
            )
   (:require [clojurewerkz.cassaforte.aliases :as alias]
             clojurewerkz.cassaforte.query.query-builder
@@ -419,7 +420,10 @@
        :using   2}
       renderers
       {:queries (fn queries-renderer [query-builder queries]
-                  (QueryBuilder/batch (into-array queries)))
+                  (reduce (fn [builder query]
+                            (.add builder query))
+                          query-builder
+                          queries))
        :using   (fn using-query [query-builder m]
                   (doseq [[key value] m]
                     (.using query-builder ((get with-values key) value)))
@@ -430,7 +434,8 @@
          (sort-by #(get order (first %)))
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
-                 nil)
+                 (QueryBuilder/batch
+                  (make-array RegularStatement 0)))
          (maybe-stringify))))
 
 ;; Batch batch(RegularStatement... statements)
