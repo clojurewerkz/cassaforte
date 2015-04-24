@@ -239,7 +239,6 @@
                  (value :k 0)
                  (value :x (tuple-of [:int] [(int 1)])))))
 
-
   (is (= "UPDATE foo USING TIMESTAMP 42 SET a=12,b=[3,2,1],c=c+3 WHERE k=2;"
          (update :foo
                  (array-map :a 12
@@ -371,7 +370,10 @@
   (is (= "TRUNCATE b.a;"
          (truncate :a :b)))
 
-  (is (= "BEGIN BATCH INSERT INTO foo(asd) VALUES ('bsd');INSERT INTO foo(asd) VALUES ('bsd');INSERT INTO foo(asd) VALUES ('bsd');APPLY BATCH;"
+  (is (= (str "BEGIN BATCH INSERT INTO foo(asd) VALUES ('bsd');"
+              "INSERT INTO foo(asd) VALUES ('bsd');"
+              "INSERT INTO foo(asd) VALUES ('bsd');"
+              "APPLY BATCH;")
          (batch
           (queries
            (insert :foo
@@ -379,7 +381,21 @@
            (insert :foo
                    (value "asd" "bsd"))
            (insert :foo
-                   (value "asd" "bsd"))))
+                   (value "asd" "bsd"))))))
 
+  (is (= (str "BEGIN COUNTER BATCH USING TIMESTAMP 42 "
+              "UPDATE foo SET a=a+1;"
+              "UPDATE foo SET b=b+1;"
+              "UPDATE foo SET c=c+1;"
+              "APPLY BATCH;")
+         (batch
+          (using {:timestamp 42})
+          (queries
+           (update :foo
+                   (array-map :a (increment-by 1)))
+           (update :foo
+                   (array-map :b (increment-by 1)))
+           (update :foo
+                   (array-map :c (increment-by 1)))))))
 
-         )))
+  )
