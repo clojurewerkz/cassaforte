@@ -415,11 +415,15 @@
                ~(vec statements))])
 
 (let [order
-      {:queries 1}
+      {:queries 1
+       :using   2}
       renderers
       {:queries (fn queries-renderer [query-builder queries]
-                  (QueryBuilder/batch (into-array queries))
-)}]
+                  (QueryBuilder/batch (into-array queries)))
+       :using   (fn using-query [query-builder m]
+                  (doseq [[key value] m]
+                    (.using query-builder ((get with-values key) value)))
+                  query-builder)}]
   (defn batch
     [& statements]
     (->> statements
