@@ -398,4 +398,13 @@
            (update :foo
                    (array-map :c (increment-by 1)))))))
 
+
+  (is (= "\n\tCREATE TABLE foo(\n\t\ta int,\n\t\tb varchar,\n\t\tc int,\n\t\td int,\n\t\te int,\n\t\tPRIMARY KEY((a, b), c, d))"
+         (create-table :foo
+                       (column-definitions {:a :int
+                                            :b :varchar
+                                            :c :int
+                                            :d :int
+                                            :e :int
+                                            :primary-key [[:a :b] :c :d]}))))
   )
