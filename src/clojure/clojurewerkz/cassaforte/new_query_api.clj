@@ -6,6 +6,8 @@
             BindMarker
             Clause]
            [com.datastax.driver.core RegularStatement]
+           [com.datastax.driver.core.schemabuilder SchemaBuilder SchemaBuilder$Direction
+            SchemaBuilder$Caching SchemaBuilder$KeyCaching]
            )
   (:require [clojurewerkz.cassaforte.aliases :as alias]
             clojurewerkz.cassaforte.query.query-builder
@@ -448,3 +450,89 @@
     (generic-batch (QueryBuilder/unloggedBatch
                     (make-array RegularStatement 0))
                    statements)))
+
+;;
+;; Schema Builder
+;;
+
+(defn column-definitions
+  [m]
+  [:column-definitions m])
+
+;; (-> (SchemaBuilder/createTable "asd")
+;;     (.addPartitionKey "asd" (:int primitive-types))
+;;     (.addPartitionKey "bsd" (:int primitive-types))
+;;     (.addClusteringColumn "a" (:int primitive-types)))
+
+(let [order
+      {:column-definitions 1}
+      renderers
+      {:column-definitions (fn [query-builder column-defs]
+                             (let [[primary-key & clustering-keys] (get column-defs :primary-key)
+                                   ]
+
+                               (reduce
+                                (fn [builder [column-name column-type]]
+                                  (.addColumn builder (name column-name)
+                                              (get primitive-types column-type)))
+                                query-builder
+                                (apply dissoc column-defs (conj (flatten (get column-defs :primary-key))
+                                                                :primary-key)))
+
+                               (reduce
+                                (fn [builder column-name]
+                                  (.addPartitionKey builder (name column-name)
+                                                    (get primitive-types
+                                                         (get column-defs column-name))))
+                                query-builder
+                                (if (sequential? primary-key)
+                                  primary-key
+                                  (list primary-key)))
+
+                               (reduce
+                                (fn [builder column-name]
+                                  (.addClusteringColumn builder
+                                                        (name column-name)
+                                                        (get primitive-types
+                                                             (get column-defs column-name))))
+                                query-builder
+                                clustering-keys)))}]
+  (defn create-table
+    [table-name & statements]
+    (->> statements
+         (sort-by #(get order (first %)))
+         (reduce (fn [builder [statement-name statement-args]]
+                   ((get renderers statement-name) builder statement-args))
+                 (SchemaBuilder/createTable (name table-name)))
+         (maybe-stringify))))
+
+
+;; Create createTable(String tableName)
+;; Create createTable(String keyspaceName, String tableName)
+;; Alter alterTable(String tableName)
+;; Alter alterTable(String keyspaceName, String tableName)
+;; Drop dropTable(String tableName)
+;; Drop dropTable(String keyspaceName, String tableName)
+;; CreateIndex createIndex(String indexName)
+;; Drop dropIndex(String indexName)
+;; Drop dropIndex(String keyspaceName, String indexName)
+;; CreateType createType(String typeName)
+;; CreateType createType(String keyspaceName, String typeName)
+;; Drop dropType(String typeName)
+;; Drop dropType(String keyspaceName, String typeName)
+;; UDTType frozen(String udtName)
+;; UDTType udtLiteral(String literal)
+;; TableOptions.CompactionOptions.SizeTieredCompactionStrategyOptions sizedTieredStategy()
+;; TableOptions.CompactionOptions.LeveledCompactionStrategyOptions leveledStrategy()
+;; TableOptions.CompactionOptions.DateTieredCompactionStrategyOptions dateTieredStrategy()
+;; TableOptions.CompressionOptions noCompression()
+;; TableOptions.CompressionOptions lz4()
+;; TableOptions.CompressionOptions snappy()
+;; TableOptions.CompressionOptions deflate()
+;; TableOptions.SpeculativeRetryValue noSpeculativeRetry()
+;; TableOptions.SpeculativeRetryValue always()
+;; TableOptions.SpeculativeRetryValue percentile(int percentile)
+;; TableOptions.SpeculativeRetryValue millisecs(int millisecs)
+;; TableOptions.CachingRowsPerPartition noRows()
+;; TableOptions.CachingRowsPerPartition allRows()
+;; TableOptions.CachingRowsPerPartition rows(int rowNumber)
