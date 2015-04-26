@@ -464,6 +464,13 @@
 ;;     (.addPartitionKey "bsd" (:int primitive-types))
 ;;     (.addClusteringColumn "a" (:int primitive-types)))
 
+(defn- make-column-type
+  [column-name column-defs]
+  (let [column-type (get column-defs column-name)]
+    (if (keyword? column-type)
+      (get primitive-types column-type)
+      column-type)))
+
 (let [order
       {:column-definitions 1}
       renderers
@@ -473,17 +480,18 @@
 
                                (reduce
                                 (fn [builder [column-name column-type]]
-                                  (.addColumn builder (name column-name)
-                                              (get primitive-types column-type)))
+                                  (.addColumn builder
+                                              (name column-name)
+                                              (make-column-type column-name column-defs)))
                                 query-builder
                                 (apply dissoc column-defs (conj (flatten (get column-defs :primary-key))
                                                                 :primary-key)))
 
                                (reduce
                                 (fn [builder column-name]
-                                  (.addPartitionKey builder (name column-name)
-                                                    (get primitive-types
-                                                         (get column-defs column-name))))
+                                  (.addPartitionKey builder
+                                                    (name column-name)
+                                                    (make-column-type column-name column-defs)))
                                 query-builder
                                 (if (sequential? primary-key)
                                   primary-key
@@ -493,8 +501,7 @@
                                 (fn [builder column-name]
                                   (.addClusteringColumn builder
                                                         (name column-name)
-                                                        (get primitive-types
-                                                             (get column-defs column-name))))
+                                                        (make-column-type column-name column-defs)))
                                 query-builder
                                 clustering-keys)))}]
   (defn create-table
