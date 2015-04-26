@@ -514,8 +514,7 @@
          (maybe-stringify))))
 
 
-;; Create createTable(String tableName)
-;; Create createTable(String keyspaceName, String tableName)
+
 ;; Alter alterTable(String tableName)
 ;; Alter alterTable(String keyspaceName, String tableName)
 ;; Drop dropTable(String tableName)
