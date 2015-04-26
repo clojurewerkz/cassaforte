@@ -441,4 +441,16 @@
                        (column-definitions {:a :int
                                             :b (map-type :varchar :varchar)
                                             :primary-key [:a]}))))
+
+  (is (= "
+	CREATE TABLE IF NOT EXISTS foo(
+		a int,
+		b varchar,
+		PRIMARY KEY(a))"
+         (create-table :foo
+                       (column-definitions {:a :int
+                                            :b :varchar
+                                            :primary-key [:a]})
+                       (if-not-exists)
+                       )))
   )
