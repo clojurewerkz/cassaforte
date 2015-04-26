@@ -467,7 +467,8 @@
       column-type)))
 
 (let [order
-      {:column-definitions 1}
+      {:column-definitions 1
+       :if-not-exists      2}
       renderers
       {:column-definitions (fn [query-builder column-defs]
                              (let [[primary-key & clustering-keys] (get column-defs :primary-key)
@@ -498,7 +499,10 @@
                                                         (name column-name)
                                                         (make-column-type column-name column-defs)))
                                 query-builder
-                                clustering-keys)))}]
+                                clustering-keys)))
+
+       :if-not-exists      (fn if-not-exists-query [query-builder _]
+                             (.ifNotExists query-builder))}]
   (defn create-table
     [table-name & statements]
     (->> statements
