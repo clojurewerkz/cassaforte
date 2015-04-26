@@ -459,11 +459,6 @@
   [m]
   [:column-definitions m])
 
-;; (-> (SchemaBuilder/createTable "asd")
-;;     (.addPartitionKey "asd" (:int primitive-types))
-;;     (.addPartitionKey "bsd" (:int primitive-types))
-;;     (.addClusteringColumn "a" (:int primitive-types)))
-
 (defn- make-column-type
   [column-name column-defs]
   (let [column-type (get column-defs column-name)]
