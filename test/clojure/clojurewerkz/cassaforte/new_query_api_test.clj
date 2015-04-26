@@ -399,7 +399,14 @@
                    (array-map :c (increment-by 1)))))))
 
 
-  (is (= "\n\tCREATE TABLE foo(\n\t\ta int,\n\t\tb varchar,\n\t\tc int,\n\t\td int,\n\t\te int,\n\t\tPRIMARY KEY((a, b), c, d))"
+  (is (= "
+	CREATE TABLE foo(
+		a int,
+		b varchar,
+		c int,
+		d int,
+		e int,
+		PRIMARY KEY((a, b), c, d))"
          (create-table :foo
                        (column-definitions {:a :int
                                             :b :varchar
@@ -407,4 +414,31 @@
                                             :d :int
                                             :e :int
                                             :primary-key [[:a :b] :c :d]}))))
+
+  (is (= "
+	CREATE TABLE foo(
+		a int,
+		c int,
+		d int,
+		e int,
+		b varchar,
+		PRIMARY KEY(a, c, d))"
+         (create-table :foo
+                       (column-definitions {:a :int
+                                            :b :varchar
+                                            :c :int
+                                            :d :int
+                                            :e :int
+                                            :primary-key [:a :c :d]}))))
+
+
+  (is (= "
+	CREATE TABLE foo(
+		a int,
+		b map<varchar, varchar>,
+		PRIMARY KEY(a))"
+         (create-table :foo
+                       (column-definitions {:a :int
+                                            :b (map-type :varchar :varchar)
+                                            :primary-key [:a]}))))
   )
