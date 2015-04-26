@@ -512,6 +512,30 @@
                  (SchemaBuilder/createTable (name table-name)))
          (maybe-stringify))))
 
+(def alter-options
+  {:default-ttl                 (fn [opts val] (.defaultTimeToLive opts val))
+   :bloom-filter-fp-chance      (fn [opts val] (.bloomFilterFPChance opts val))
+   :caching                     (fn [opts val] (.caching opts val))
+   :gc-grace-seconds            (fn [opts val] (.gcGraceSeconds opts val))
+   :min-index-interval          (fn [opts val] (.minIndexInterval opts val))
+   :index-interval              (fn [opts val] (.indexInterval opts val))
+   :max-index-interval          (fn [opts val] (.maxIndexInterval opts val))
+   :comment                     (fn [opts val] (.comment opts val))
+   :read-repair-chance          (fn [opts val] (.readRepairChance opts val))
+   :speculative-retry           (fn [opts val] (.speculativeRetry opts val))
+   :dc-local-read-repair-chance (fn [opts val] (.dcLocalReadRepairChance opts val))
+   :memtable-flush-period-in-ms (fn [opts val] (.memtableFlushPeriodInMillis opts val))
+   :compaction-options          (fn [opts val] (.compactionOptions opts val))
+   :compression-options         (fn [opts val] (.compressionOptions opts val))})
+
+(let [order
+      {:with-options 1
+       :add-column   2
+       :alter-column 3
+       :drop-column  4
+       :with-options 5}])
+
+
 
 
 ;; Alter alterTable(String tableName)
