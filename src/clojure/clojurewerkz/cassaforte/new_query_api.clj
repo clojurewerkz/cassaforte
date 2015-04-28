@@ -575,12 +575,14 @@
 
 
        :add-column   (fn add-column-statement [query-builder [column-name column-type]]
-                       (-> (.addColumn query-builder (name column-name))
-                           (resolve-primitive-type column-type)))
+                       (println column-name 123 column-type)
+                       (-> query-builder
+                           (.addColumn (name column-name))
+                           (.type (resolve-primitive-type column-type))))
 
        :alter-column (fn alter-column-statement [query-builder [column-name column-type]]
-                       (println (resolve-primitive-type column-type))
-                       (-> (.alterColumn query-builder (name column-name))
+                       (-> query-builder
+                           (.alterColumn (name column-name))
                            (.type (resolve-primitive-type column-type))))
 
        :drop-column  (fn drop-column-statement [query-builder column-name]
