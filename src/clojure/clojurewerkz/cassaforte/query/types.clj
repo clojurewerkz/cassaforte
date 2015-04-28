@@ -23,6 +23,15 @@
    :varint    (DataType/varint)
    :timeuuid  (DataType/timeuuid)})
 
+(defn resolve-primitive-type
+  [type-name]
+  (if-let [res (get primitive-types type-name)]
+    res
+    (throw (IllegalArgumentException. (str "Column name "
+                                           " was not found, pick one of ("
+                                           (clojure.string/join "," (keys primitive-types))
+                                           ")")))))
+
 (defn list-type
   [primitive-type]
   (DataType/list (get primitive-types primitive-type)))
