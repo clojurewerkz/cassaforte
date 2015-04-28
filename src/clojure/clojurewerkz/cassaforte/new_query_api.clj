@@ -7,6 +7,7 @@
             Clause]
            [com.datastax.driver.core RegularStatement]
            [com.datastax.driver.core.schemabuilder SchemaBuilder SchemaBuilder$Direction
+
             SchemaBuilder$Caching SchemaBuilder$KeyCaching]
            )
   (:require [clojurewerkz.cassaforte.aliases :as alias]
@@ -512,7 +513,27 @@
                  (SchemaBuilder/createTable (name table-name)))
          (maybe-stringify))))
 
-(def alter-options
+;;
+;; Alter table
+;;
+
+(defn with-options
+  [options]
+  [:with-options options])
+
+(defn add-column
+  [column-name column-type]
+  [:add-column [column-name column-type]])
+
+(defn drop-column
+  [column-name]
+  [:drop-column column-name])
+
+(defn alter-column
+  [column-name column-type]
+  [:alter-column [column-name column-type]])
+
+(def ^:private alter-options
   {:default-ttl                 (fn [opts val] (.defaultTimeToLive opts val))
    :bloom-filter-fp-chance      (fn [opts val] (.bloomFilterFPChance opts val))
    :caching                     (fn [opts val] (.caching opts val))
@@ -528,12 +549,55 @@
    :compaction-options          (fn [opts val] (.compactionOptions opts val))
    :compression-options         (fn [opts val] (.compressionOptions opts val))})
 
+(defn resolve-alter-option
+  [option-name]
+  (if-let [res (get alter-options option-name)]
+    res
+    (throw (IllegalArgumentException. (str "Alter option "
+                                           " was not found, pick one of ("
+                                           (clojure.string/join "," (keys alter-options))
+                                           ")")))))
 (let [order
       {:with-options 1
        :add-column   2
        :alter-column 3
-       :drop-column  4
-       :with-options 5}])
+       :drop-column  4}
+      renderers
+      {:with-options (fn with-options-statement [query-builder options]
+                       (reduce
+                        (fn [query-builder [option-name option-vals]]
+                          ((resolve-alter-option option-name) option-vals))
+                        (.withOptions query-builder)
+                        options)
+                       query-builder)
+
+
+       :add-column   (fn add-column-statement [query-builder [column-name column-type]]
+                       (-> (.addColumn query-builder (name column-name))
+                           (resolve-primitive-type column-type)))
+
+       :alter-column (fn alter-column-statement [query-builder [column-name column-type]]
+                       (println (resolve-primitive-type column-type))
+                       (-> (.alterColumn query-builder (name column-name))
+                           (.type (resolve-primitive-type column-type))))
+
+       :drop-column  (fn drop-column-statement [query-builder column-name]
+                       (.dropColumn query-builder (name column-name)))
+
+
+
+       }]
+
+  (defn alter-table
+    [table-name & statements]
+    (->> statements
+         (sort-by #(get order (first %)))
+         (reduce (fn [builder [statement-name statement-args]]
+                   ((get renderers statement-name) builder statement-args))
+                 (SchemaBuilder/alterTable (name table-name)))
+         (maybe-stringify)))
+
+  )
 
 
 
