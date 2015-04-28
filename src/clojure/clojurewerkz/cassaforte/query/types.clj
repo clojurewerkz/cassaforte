@@ -24,13 +24,16 @@
    :timeuuid  (DataType/timeuuid)})
 
 (defn resolve-primitive-type
-  [type-name]
-  (if-let [res (get primitive-types type-name)]
-    res
-    (throw (IllegalArgumentException. (str "Column name "
-                                           " was not found, pick one of ("
-                                           (clojure.string/join "," (keys primitive-types))
-                                           ")")))))
+  [type-or-name]
+  (if (keyword? type-or-name)
+    (if-let [res (get primitive-types type-or-name)]
+      res
+      (throw (IllegalArgumentException. (str "Column name "
+                                             (name type-or-name)
+                                             " was not found, pick one of ("
+                                             (clojure.string/join "," (keys primitive-types))
+                                             ")"))))
+    type-or-name))
 
 (defn list-type
   [primitive-type]
