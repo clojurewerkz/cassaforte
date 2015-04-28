@@ -14,6 +14,8 @@
             clojurewerkz.cassaforte.query.query-builder
             clojurewerkz.cassaforte.query.types))
 
+(set! *warn-on-reflection* false)
+
 (def ^:dynamic *batch* false)
 
 (defn maybe-stringify
