@@ -9,6 +9,7 @@
   (is (= "SELECT asd FROM \"table-name\";"
          (select "table-name"
                  (column "asd"))))
+
   (is (= "SELECT first,second FROM \"table-name\";"
          (select "table-name"
                  (column "first")
@@ -57,11 +58,11 @@
                           [<= :c "z"]])
                   )))
 
-  (is (= "SELECT DISTINCT asd AS bsd FROM foo;")
-      (select :foo
-              (columns (-> "asd"
-                           distinct*
-                           (as "bsd")))))
+  (is (= "SELECT DISTINCT asd AS bsd FROM foo;"
+         (select :foo
+                 (columns (-> "asd"
+                              distinct*
+                              (as "bsd"))))))
 
   (is (= "SELECT DISTINCT longName AS a,ttl(longName) AS ttla FROM foo LIMIT :limit;";
          (select :foo
@@ -400,13 +401,13 @@
 
 
   (is (= "
-	CREATE TABLE foo(
-		a int,
-		b varchar,
-		c int,
-		d int,
-		e int,
-		PRIMARY KEY((a, b), c, d))"
+  CREATE TABLE foo(
+    a int,
+    b varchar,
+    c int,
+    d int,
+    e int,
+    PRIMARY KEY((a, b), c, d))"
          (create-table :foo
                        (column-definitions {:a :int
                                             :b :varchar
@@ -416,13 +417,13 @@
                                             :primary-key [[:a :b] :c :d]}))))
 
   (is (= "
-	CREATE TABLE foo(
-		a int,
-		c int,
-		d int,
-		e int,
-		b varchar,
-		PRIMARY KEY(a, c, d))"
+  CREATE TABLE foo(
+    a int,
+    c int,
+    d int,
+    e int,
+    b varchar,
+    PRIMARY KEY(a, c, d))"
          (create-table :foo
                        (column-definitions {:a :int
                                             :b :varchar
@@ -433,24 +434,29 @@
 
 
   (is (= "
-	CREATE TABLE foo(
-		a int,
-		b map<varchar, varchar>,
-		PRIMARY KEY(a))"
+  CREATE TABLE foo(
+    a int,
+    b map<varchar, varchar>,
+    PRIMARY KEY(a))"
          (create-table :foo
                        (column-definitions {:a :int
                                             :b (map-type :varchar :varchar)
                                             :primary-key [:a]}))))
 
   (is (= "
-	CREATE TABLE IF NOT EXISTS foo(
-		a int,
-		b varchar,
-		PRIMARY KEY(a))"
+  CREATE TABLE IF NOT EXISTS foo(
+    a int,
+    b varchar,
+    PRIMARY KEY(a))"
          (create-table :foo
                        (column-definitions {:a :int
                                             :b :varchar
                                             :primary-key [:a]})
                        (if-not-exists)
                        )))
+
+  (is (= "
+  ALTER TABLE foo ALTER foo TYPE int"
+         (alter-table :foo
+                      (alter-column :foo :int))))
   )
