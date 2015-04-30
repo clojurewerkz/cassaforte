@@ -205,8 +205,9 @@
     (insert s :users {:name "Robert" :city "Berlin"        :age (int 25)})
     (insert s :users {:name "Sam"    :city "San Francisco" :age (int 21)})
 
-    (is (= "Munich" (get-in (client/with-fetch-size Integer/MAX_VALUE
-                              (select s :users (where {:name "Alex"}))) [0 :city]))))
+    (is (= "Munich" (get-in (client/execute s
+                                            "SELECT * FROM users where name='Alex';"
+                                            :fetch-size Integer/MAX_VALUE) [0 :city]))))
 
   (deftest test-select-in
     (insert s :users {:name "Alex"   :city "Munich"        :age (int 19)})
@@ -381,8 +382,9 @@
 
   (deftest test-insert-with-consistency-level
     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-      (cp/with-consistency-level :quorum
-        (insert s :users r))
+      (client/execute s
+                      "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);"
+                      :consistency-level (cp/consistency-level :quorum))
       (is (= r (get-one s :users)))
       (truncate s :users)))
 

@@ -36,7 +36,6 @@
 
 (declare build-ssl-options select-compression)
 
-(def ^:dynamic *fetch-size*)
 (def ^:dynamic *async* false)
 
 ;;
@@ -48,12 +47,6 @@
   [body]
   `(binding [*async* true]
      (do ~body)))
-
-(defmacro with-fetch-size
-  "Temporarily alters fetch size."
-  [^Integer n# & body]
-  `(binding [*fetch-size* ~n#]
-     (do ~@body)))
 
 (defmacro prepare
   "Prepare a single statement, return prepared statement"
@@ -251,18 +244,6 @@
   [^Cluster cluster]
   (.close cluster))
 
-(defn ^:private build-statement-
-  "Builds a Prepare or Simple statement out of given params.
-
-   Arities:
-     * query + args - for building prepared statements, `query` is a string with placeholders, `values`
-       are values to be bound to the built statement for execution.
-     * query - for building simple, not prepared statements."
-  ([^PreparedStatement query values]
-     (set-statement-options- (.bind query (to-array values))))
-  ([^String string-query]
-     (set-statement-options- (SimpleStatement. string-query))))
-
 (defn bind
   "Binds prepared statement to values, for example:
 
@@ -291,12 +272,22 @@
            (AsyncResult. (.executeAsync session built-statement))
            (-> (.execute session built-statement)
                (conv/to-clj))))))
-  ([^Session session query & {:keys [retry-policy consistency-level]}]
+  ([^Session session query & {:keys [retry-policy
+                                     consistency-level
+                                     fetch-size
+                                     enable-tracing
+                                     default-timestamp]}]
      (let [^Statement built-statement (build-statement query)]
+       (when default-timestamp
+         (.setDefaultTimestamp built-statement))
+       (when enable-tracing
+         (.enableTracing built-statement))
+       (when fetch-size
+         (.setFetchSize built-statement (int fetch-size)))
        (when retry-policy
          (.setRetryPolicy built-statement retry-policy))
        (when consistency-level
-         (.setConsistencyLevel built-statement consistency-level*))
+         (.setConsistencyLevel built-statement consistency-level))
        (if *async*
          (AsyncResult. (.executeAsync session built-statement))
          (-> (.execute session built-statement)
