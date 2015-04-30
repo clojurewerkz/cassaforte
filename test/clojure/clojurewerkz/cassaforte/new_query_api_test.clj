@@ -4,6 +4,10 @@
   (:require [clojure.test                          :refer :all]
             [clojurewerkz.cassaforte.new-query-api :refer :all]))
 
+(defn normalize-string
+  [s]
+  (clojure.string/replace s "\t" "  "))
+
 (deftest test-select-query
 
   (is (= "SELECT asd FROM \"table-name\";"
@@ -408,13 +412,16 @@
     d int,
     e int,
     PRIMARY KEY((a, b), c, d))"
-         (create-table :foo
-                       (column-definitions {:a :int
-                                            :b :varchar
-                                            :c :int
-                                            :d :int
-                                            :e :int
-                                            :primary-key [[:a :b] :c :d]}))))
+         (normalize-string
+          (create-table :foo
+                        (column-definitions {:a :int
+                                             :b :varchar
+                                             :c :int
+                                             :d :int
+                                             :e :int
+                                             :primary-key [[:a :b] :c :d]}))
+
+          )))
 
   (is (= "
   CREATE TABLE foo(
@@ -424,13 +431,14 @@
     e int,
     b varchar,
     PRIMARY KEY(a, c, d))"
-         (create-table :foo
-                       (column-definitions {:a :int
-                                            :b :varchar
-                                            :c :int
-                                            :d :int
-                                            :e :int
-                                            :primary-key [:a :c :d]}))))
+         (normalize-string
+          (create-table :foo
+                        (column-definitions {:a :int
+                                             :b :varchar
+                                             :c :int
+                                             :d :int
+                                             :e :int
+                                             :primary-key [:a :c :d]})))))
 
 
   (is (= "
@@ -438,25 +446,28 @@
     a int,
     b map<varchar, varchar>,
     PRIMARY KEY(a))"
-         (create-table :foo
-                       (column-definitions {:a :int
-                                            :b (map-type :varchar :varchar)
-                                            :primary-key [:a]}))))
+         (normalize-string
+          (create-table :foo
+                        (column-definitions {:a :int
+                                             :b (map-type :varchar :varchar)
+                                             :primary-key [:a]})))))
 
   (is (= "
   CREATE TABLE IF NOT EXISTS foo(
     a int,
     b varchar,
     PRIMARY KEY(a))"
-         (create-table :foo
-                       (column-definitions {:a :int
-                                            :b :varchar
-                                            :primary-key [:a]})
-                       (if-not-exists)
-                       )))
+         (normalize-string
+          (create-table :foo
+                        (column-definitions {:a :int
+                                             :b :varchar
+                                             :primary-key [:a]})
+                        (if-not-exists)
+                        ))))
 
   (is (= "
   ALTER TABLE foo ALTER foo TYPE int"
-         (alter-table :foo
-                      (alter-column :foo :int))))
+         (normalize-string
+          (alter-table :foo
+                       (alter-column :foo :int)))))
   )
