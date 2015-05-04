@@ -8,8 +8,7 @@
            [com.datastax.driver.core RegularStatement]
            [com.datastax.driver.core.schemabuilder SchemaBuilder SchemaBuilder$Direction
 
-            SchemaBuilder$Caching SchemaBuilder$KeyCaching]
-           )
+            SchemaBuilder$Caching SchemaBuilder$KeyCaching])
   (:require [clojurewerkz.cassaforte.aliases :as alias]
             clojurewerkz.cassaforte.query.query-builder
             clojurewerkz.cassaforte.query.types))
@@ -469,13 +468,37 @@
       (get primitive-types column-type)
       column-type)))
 
+(def directions
+  {:asc  SchemaBuilder$Direction/ASC
+   :desc SchemaBuilder$Direction/DESC})
+
+(def ^:private create-options
+  {:clustering-order      (fn [opts [column-name direction]] (.clusteringOrder opts column-name (get directions direction)))
+   :compact-storage       (fn [opts _] (.compactStorage opts))
+   :clustering-keys-order (fn [opts [column-name direction]] (.addSpecificOptions opts))})
+
+(defn resolve-create-option
+  [option-name]
+  (if-let [res (get create-options option-name)]
+    res
+    (throw (IllegalArgumentException. (str "Create option "
+                                           " was not found, pick one of ("
+                                           (clojure.string/join "," (keys create-options))
+                                           ")")))))
+
 (let [order
-      {:column-definitions 1
+      {:with-options       3
+       :column-definitions 1
        :if-not-exists      2}
       renderers
-      {:column-definitions (fn [query-builder column-defs]
-                             (let [[primary-key & clustering-keys] (get column-defs :primary-key)
-                                   ]
+      {:with-options       (fn with-options-statement [query-builder options]
+                             (reduce
+                              (fn [opts [option-name option-vals]]
+                                ((resolve-create-option option-name) opts option-vals))
+                              (.withOptions query-builder)
+                              options))
+       :column-definitions (fn [query-builder column-defs]
+                             (let [[primary-key & clustering-keys] (get column-defs :primary-key)]
 
                                (reduce
                                 (fn [builder [column-name column-type]]
