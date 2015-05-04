@@ -443,6 +443,24 @@
 
   (is (= "
   CREATE TABLE foo(
+    a varchar,
+    b varchar,
+    c varchar,
+    d varchar,
+    PRIMARY KEY((a, b), c, d))
+  WITH COMPACT STORAGE"
+         (normalize-string
+          (create-table :foo
+                        (column-definitions {:a :varchar
+                                             :b :varchar
+                                             :c :varchar
+                                             :d :varchar
+                                             :primary-key [[:a :b] :c :d]})
+                        (with-options {:compact-storage true})
+                        ))))
+
+  (is (= "
+  CREATE TABLE foo(
     a int,
     b map<varchar, varchar>,
     PRIMARY KEY(a))"
