@@ -536,7 +536,7 @@
   [:alter-column [column-name column-type]])
 
 (def ^:private alter-options
-  {:default-ttl                 (fn [opts val] (.defaultTimeToLive opts val))
+  {:default-ttl                 (fn [opts val] (.defaultTimeToLive opts (int val)))
    :bloom-filter-fp-chance      (fn [opts val] (.bloomFilterFPChance opts val))
    :caching                     (fn [opts val] (.caching opts val))
    :gc-grace-seconds            (fn [opts val] (.gcGraceSeconds opts val))
