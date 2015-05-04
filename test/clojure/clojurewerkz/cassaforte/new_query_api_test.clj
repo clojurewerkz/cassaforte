@@ -488,4 +488,24 @@
          (normalize-string
           (alter-table :foo
                        (alter-column :foo :int)))))
+
+  (is (= "
+  ALTER TABLE foo ADD bar varchar"
+         (normalize-string
+          (alter-table :foo
+                       (add-column :bar :varchar)))))
+
+  (is (= "
+  ALTER TABLE foo DROP bar"
+         (normalize-string
+          (alter-table :foo
+                       (drop-column :bar)))))
+
+  (is (= "
+  ALTER TABLE foo ALTER foo TYPE int"
+         (normalize-string
+          (alter-table :foo
+                       (alter-column :foo :int)
+                       (with-options {:default-ttl 100})
+                       ))))
   )
