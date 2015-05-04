@@ -590,15 +590,14 @@
       renderers
       {:with-options (fn with-options-statement [query-builder options]
                        (reduce
-                        (fn [query-builder [option-name option-vals]]
-                          ((resolve-alter-option option-name) option-vals))
+                        (fn [opts [option-name option-vals]]
+                          ((resolve-alter-option option-name) opts option-vals))
                         (.withOptions query-builder)
                         options)
                        query-builder)
 
 
        :add-column   (fn add-column-statement [query-builder [column-name column-type]]
-                       (println column-name 123 column-type)
                        (-> query-builder
                            (.addColumn (name column-name))
                            (.type (resolve-primitive-type column-type))))
