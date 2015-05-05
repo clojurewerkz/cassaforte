@@ -625,6 +625,20 @@
 
   )
 
+(let [order
+      {:if-exists 1}
+      renderers
+      {:if-exists (fn if-exists [query-builder _]
+                    (.ifExists query-builder))}]
+  (defn drop-table
+    [table-name & statements]
+    (->> statements
+         (sort-by #(get order (first %)))
+         (reduce (fn [builder [statement-name statement-args]]
+                   ((get renderers statement-name) builder statement-args))
+                 (SchemaBuilder/dropTable (name table-name)))
+         (maybe-stringify)))
+  )
 
 
 
