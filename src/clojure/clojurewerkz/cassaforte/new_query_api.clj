@@ -610,8 +610,6 @@
        :drop-column  (fn drop-column-statement [query-builder column-name]
                        (.dropColumn query-builder (name column-name)))
 
-
-
        }]
 
   (defn alter-table
@@ -641,9 +639,6 @@
   )
 
 
-
-;; Alter alterTable(String tableName)
-;; Alter alterTable(String keyspaceName, String tableName)
 ;; Drop dropTable(String tableName)
 ;; Drop dropTable(String keyspaceName, String tableName)
 ;; CreateIndex createIndex(String indexName)
