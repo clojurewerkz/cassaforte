@@ -508,4 +508,11 @@
                        (alter-column :foo :int)
                        (with-options {:default-ttl 100})
                        ))))
+
+  (is (= "DROP TABLE foo"
+         (drop-table :foo)))
+
+  (is (= "DROP TABLE IF EXISTS foo"
+         (drop-table :foo
+                     (if-exists))))
   )
