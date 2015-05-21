@@ -635,15 +635,40 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (SchemaBuilder/dropTable (name table-name)))
-         (maybe-stringify)))
-  )
+         (maybe-stringify))))
 
+(let [order
+      {:ont-table          1
+       :and-column         2
+       :and-keys-of-column 2}
+      renderers
+      {:on-table           (fn on-table-query [query-builder table-name]
+                             (.onTable query-builder table-name))
+       :and-column         (fn and-column [query-builder column-name]
+                             (.andColumn query-builder column-name))
+       :and-keys-of-column (fn and-keys-of-column [query-builder column-name]
+                             (.andKeysOfColumn query-builder column-name))
+       }]
+  (defn create-index
+    [index-name & statements]
+    (->> statements
+         (sort-by #(get order (first %)))
+         (reduce (fn [builder [statement-name statement-args]]
+                   ((get renderers statement-name) builder statement-args))
+                 (SchemaBuilder/createIndex (name index-name)))
+         (maybe-stringify))))
 
-;; Drop dropTable(String tableName)
-;; Drop dropTable(String keyspaceName, String tableName)
+(defn on-table
+  [table-name]
+  [:on-table (name table-name)])
+(defn and-column
+  [column-name]
+  [:and-column (name column-name)])
+(defn and-keys-of-column
+  [column-name]
+  [:and-keys-of-column (name column-name)])
+
 ;; CreateIndex createIndex(String indexName)
-;; Drop dropIndex(String indexName)
-;; Drop dropIndex(String keyspaceName, String indexName)
 ;; CreateType createType(String typeName)
 ;; CreateType createType(String keyspaceName, String typeName)
 ;; Drop dropType(String typeName)
