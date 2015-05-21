@@ -512,7 +512,19 @@
   (is (= "DROP TABLE foo"
          (drop-table :foo)))
 
-  (is (= "DROP TABLE IF EXISTS foo"
-         (drop-table :foo
-                     (if-exists))))
+  (is (= "
+  CREATE INDEX foo ON bar(baz)"
+         (normalize-string
+          (create-index "foo"
+                        (on-table "bar")
+                        (and-column "baz")))))
+
+  (is (= "
+  CREATE INDEX foo ON bar(KEYS(baz))"
+         (normalize-string
+          (create-index "foo"
+                        (on-table "bar")
+                        (and-keys-of-column "baz")))))
+
+
   )
