@@ -621,9 +621,7 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (SchemaBuilder/alterTable (name table-name)))
-         (maybe-stringify)))
-
-  )
+         (maybe-stringify))))
 
 (let [order
       {:if-exists 1}
