@@ -524,7 +524,4 @@
          (normalize-string
           (create-index "foo"
                         (on-table "bar")
-                        (and-keys-of-column "baz")))))
-
-
-  )
+                        (and-keys-of-column "baz"))))))

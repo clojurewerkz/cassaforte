@@ -668,7 +668,6 @@
   [column-name]
   [:and-keys-of-column (name column-name)])
 
-;; CreateIndex createIndex(String indexName)
 ;; CreateType createType(String typeName)
 ;; CreateType createType(String keyspaceName, String typeName)
 ;; Drop dropType(String typeName)
