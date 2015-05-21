@@ -165,15 +165,16 @@
       (conj statements (all))
       statements)))
 
-(let [order     {:what-count   1
-                 :what-fcall   1
-                 :what-columns 1
-                 :what-column  1
-                 :from         2
-                 :where        3
-                 :order        4
-                 :limit        4
-                 :filtering    5}
+(let [order
+      {:what-count   1
+       :what-fcall   1
+       :what-columns 1
+       :what-column  1
+       :from         2
+       :where        3
+       :order        4
+       :limit        4
+       :filtering    5}
       renderers
       {:what-count   (fn count-all-query [query-builder _]
                        (.countAll query-builder))
