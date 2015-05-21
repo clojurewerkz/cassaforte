@@ -21,6 +21,7 @@
   [statement]
   (if *batch*
     statement
+    ;; TODO: make sure that we _CAN_ finish the query (check if it's complete)
     (.toString statement)))
 
 (alias/alias-ns 'clojurewerkz.cassaforte.query.query-builder)
