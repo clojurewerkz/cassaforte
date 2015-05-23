@@ -25,6 +25,8 @@
     (.toString statement)))
 
 (alias/alias-ns 'clojurewerkz.cassaforte.query.query-builder)
+(alias/alias-ns 'clojurewerkz.cassaforte.query.dsl)
+(alias/alias-ns 'clojurewerkz.cassaforte.query.column)
 (alias/alias-ns 'clojurewerkz.cassaforte.query.types)
 
 ;;
@@ -84,76 +86,8 @@
        construct))))
 
 ;;
-;; SELECT Statement
+;; Select Query
 ;;
-
-
-;; Columns
-
-(defn write-time
-  [column]
-  (fn writetime-query [query-builder]
-    (.writeTime query-builder (name column))))
-
-(defn ttl-column
-  [column]
-  (fn ttl-query [query-builder]
-    (.ttl query-builder (name column))))
-
-(defn distinct*
-  [column]
-  (fn distinct-query [query-builder]
-    (.distinct (.column query-builder column))))
-
-(defn as
-  [wrapper alias]
-  (fn distinct-query [query-builder]
-    (.as (wrapper query-builder) alias)))
-
-;; Query Parts
-
-(defn count-all
-  []
-  [:what-count nil])
-
-(defn fcall
-  [name & args]
-  [:what-fcall [name args]])
-
-(defn all
-  []
-  ;; TODO: resolve API inconsistency
-  [:what-all nil])
-
-(defn columns
-  [& columns]
-  [:what-columns columns])
-
-(defn column
-  [column & keys]
-  [:what-column [column keys]])
-
-(defn where
-  [m]
-  [:where m])
-
-(defn order-by
-  [& orderings]
-  [:order orderings])
-
-(defn limit
-  [lim]
-  [:limit lim])
-
-(defn allow-filtering
-  []
-  [:filtering nil])
-
-(defn from
-  [table-name]
-  [:from (name table-name)])
-
-;; Query
 
 (defn- complete-select-query
   [statements]
@@ -180,14 +114,14 @@
                        (.countAll query-builder))
        :what-fcall   (fn fcall-query [query-builder [name args]]
                        (.fcall query-builder name (to-array args)))
-       :what-columns (fn [query-builder columns]
+       :what-columns (fn what-columns-query [query-builder columns]
                        (reduce (fn [builder column]
                                  (if (string? column)
                                    (.column builder column)
                                    (column builder)))
                                query-builder
                                columns))
-       :what-column  (fn column-query [query-builder [column {:keys [as]}]]
+       :what-column  (fn what-column-query [query-builder [column {:keys [as]}]]
                        (let [c (.column query-builder (name column))]
                          (if as
                            (.as c as)
@@ -202,10 +136,10 @@
        :order        (fn order-by-query [query-builder orderings]
                        (.orderBy query-builder (into-array orderings)))
 
-       :limit        (fn order-by-query [query-builder lim]
+       :limit        (fn limit-query [query-builder lim]
                        (.limit query-builder lim))
 
-       :filtering    (fn order-by-query [query-builder _]
+       :filtering    (fn filtering-query [query-builder _]
                        (.allowFiltering query-builder))
 
        :from         (fn from-query [query-builder table-name]
@@ -224,30 +158,13 @@
          )))
 
 ;;
-;; Insert Query
+;; INSERT Query
 ;;
-
-(defn value
-  [key value]
-  [:value [key value]])
-
-(defn if-not-exists
-  []
-  [:if-not-exists nil])
-
-(defn values
-  ([m]
-     [:values-vector m])
-  ([key-seq value-seq]
-     [:values-seq [key-seq value-seq]]))
-
-(defn using
-  [m]
-  [:using m])
 
 (def ^:private with-values
   {:timestamp #(QueryBuilder/timestamp %)
    :ttl       #(QueryBuilder/ttl %)})
+
 (let [order       {:values        1
                    :value         1
                    :values-vector 1
@@ -285,10 +202,6 @@
   (if (fn? v)
     (v (name k))
     (set-column (name k) v)))
-
-(defn only-if
-  [m]
-  [:only-if m])
 
 (defn- update-records-statement
   [m]
@@ -341,9 +254,6 @@
 ;; Delete column types
 ;;
 
-(defn if-exists
-  []
-  [:if-exists nil])
 
 (defn list-elt
   [column-name n]
@@ -543,22 +453,6 @@
 ;;
 ;; Alter table
 ;;
-
-(defn with-options
-  [options]
-  [:with-options options])
-
-(defn add-column
-  [column-name column-type]
-  [:add-column [column-name column-type]])
-
-(defn drop-column
-  [column-name]
-  [:drop-column column-name])
-
-(defn alter-column
-  [column-name column-type]
-  [:alter-column [column-name column-type]])
 
 (def ^:private alter-options
   {:default-ttl                 (fn [opts val] (.defaultTimeToLive opts (int val)))
