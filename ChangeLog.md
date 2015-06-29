@@ -1,5 +1,28 @@
 ## Changes between 2.0.0 and 2.1.0
 
+### Fetch Size
+
+In order to specify the fetch size, you can use `execute`:
+
+```clojure
+(client/execute s
+                "SELECT * FROM users where name='Alex';"
+                :fetch-size Integer/MAX_VALUE)
+```
+
+Same can be done with prepared statements:
+
+```clojure
+(let [prepared (client/prepare (insert s :users
+                                           {:name ?
+                                            :city ?
+                                            :age  ?}))
+          r        {:name "Alex" :city "Munich" :age (int 19)}]
+      (client/execute s
+                      (client/bind prepared ["Alex" "Munich" (int 19)]))
+                      :fetch-size Integer/MAX_VALUE)
+```
+
 ### Prepared statements
 
 It is now possible to prepare statements for later execution, for example:
