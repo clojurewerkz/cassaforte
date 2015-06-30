@@ -1,3 +1,4 @@
+
 (defproject clojurewerkz/cassaforte "2.0.2-SNAPSHOT"
   :min-lein-version "2.5.0"
   :description "A Clojure client for Apache Cassandra"
@@ -5,7 +6,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure                          "1.6.0"]
-                 [cc.qbits/hayt                                "2.0.0"]
+                 [cc.qbits/hayt                                "2.1.0"]
                  [com.datastax.cassandra/cassandra-driver-core "2.1.6"]
                  [com.datastax.cassandra/cassandra-driver-dse  "2.1.6"]]
   :source-paths      ["src/clojure"]
