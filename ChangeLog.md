@@ -1,3 +1,15 @@
+## Changes between 2.0.1 and 2.0.2
+
+### DataStax Java Driver Update
+
+DataStax Java driver has been updated to `2.1.6`.
+
+### Hayt 2.1
+
+Hayt dependency has been upgraded to `2.1.0`.
+
+
+
 ## Changes between 2.0.0 and 2.0.1
 
 ### Cluster Resource Leak Plugged
