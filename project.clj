@@ -4,14 +4,14 @@
   :url               "http://clojurecassandra.info"
   :license           {:name "Eclipse Public License"
                       :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies      [[org.clojure/clojure                          "1.6.0"]
+  :dependencies      [[org.clojure/clojure                          "1.7.0"]
                       [cc.qbits/hayt                                "2.1.0"]
                       [com.datastax.cassandra/cassandra-driver-core "2.1.6"]
                       [com.datastax.cassandra/cassandra-driver-dse  "2.1.6"]]
   :source-paths      ["src/clojure"]
   :test-paths        ["test/clojure" "test/java"]
   :java-source-paths ["test/java" ]
-  :profiles          {:1.7    {:dependencies [[org.clojure/clojure "1.7.0-RC2"]]}
+  :profiles          {:1.6    {:dependencies [[org.clojure/clojure "1.6.0"]]}
                       :master {:dependencies [[org.clojure/clojure "1.7.0-master-SNAPSHOT"]]}
                       :dev    {:jvm-opts       ["-Dlog4j.configuration=log4j.properties.unit"
                                                 "-Xmx2048m"
@@ -23,7 +23,7 @@
                                                 [org.xerial.snappy/snappy-java     "1.1.1.6"]
                                                 [org.clojure/tools.trace           "0.7.8"]
                                                 [clj-time                          "0.9.0"]]}}
-  :aliases           {"all" ["with-profile" "dev:dev,1.7:dev,master"]}
+  :aliases           {"all" ["with-profile" "dev:dev,1.6:dev,master"]}
   :test-selectors    {:focus   :focus
                       :client  :client
                       :cql     :cql
