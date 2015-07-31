@@ -12,7 +12,7 @@
   :test-paths        ["test/clojure" "test/java"]
   :java-source-paths ["test/java" ]
   :profiles          {:1.6    {:dependencies [[org.clojure/clojure "1.6.0"]]}
-                      :master {:dependencies [[org.clojure/clojure "1.7.0-master-SNAPSHOT"]]}
+                      :master {:dependencies [[org.clojure/clojure "1.8.0-master-SNAPSHOT"]]}
                       :dev    {:jvm-opts       ["-Dlog4j.configuration=log4j.properties.unit"
                                                 "-Xmx2048m"
                                                 "-javaagent:lib/jamm-0.2.5.jar"]
