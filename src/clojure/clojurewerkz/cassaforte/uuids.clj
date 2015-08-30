@@ -43,7 +43,7 @@ version 1 UUID generated at the provided timestamp.
   [^long timestamp]
   (UUIDs/endOf timestamp))
 
-(defn ^long unix-timestamp
+(defn ^{:tag 'long} unix-timestamp
   "Return the unix timestamp contained by the provided time-based UUID."
   [^UUID uuid]
   (UUIDs/unixTimestamp uuid))
