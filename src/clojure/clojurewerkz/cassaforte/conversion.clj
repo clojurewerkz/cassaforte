@@ -23,61 +23,38 @@
 ;; Protocol version 2, requires Cassandra 2.0+.
 (def ^:const protocol-version 2)
 
-(defprotocol ClojureRepresentation
-  (to-clj [input] "Converts any definition to a Clojure data structure"))
-
-
 (defn deserialize
   [^DataType dt ^ByteBuffer bytes ^Integer protocol-version]
   (.deserialize dt bytes protocol-version))
-;;
-;; Core JDK Types
-;;
 
-(extend-protocol ClojureRepresentation
-  nil
-  (to-clj [input] nil)
-
-  String
-  (to-clj [^String input] input)
-
-  Object
-  (to-clj [input] input)
-
-  Map
-  (to-clj [^Map input]
-    (into {} input))
-
-  Set
-  (to-clj [^Set input]
-    (into #{} input))
-
-  List
-  (to-clj [^List input]
-    (into [] input))
-
-  DriverException
-  (to-clj [^DriverException e]
-    e))
-
-;;
-;; C* Types
-;;
-
-(extend-protocol ClojureRepresentation
-  ResultSet
-  (to-clj [^ResultSet input]
-    (into []
-          (for [^Row row input]
-            (into {}
-                  (for [^ColumnDefinitions$Definition cd (.getColumnDefinitions row)]
-                    (let [^String n                      (.getName cd)
-                          ^ByteBuffer bytes              (.getBytesUnsafe row n)]
-                      [(keyword n) (when bytes
-                                     (let [v (deserialize (.getType cd) bytes protocol-version)]
-                                       (to-clj v)))]))))))
-  Host
-  (to-clj [^Host host]
-    {:datacenter (.getDatacenter host)
-     :address    (.getHostAddress (.getAddress host))
-     :rack       (.getRack host)}))
+(defn to-clj
+  [java-val]
+  (cond
+    (instance? ResultSet java-val) (into [] ;; TODO: transient?
+                                         (for [^Row row java-val]
+                                           (into {}
+                                                 (for [^ColumnDefinitions$Definition cd (.getColumnDefinitions row)]
+                                                   (let [^String n                      (.getName cd)
+                                                         ^ByteBuffer bytes              (.getBytesUnsafe row n)]
+                                                     [(keyword n) (when bytes
+                                                                    (let [v (deserialize (.getType cd) bytes protocol-version)]
+                                                                      ;; TODO Split to-clj to two parts for performance reasions:
+                                                                      ;; The call dispatch "sources" aren't overlapping
+                                                                      (to-clj v)))])))))
+    (instance? Map java-val)       (let [t (transient {})]
+                                     (doseq [[k v] java-val]
+                                       (assoc! t k v))
+                                     (persistent! t))
+    (instance? Set java-val)       (let [t (transient #{})]
+                                     (doseq [v java-val]
+                                       (conj! t v))
+                                     (persistent! t))
+    (instance? List java-val)      (let [t (transient [])]
+                                     (doseq [v java-val]
+                                       (conj! t v))
+                                     (persistent! t))
+    (instance? Host java-val)      (let [^Host host java-val]
+                                     {:datacenter (.getDatacenter host)
+                                      :address    (.getHostAddress (.getAddress host))
+                                      :rack       (.getRack host)})
+    :else                          java-val))
