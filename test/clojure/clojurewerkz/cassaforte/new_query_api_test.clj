@@ -414,31 +414,29 @@
     PRIMARY KEY((a, b), c, d))"
          (normalize-string
           (create-table :foo
-                        (column-definitions {:a :int
-                                             :b :varchar
-                                             :c :int
-                                             :d :int
-                                             :e :int
-                                             :primary-key [[:a :b] :c :d]}))
-
-          )))
+                        (column-definitions (array-map :a :int
+                                                       :b :varchar
+                                                       :c :int
+                                                       :d :int
+                                                       :e :int
+                                                       :primary-key [[:a :b] :c :d]))))))
 
   (is (= "
   CREATE TABLE foo(
     a int,
     c int,
     d int,
-    e int,
     b varchar,
+    e int,
     PRIMARY KEY(a, c, d))"
          (normalize-string
           (create-table :foo
-                        (column-definitions {:a :int
-                                             :b :varchar
-                                             :c :int
-                                             :d :int
-                                             :e :int
-                                             :primary-key [:a :c :d]})))))
+                        (column-definitions (array-map :a :int
+                                                       :c :int
+                                                       :d :int
+                                                       :b :varchar
+                                                       :e :int
+                                                       :primary-key [:a :c :d]))))))
 
 
   (is (= "
@@ -451,11 +449,11 @@
   WITH COMPACT STORAGE"
          (normalize-string
           (create-table :foo
-                        (column-definitions {:a :varchar
-                                             :b :varchar
-                                             :c :varchar
-                                             :d :varchar
-                                             :primary-key [[:a :b] :c :d]})
+                        (column-definitions (array-map :a :varchar
+                                                       :b :varchar
+                                                       :c :varchar
+                                                       :d :varchar
+                                                       :primary-key [[:a :b] :c :d]))
                         (with-options {:compact-storage true})
                         ))))
 
@@ -466,9 +464,9 @@
     PRIMARY KEY(a))"
          (normalize-string
           (create-table :foo
-                        (column-definitions {:a :int
-                                             :b (map-type :varchar :varchar)
-                                             :primary-key [:a]})))))
+                        (column-definitions (array-map :a :int
+                                                       :b (map-type :varchar :varchar)
+                                                       :primary-key [:a]))))))
 
   (is (= "
   CREATE TABLE IF NOT EXISTS foo(
@@ -477,9 +475,9 @@
     PRIMARY KEY(a))"
          (normalize-string
           (create-table :foo
-                        (column-definitions {:a :int
-                                             :b :varchar
-                                             :primary-key [:a]})
+                        (column-definitions (array-map :a :int
+                                                       :b :varchar
+                                                       :primary-key [:a]))
                         (if-not-exists)
                         ))))
 
