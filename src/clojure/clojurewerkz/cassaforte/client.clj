@@ -95,8 +95,8 @@
     (conv/to-clj @fut))
 
   clojure.lang.IBlockingDeref
-  (deref [_ time-period time-unit]
-    (conv/to-clj (deref fut time-period time-unit)))
+  (deref [_ timeout-ms default-val]
+    (conv/to-clj (deref fut timeout-ms default-val)))
 
   Listenable
   (add-listener [_ runnable executor]
