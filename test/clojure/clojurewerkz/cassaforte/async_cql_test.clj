@@ -8,9 +8,9 @@
             [clojure.test                        :refer :all]
             [clojurewerkz.cassaforte.query       :refer :all]))
 
-(use-fixtures :each (fn [f]
-                      (th/with-temporary-keyspace f)))
 
+  (use-fixtures :each (fn [f]
+                        (th/with-temporary-keyspace f)))
 
 (let [s (th/make-test-session)]
   (deftest test-insert
@@ -23,7 +23,7 @@
   (deftest test-insert-time-unit
     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
       @(insert-async s :users r)
-      (is (= r (first (deref (select-async s :users) 1 java.util.concurrent.TimeUnit/SECONDS))))
+      (is (= r (first (deref (select-async s :users) 1000 nil))))
       (truncate s :users)))
 
   (deftest test-insert-callback
@@ -70,8 +70,8 @@
     (testing "One of many update"
       (dotimes [i 3]
         @(insert-async s :user_posts {:username "user1"
-                                     :post_id (str "post" i)
-                                     :body (str "body" i)}))
+                                      :post_id (str "post" i)
+                                      :body (str "body" i)}))
       @(update-async s :user_posts
                      {:body "bodynew"}
                      (where {:username "user1"
