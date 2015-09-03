@@ -18,6 +18,7 @@
   (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.query  :as q]
             [qbits.hayt.cql                 :as hayt]
+            [clojurewerkz.cassaforte.new-query-api :as new-query-api]
             [clojurewerkz.cassaforte.client :as cc])
   (:import com.datastax.driver.core.Session))
 
@@ -139,7 +140,9 @@
    specified. Also, since a row only exists when it contains one value for a column not part of
    the primary key, one such value must be specified too."
   [^Session session & query-params]
+
   (cc/execute session
+              ;; (apply new-query-api/insert query-params)
               (compile-query- q/insert-query query-params)))
 
 (defn insert-async
@@ -209,7 +212,7 @@
    It returns a result set, where every row is a collection of columns returned by the query."
   [^Session session & query-params]
   (cc/execute session
-              (compile-query- q/select-query query-params)))
+              (apply new-query-api/select query-params)))
 
 (defn select-async
   "Same as select but returns a future"
