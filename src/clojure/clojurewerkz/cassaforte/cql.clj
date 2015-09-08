@@ -142,8 +142,9 @@
   [^Session session & query-params]
 
   (cc/execute session
-              ;; (apply new-query-api/insert query-params)
-              (compile-query- q/insert-query query-params)))
+              (apply new-query-api/insert query-params)
+              ;; (compile-query- q/insert-query query-params)
+              ))
 
 (defn insert-async
   "Same as insert but returns a future"
