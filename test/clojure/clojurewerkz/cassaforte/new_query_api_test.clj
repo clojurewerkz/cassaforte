@@ -175,74 +175,66 @@
 
   (is (= "INSERT INTO foo(asd) VALUES ('bsd');"
          (insert :foo
-                 (value "asd" "bsd"))))
+                 {"asd" "bsd"})))
   (is (= "INSERT INTO foo(asd) VALUES ('bsd');"
          (insert :foo
-                 (values ["asd"] ["bsd"]))))
+                 {"asd" "bsd"})))
 
   (is (= "INSERT INTO foo(asd) VALUES ('bsd');"
          (insert :foo
-                 (values {"asd" "bsd"}))))
+                 {"asd" "bsd"})))
 
 
   (is (= "INSERT INTO foo(a,b,\"C\",d) VALUES (123,'127.0.0.1','foo''bar',{'x':3,'y':2}) USING TIMESTAMP 42 AND TTL 24;"
          (insert :foo
-                 (value "a" 123)
-                 (value "b" (java.net.InetAddress/getByName "127.0.0.1"))
-                 (value (quote* "C") "foo'bar")
-                 (value "d" (array-map "x" 3 "y" 2))
+                 (array-map "a"          123
+                            "b"          (java.net.InetAddress/getByName "127.0.0.1")
+                            (quote* "C") "foo'bar"
+                            "d"          (array-map "x" 3 "y" 2))
                  (using (array-map :timestamp 42
-                                   :ttl       24))
-
-                 )))
+                                   :ttl       24)))))
 
   (is (= "INSERT INTO foo(a,b,\"C\",d) VALUES (123,'127.0.0.1','foo''bar',{'x':3,'y':2}) USING TIMESTAMP 42 AND TTL 24;"
          (insert :foo
-                 (value "a" 123)
-                 (value "b" (java.net.InetAddress/getByName "127.0.0.1"))
-                 (value (quote* "C") "foo'bar")
-                 (value "d" {"x" 3 "y" 2})
+                 (array-map "a"          123
+                            "b"          (java.net.InetAddress/getByName "127.0.0.1")
+                            (quote* "C") "foo'bar"
+                            "d"          {"x" 3 "y" 2})
                  (using (array-map :timestamp 42
                                    :ttl       24)))))
 
   (is (= "INSERT INTO foo(a,b) VALUES ({2,3,4},3.4) USING TIMESTAMP 42 AND TTL 24;"
          (insert :foo
-                 (values ["a" "b"]
-                         [(sorted-set 2 3 4) 3.4])
+                 (array-map "a" (sorted-set 2 3 4)
+                            "b" 3.4)
                  (using (array-map :timestamp 42
                                    :ttl       24)))))
 
   (is (= "INSERT INTO foo(a,b) VALUES ({2,3,4},3.4) USING TTL ? AND TIMESTAMP ?;"
          (insert :foo
-                 (values [:a :b]
-                         [(sorted-set 2 3 4) 3.4])
+                 (array-map :a (sorted-set 2 3 4)
+                            :b 3.4)
                  (using (array-map :ttl       (?)
                                    :timestamp (?))))))
 
   (is (= "INSERT INTO foo(c,a,b) VALUES (123,{2,3,4},3.4) USING TIMESTAMP 42;"
          (insert :foo
-                 (value :c 123)
-                 (values [:a :b]
-                         [(sorted-set 2 3 4) 3.4]
-                         )
+                 (array-map :c 123
+                            :a (sorted-set 2 3 4)
+                            :b 3.4)
                  (using {:timestamp 42}))))
-
-  (is (thrown? IllegalArgumentException
-               (insert :foo
-                       (values [:a :b]
-                               [1 2 3]))))
 
   (is (= "INSERT INTO foo(k,x) VALUES (0,1) IF NOT EXISTS;";
          (insert :foo
-                 (value :k 0)
-                 (value :x 1)
+                 (array-map :k 0
+                            :x 1)
                  (if-not-exists))))
 
 
   (is (= "INSERT INTO foo(k,x) VALUES (0,(1));";
          (insert :foo
-                 (value :k 0)
-                 (value :x (tuple-of [:int] [(int 1)])))))
+                 (array-map :k 0
+                            :x (tuple-of [:int] [(int 1)])))))
 
   (is (= "UPDATE foo USING TIMESTAMP 42 SET a=12,b=[3,2,1],c=c+3 WHERE k=2;"
          (update :foo
@@ -382,11 +374,11 @@
          (batch
           (queries
            (insert :foo
-                   (value "asd" "bsd"))
+                   {"asd" "bsd"})
            (insert :foo
-                   (value "asd" "bsd"))
+                   {"asd" "bsd"})
            (insert :foo
-                   (value "asd" "bsd"))))))
+                   {"asd" "bsd"})))))
 
   (is (= (str "BEGIN COUNTER BATCH USING TIMESTAMP 42 "
               "UPDATE foo SET a=a+1;"
