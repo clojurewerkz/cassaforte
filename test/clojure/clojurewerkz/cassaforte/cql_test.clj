@@ -15,6 +15,7 @@
             [clojurewerkz.cassaforte.cql         :refer :all]
 
             [clojure.test                        :refer :all]
+            [clojurewerkz.cassaforte.new-query-api :as new-query-api]
             ))
 
 
@@ -22,13 +23,12 @@
 
 
 (let [s (th/make-test-session)]
-
   (deftest test-insert
-    (let [s (th/make-test-session)
-          r {:name "Alex" :city "Munich" :age (int 19)}]
+    (let [r {:name "Alex" :city "Munich" :age (int 19)}]
       (insert s :users r)
       (is (= r (first (select s :users))))
-      (truncate s :users)))
+      (truncate s :users)
+      ))
 
   (deftest test-insert-prepare
     (let [prepared (client/prepare (insert s :users
@@ -38,7 +38,10 @@
           r        {:name "Alex" :city "Munich" :age (int 19)}]
       (client/execute s
                       (client/bind prepared ["Alex" "Munich" (int 19)]))
-      (is (= r (first (select s :users))))))
+      (is (= r (first (select s :users)))))))
+
+(comment
+
 
   (deftest test-update
     (testing "Simple updates"
