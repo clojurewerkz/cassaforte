@@ -57,12 +57,6 @@
   []
   [:if-not-exists nil])
 
-(defn values
-  ([m]
-     [:values-vector m])
-  ([key-seq value-seq]
-     [:values-seq [key-seq value-seq]]))
-
 (defn using
   [m]
   [:using m])

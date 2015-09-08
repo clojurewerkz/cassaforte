@@ -1,6 +1,7 @@
 (ns clojurewerkz.cassaforte.new-query-api
   "Functions for building dynamic CQL queries, in case you feel
-   that `cql` namespace is too limiting for you."
+  that `cql` namespace is too limiting for you."
+  (:refer-clojure :exclude [update])
   (:import [com.datastax.driver.core.querybuilder QueryBuilder
             Select$Selection Select Select$Where
             BindMarker
@@ -167,26 +168,22 @@
 
 (let [order       {:values        1
                    :value         1
-                   :values-vector 1
+                   :values-map    1
                    :values-seq    1
                    :using         2
                    :if-not-exists 3}
       renderers
-      {:value         (fn value-query [query-builder [key value]]
-                        (.value query-builder (name key) value))
-       :if-not-exists (fn value-query [query-builder _]
+      {:if-not-exists (fn value-query [query-builder _]
                         (.ifNotExists query-builder))
-       :values-vector (fn values-query [query-builder m]
+       :values-map    (fn values-query [query-builder m]
                         (.values query-builder (into-array (map name (keys m))) (object-array (vals m))))
-       :values-seq    (fn order-by-query [query-builder [key-seq value-seq]]
-                        (.values query-builder (into-array (map name key-seq)) (object-array value-seq)))
        :using         (fn using-query [query-builder m]
                         (doseq [[key value] m]
                           (.using query-builder ((get with-values key) value)))
                         query-builder)}]
   (defn insert
-    [table-name & statements]
-    (->> statements
+    [table-name values & statements]
+    (->> (conj statements [:values-map values])
          (sort-by #(get order (first %)))
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
@@ -582,3 +579,6 @@
 ;; TableOptions.CachingRowsPerPartition noRows()
 ;; TableOptions.CachingRowsPerPartition allRows()
 ;; TableOptions.CachingRowsPerPartition rows(int rowNumber)
+
+
+(def ? (QueryBuilder/bindMarker))
