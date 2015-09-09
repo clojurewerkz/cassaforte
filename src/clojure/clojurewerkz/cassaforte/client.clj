@@ -312,6 +312,22 @@
            .getMetadata
            .getAllHosts)))
 
+;;
+;; Prepared Statements
+;;
+
+(defmacro forcing-prepared-statements
+  "Forces prepared statements for operations executed in the body"
+  [& body]
+  `(binding [cc/*prepared-statement* true]
+     ~@body))
+
+(defmacro without-prepared-statements
+  "Disables prepared statements for operations executed in the body"
+  [& body]
+  `(binding [cc/*prepared-statement* false]
+     ~@body))
+
 ;; defn get-replicas
 ;; defn get-cluster-name
 ;; defn get-keyspace

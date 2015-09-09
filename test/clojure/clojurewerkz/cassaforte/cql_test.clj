@@ -397,7 +397,7 @@
   (deftest test-insert-with-forced-prepared-statements
     (comment
       (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-        (cp/forcing-prepared-statements
+        (client/forcing-prepared-statements
          (insert s :users r))
         (is (= r (get-one s :users)))
         (truncate s :users))))
@@ -405,7 +405,7 @@
   (deftest test-insert-without-prepared-statements
     (comment
       (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-        (cp/without-prepared-statements
+        (client/without-prepared-statements
          (insert s :users r))
         (is (= r (get-one s :users)))
         (truncate s :users))))

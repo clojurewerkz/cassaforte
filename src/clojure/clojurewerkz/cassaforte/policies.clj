@@ -14,7 +14,6 @@
 
 (ns clojurewerkz.cassaforte.policies
   "Consistency levels, retry policies, reconnection policies, etc"
-  (:require [clojurewerkz.cassaforte.client :as cc])
   (:import [com.datastax.driver.core ConsistencyLevel]
            [com.datastax.driver.core.policies
             LoadBalancingPolicy DCAwareRoundRobinPolicy RoundRobinPolicy TokenAwarePolicy
@@ -105,19 +104,3 @@ reached.
   (if (= (type cl) ConsistencyLevel)
     cl
     (consistency-level cl)))
-
-;;
-;; Prepared Statements
-;;
-
-(defmacro forcing-prepared-statements
-  "Forces prepared statements for operations executed in the body"
-  [& body]
-  `(binding [cc/*prepared-statement* true]
-     ~@body))
-
-(defmacro without-prepared-statements
-  "Disables prepared statements for operations executed in the body"
-  [& body]
-  `(binding [cc/*prepared-statement* false]
-     ~@body))
