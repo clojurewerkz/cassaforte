@@ -140,11 +140,8 @@
    specified. Also, since a row only exists when it contains one value for a column not part of
    the primary key, one such value must be specified too."
   [^Session session & query-params]
-
   (cc/execute session
-              (apply new-query-api/insert query-params)
-              ;; (compile-query- q/insert-query query-params)
-              ))
+              (apply new-query-api/insert query-params)))
 
 (defn insert-async
   "Same as insert but returns a future"
@@ -184,7 +181,9 @@
    Other columns values are specified through assignment within the `set` clause."
   [^Session session & query-params]
   (cc/execute session
-              (compile-query- q/update-query query-params)))
+              (apply new-query-api/update query-params)
+              ;; (compile-query- q/update-query query-params)
+              ))
 
 (defn update-async
   "Same as update but returns a future"
