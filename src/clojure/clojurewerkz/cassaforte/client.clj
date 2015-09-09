@@ -15,11 +15,11 @@
 (ns clojurewerkz.cassaforte.client
   "Provides fundamental functions for
 
-   * connecting to Cassandra nodes and clusters
-   * configuring connections
-   * tuning load balancing, retries, reconnection strategies and consistency settings
-   * preparing and executing queries constructed via DSL
-   * working with executing results"
+  * connecting to Cassandra nodes and clusters
+  * configuring connections
+  * tuning load balancing, retries, reconnection strategies and consistency settings
+  * preparing and executing queries constructed via DSL
+  * working with executing results"
   (:require [clojure.java.io                    :as io]
             [clojurewerkz.cassaforte.policies   :as cp]
             [clojurewerkz.cassaforte.conversion :as conv]
@@ -51,13 +51,13 @@
 (defmacro prepare
   "Prepare a single statement, return prepared statement"
   ([body]
-     `(binding [hayt/*prepared-statement* true
-                hayt/*param-stack*        (atom [])]
-        ~body))
+   `(binding [hayt/*prepared-statement* true
+              hayt/*param-stack*        (atom [])]
+      ~body))
   ([session body]
-     `(binding [hayt/*prepared-statement* true
-                hayt/*param-stack*        (atom [])]
-        (.prepare ~session ~body))))
+   `(binding [hayt/*prepared-statement* true
+              hayt/*param-stack*        (atom [])]
+      (.prepare ~session ~body))))
 
 ;;
 ;; Protocols
@@ -208,25 +208,25 @@
 (defn ^Session connect
   "Connects to the Cassandra cluster. Use `build-cluster` to build a cluster."
   ([hosts]
-     (connect-or-close (build-cluster {:hosts hosts})))
+   (connect-or-close (build-cluster {:hosts hosts})))
   ([hosts keyspace-or-opts]
-     (if (string? keyspace-or-opts)
-       (connect hosts keyspace-or-opts {})
-       (let [keyspace (:keyspace keyspace-or-opts)
-             opts     (dissoc keyspace-or-opts :keyspace)]
-         (if keyspace
-           (connect hosts keyspace opts)
-           (connect-or-close (-> opts (merge {:hosts hosts}) build-cluster))))))
+   (if (string? keyspace-or-opts)
+     (connect hosts keyspace-or-opts {})
+     (let [keyspace (:keyspace keyspace-or-opts)
+           opts     (dissoc keyspace-or-opts :keyspace)]
+       (if keyspace
+         (connect hosts keyspace opts)
+         (connect-or-close (-> opts (merge {:hosts hosts}) build-cluster))))))
   ([hosts keyspace opts]
-     (let [c (build-cluster (merge opts {:hosts hosts}))]
-       (connect-or-close c (name keyspace)))))
+   (let [c (build-cluster (merge opts {:hosts hosts}))]
+     (connect-or-close c (name keyspace)))))
 
 (defn ^Session connect-with-uri
   ([^String uri]
-     (connect-with-uri uri {}))
+   (connect-with-uri uri {}))
   ([^String uri opts]
-     (let [^URI u (URI. uri)]
-       (connect [(.getHost u)] (merge {:port (.getPort u) :keyspace (-> u .getPath (.substring 1))} opts)))))
+   (let [^URI u (URI. uri)]
+     (connect [(.getHost u)] (merge {:port (.getPort u) :keyspace (-> u .getPath (.substring 1))} opts)))))
 
 (defn disconnect
   "1-arity version receives Session, and shuts it down. It doesn't shut down all other sessions
@@ -247,51 +247,50 @@
 (defn bind
   "Binds prepared statement to values, for example:
 
-   With string statement:
+  With string statement:
 
-      (client/bind
-             (client/prepare s \"INSERT INTO users (name, city, age) VALUES (?, ?, ?);\")
-             [\"Alex\" \"Munich\" (int 19)])
+  (client/bind
+  (client/prepare s \"INSERT INTO users (name, city, age) VALUES (?, ?, ?);\")
+  [\"Alex\" \"Munich\" (int 19)])
 
-    With queries:
+  With queries:
 
-      (let [prepared (client/prepare (insert s :users {:name ? :city ? :age  ?}))]
-        (client/execute s
-                (client/bind prepared [\"Alex\" \"Munich\" (int 19)]))"
+  (let [prepared (client/prepare (insert s :users {:name ? :city ? :age  ?}))]
+  (client/execute s
+  (client/bind prepared [\"Alex\" \"Munich\" (int 19)]))"
   [^PreparedStatement statement values]
   (.bind statement (to-array values)))
 
 (defn execute
   "Executes a statement"
   ([^Session session query]
-     (if hayt/*prepared-statement*
-       (let [^String q (hayt/->raw query)]
-         (.prepare session q))
-       (let [^Statement built-statement (build-statement query)]
-         (if *async*
-           (AsyncResult. (.executeAsync session built-statement))
-           (-> (.execute session built-statement)
-               (conv/to-clj))))))
+   (if hayt/*prepared-statement*
+     (.prepare session query)
+     (let [^Statement built-statement (build-statement query)]
+       (if *async*
+         (AsyncResult. (.executeAsync session built-statement))
+         (-> (.execute session built-statement)
+             (conv/to-clj))))))
   ([^Session session query & {:keys [retry-policy
                                      consistency-level
                                      fetch-size
                                      enable-tracing
                                      default-timestamp]}]
-     (let [^Statement built-statement (build-statement query)]
-       (when default-timestamp
-         (.setDefaultTimestamp built-statement))
-       (when enable-tracing
-         (.enableTracing built-statement))
-       (when fetch-size
-         (.setFetchSize built-statement (int fetch-size)))
-       (when retry-policy
-         (.setRetryPolicy built-statement retry-policy))
-       (when consistency-level
-         (.setConsistencyLevel built-statement consistency-level))
-       (if *async*
-         (AsyncResult. (.executeAsync session built-statement))
-         (-> (.execute session built-statement)
-             (conv/to-clj))))))
+   (let [^Statement built-statement (build-statement query)]
+     (when default-timestamp
+       (.setDefaultTimestamp built-statement))
+     (when enable-tracing
+       (.enableTracing built-statement))
+     (when fetch-size
+       (.setFetchSize built-statement (int fetch-size)))
+     (when retry-policy
+       (.setRetryPolicy built-statement retry-policy))
+     (when consistency-level
+       (.setConsistencyLevel built-statement consistency-level))
+     (if *async*
+       (AsyncResult. (.executeAsync session built-statement))
+       (-> (.execute session built-statement)
+           (conv/to-clj))))))
 
 (defn ^String export-schema
   "Exports the schema as a string"
