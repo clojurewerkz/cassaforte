@@ -7,7 +7,6 @@
 ;;
 ;; Query Builder helper methods
 ;;
-(def ? (QueryBuilder/bindMarker))
 
 (defn bind-marker
   [name]

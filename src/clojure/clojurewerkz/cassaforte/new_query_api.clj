@@ -580,5 +580,4 @@
 ;; TableOptions.CachingRowsPerPartition allRows()
 ;; TableOptions.CachingRowsPerPartition rows(int rowNumber)
 
-
 (def ? (QueryBuilder/bindMarker))

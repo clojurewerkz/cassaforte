@@ -22,8 +22,7 @@
   * working with executing results"
   (:require [clojure.java.io                    :as io]
             [clojurewerkz.cassaforte.policies   :as cp]
-            [clojurewerkz.cassaforte.conversion :as conv]
-            [qbits.hayt.cql                     :as hayt])
+            [clojurewerkz.cassaforte.conversion :as conv])
   (:import [com.datastax.driver.core Statement ResultSet ResultSetFuture Host Session Cluster
             Cluster$Builder SimpleStatement PreparedStatement BoundStatement HostDistance PoolingOptions
             SSLOptions ProtocolOptions$Compression]
@@ -48,15 +47,14 @@
   `(binding [*async* true]
      (do ~body)))
 
+(def *prepared-statement* false)
 (defmacro prepare
   "Prepare a single statement, return prepared statement"
   ([body]
-   `(binding [hayt/*prepared-statement* true
-              hayt/*param-stack*        (atom [])]
+   `(binding [*prepared-statement* true]
       ~body))
   ([session body]
-   `(binding [hayt/*prepared-statement* true
-              hayt/*param-stack*        (atom [])]
+   `(binding [*prepared-statement* true]
       (.prepare ~session ~body))))
 
 ;;
@@ -80,7 +78,8 @@
 
   clojure.lang.IPersistentMap
   (build-statement [raw-statement]
-    (build-statement (hayt/->raw raw-statement)))
+    ;; TODO: ?? NOW WHAT
+    )
 
   Statement
   (build-statement [s]
@@ -264,7 +263,7 @@
 (defn execute
   "Executes a statement"
   ([^Session session query]
-   (if hayt/*prepared-statement*
+   (if *prepared-statement*
      (.prepare session query)
      (let [^Statement built-statement (build-statement query)]
        (if *async*

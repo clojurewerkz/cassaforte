@@ -9,7 +9,6 @@
             [clj-time.coerce                     :as cc]
             [clj-time.core                       :refer [seconds ago before? date-time] :as tc]
 
-            ;; x[qbits.hayt.fns                      :as fns]
             ;; [clojurewerkz.cassaforte.query       :refer :all]
             [clojurewerkz.cassaforte.cql         :refer :all]
 

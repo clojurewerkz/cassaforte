@@ -9,10 +9,6 @@
 
             [clojure.test :refer :all]
 
-            [qbits.hayt.dsl.statement :as hs]
-            [qbits.hayt.dsl.clause :as hc]
-            [qbits.hayt.fns :as fns]
-
             [clj-time.core :refer [seconds ago before? date-time] :as tc]
             [clj-time.format :as tf]
             [clj-time.coerce :as cc]))

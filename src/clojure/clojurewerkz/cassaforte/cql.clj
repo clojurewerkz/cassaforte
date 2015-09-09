@@ -17,7 +17,6 @@
    for key operations built on top of CQL."
   (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.query  :as q]
-            [qbits.hayt.cql                 :as hayt]
             [clojurewerkz.cassaforte.new-query-api :as new-query-api]
             [clojurewerkz.cassaforte.client :as cc])
   (:import com.datastax.driver.core.Session))
@@ -273,7 +272,7 @@
 
    Doesn't work as a prepared query."
   [^Session session & query-params]
-  (assert (not hayt/*prepared-statement*) "get-one query can't be executed as a prepared query")
+  (assert (not cc/*prepared-statement*) "get-one query can't be executed as a prepared query")
   (first
    (cc/execute session
                (compile-query- q/select-query query-params))))
@@ -286,7 +285,7 @@
 
    Doesn't work as a prepared query."
   [^Session session table & query-params]
-  (assert (not hayt/*prepared-statement*) "Count query can't be executed as a prepared query")
+  (assert (not cc/*prepared-statement*) "Count query can't be executed as a prepared query")
   (:count
    (first
     (select session table
@@ -301,7 +300,7 @@
 (defn describe-keyspace
   "Returns a keyspace description, taken from `system.schema_keyspaces`."
   [^Session session ks]
-  (assert (not hayt/*prepared-statement*) "Describe Keyspace query can't be executed as a prepared query")
+  (assert (not cc/*prepared-statement*) "Describe Keyspace query can't be executed as a prepared query")
   (first
    (select session :system.schema_keyspaces
            (q/where {:keyspace_name (name ks)}))))
@@ -309,7 +308,7 @@
 (defn describe-table
   "Returns a table description, taken from `system.schema_columnfamilies`."
   [^Session session ks table]
-  (assert (not hayt/*prepared-statement*) "Describe Table query can't be executed as a prepared query")
+  (assert (not cc/*prepared-statement*) "Describe Table query can't be executed as a prepared query")
   (first
    (select session :system.schema_columnfamilies
            (q/where {:keyspace_name (name ks)
@@ -318,7 +317,7 @@
 (defn describe-columns
   "Returns table columns description, taken from `system.schema_columns`."
   [^Session session ks table]
-  (assert (not hayt/*prepared-statement*) "Describe Columns query can't be executed as a prepared query")
+  (assert (not cc/*prepared-statement*) "Describe Columns query can't be executed as a prepared query")
   (select session :system.schema_columns
           (q/where {:keyspace_name (name ks)
                     :columnfamily_name (name table)})))

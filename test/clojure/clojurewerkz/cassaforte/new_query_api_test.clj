@@ -1,5 +1,4 @@
 (ns clojurewerkz.cassaforte.new-query-api-test
-  (:refer-clojure :exclude [update])
   (:import [com.datastax.driver.core.utils Bytes])
   (:require [clojure.test                          :refer :all]
             [clojurewerkz.cassaforte.new-query-api :refer :all]))
@@ -76,7 +75,7 @@
                           (-> "longName"
                               ttl-column
                               (as "ttla")))
-                 (limit (? "limit")))))
+                 (limit (bind-marker "limit")))))
 
   (is (= "SELECT a,b,\"C\" FROM foo WHERE a IN ('127.0.0.1','127.0.0.3') AND \"C\"='foo' ORDER BY a ASC,b DESC LIMIT 42;";
          (select :foo
@@ -106,18 +105,18 @@
                               (ttl-column)
                               (as "ttla")))
                  (where [[:in :k []]])
-                 (limit (? "limit")))))
+                 (limit (bind-marker "limit")))))
 
   (is (= "SELECT * FROM foo WHERE bar=:barmark AND baz=:bazmark LIMIT :limit;"
          (select :foo
-                 (where [[:= :bar (? "barmark")]
-                         [:= :baz (? "bazmark")]])
-                 (limit (? "limit")))))
+                 (where [[:= :bar (bind-marker "barmark")]
+                         [:= :baz (bind-marker "bazmark")]])
+                 (limit (bind-marker "limit")))))
 
   (is (= "SELECT a FROM foo WHERE k IN ?;";
          (select :foo
                  (column :a)
-                 (where [[:in :k [(?)]]]))))
+                 (where [[:in :k [?]]]))))
 
   (is (= "SELECT count(*) FROM foo;";
          (select :foo
@@ -214,8 +213,8 @@
          (insert :foo
                  (array-map :a (sorted-set 2 3 4)
                             :b 3.4)
-                 (using (array-map :ttl       (?)
-                                   :timestamp (?))))))
+                 (using (array-map :ttl       ?
+                                   :timestamp ?)))))
 
   (is (= "INSERT INTO foo(c,a,b) VALUES (123,{2,3,4},3.4) USING TIMESTAMP 42;"
          (insert :foo
@@ -358,7 +357,7 @@
 
   (is (= "DELETE FROM foo WHERE k1=:key;"
          (delete :foo
-                 (where {:k1 (? "key")}))))
+                 (where {:k1 (bind-marker "key")}))))
 
 
   (is (= "TRUNCATE a;"
