@@ -1,16 +1,17 @@
 (ns clojurewerkz.cassaforte.query.query-builder
   "Functions for building dynamic CQL queries, in case you feel
    that `cql` namespace is too limiting for you."
+  (:refer-clojure :exclude [update])
   (:import [com.datastax.driver.core.querybuilder QueryBuilder]))
 
 ;;
 ;; Query Builder helper methods
 ;;
-(defn ?
-  ([]
-     (QueryBuilder/bindMarker))
-  ([name]
-     (QueryBuilder/bindMarker name)))
+(def ? (QueryBuilder/bindMarker))
+
+(defn bind-marker
+  [name]
+  (QueryBuilder/bindMarker name))
 
 (defn timestamp
   [column-name]

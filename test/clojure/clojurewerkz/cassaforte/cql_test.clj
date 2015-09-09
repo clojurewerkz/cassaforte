@@ -5,17 +5,17 @@
             [clojurewerkz.cassaforte.policies    :as cp]
             [clojurewerkz.cassaforte.uuids       :as uuids]
 
-            [qbits.hayt.fns                      :as fns]
-
             [clj-time.format                     :as tf]
             [clj-time.coerce                     :as cc]
             [clj-time.core                       :refer [seconds ago before? date-time] :as tc]
 
-            [clojurewerkz.cassaforte.query       :refer :all]
+            ;; x[qbits.hayt.fns                      :as fns]
+            ;; [clojurewerkz.cassaforte.query       :refer :all]
             [clojurewerkz.cassaforte.cql         :refer :all]
 
             [clojure.test                        :refer :all]
             [clojurewerkz.cassaforte.new-query-api :as new-query-api]
+            [clojurewerkz.cassaforte.query.dsl :refer :all]
             ))
 
 
@@ -31,17 +31,15 @@
       ))
 
   (deftest test-insert-prepare
-    (let [prepared (client/prepare (insert s :users
-                                           {:name ?
-                                            :city ?
-                                            :age  ?}))
+    (let [prepared (client/prepare
+                    (insert s :users
+                            {:name new-query-api/?
+                             :city new-query-api/?
+                             :age  new-query-api/?}))
           r        {:name "Alex" :city "Munich" :age (int 19)}]
       (client/execute s
                       (client/bind prepared ["Alex" "Munich" (int 19)]))
-      (is (= r (first (select s :users)))))))
-
-(comment
-
+      (is (= r (first (select s :users))))))
 
   (deftest test-update
     (testing "Simple updates"
@@ -59,6 +57,7 @@
         (insert s :user_posts {:username "user1"
                                :post_id (str "post" i)
                                :body (str "body" i)}))
+
       (update s :user_posts
               {:body "bodynew"}
               (where {:username "user1"
@@ -68,7 +67,12 @@
               (select s :user_posts
                       (where {:username "user1"
                               :post_id "post1"}))
-              [0 :body])))))
+              [0 :body]))))))
+
+(comment
+
+
+
 
   (deftest test-update-with-compound-key
     (let [t   :events_by_device_id_and_date
