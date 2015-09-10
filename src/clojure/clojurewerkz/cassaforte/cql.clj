@@ -16,8 +16,7 @@
   "Main namespace for working with CQL, prepared statements. Convenience functions
    for key operations built on top of CQL."
   (:refer-clojure :exclude [update])
-  (:require [clojurewerkz.cassaforte.query  :as q]
-            [clojurewerkz.cassaforte.new-query-api :as new-query-api]
+  (:require [clojurewerkz.cassaforte.new-query-api :as new-query-api]
             [clojurewerkz.cassaforte.client :as cc])
   (:import com.datastax.driver.core.Session))
 
@@ -36,7 +35,7 @@
    including all column families in it, and all data contained in those column families."
   [^Session session ks & query-params]
   (cc/execute session
-              (compile-query- q/drop-keyspace-query (cons ks query-params))))
+              (compile-query- new-query-api/drop-keyspace (cons ks query-params))))
 
 (defn create-keyspace
   "Creates a new top-level keyspace. A keyspace is a namespace that
