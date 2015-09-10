@@ -8,7 +8,7 @@
             Clause]
            [com.datastax.driver.core RegularStatement]
            [com.datastax.driver.core.schemabuilder SchemaBuilder SchemaBuilder$Direction
-
+            CreateKeyspace DropKeyspace
             SchemaBuilder$Caching SchemaBuilder$KeyCaching])
   (:require [clojurewerkz.cassaforte.aliases :as alias]
             clojurewerkz.cassaforte.query.query-builder
@@ -580,4 +580,18 @@
 ;; TableOptions.CachingRowsPerPartition allRows()
 ;; TableOptions.CachingRowsPerPartition rows(int rowNumber)
 
+
+(let [order
+      {:if-exists 1}
+      renderers
+      {:if-exists (fn if-exists [query-builder _]
+                    (.ifExists query-builder))}]
+  (defn drop-keyspace
+    [keyspace-name & statements]
+    (->> statements
+         (sort-by #(get order (first %)))
+         (reduce (fn [builder [statement-name statement-args]]
+                   ((get renderers statement-name) builder statement-args))
+                 (DropKeyspace. (name keyspace-name)))
+         (maybe-stringify))))
 (def ? (QueryBuilder/bindMarker))
