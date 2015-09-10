@@ -513,4 +513,25 @@
          (normalize-string
           (create-index "foo"
                         (on-table "bar")
-                        (and-keys-of-column "baz"))))))
+                        (and-keys-of-column "baz")))))
+
+
+  (is (= "DROP KEYSPACE foo;"
+         (drop-keyspace "foo")))
+  (is (= "DROP KEYSPACE IF EXISTS foo;"
+         (drop-keyspace "foo" (if-exists))))
+
+
+  (is (= "CREATE KEYSPACE IF NOT EXISTS foo;"
+         (create-keyspace "foo"
+                          (if-not-exists))))
+
+  (is (= "CREATE KEYSPACE IF NOT EXISTS foo WITH REPLICATION = {class: 'SimpleStrategy', replication_factor: 1};"
+         (create-keyspace "foo"
+                          (with-options
+                            {:replication
+                             {"class"              "SimpleStrategy"
+                              "replication_factor" 1}})
+                          (if-not-exists))))
+
+  )
