@@ -594,4 +594,39 @@
                    ((get renderers statement-name) builder statement-args))
                  (DropKeyspace. (name keyspace-name)))
          (maybe-stringify))))
+
+(def ^:private create-keyspace-options
+  {:replication    (fn [opts replication] (.replication opts replication))
+   :durable-writes (fn [opts durable-writes] (.durableWrites opts durable-writes))})
+
+(defn resolve-create-keyspace-option
+  [option-name]
+  (if-let [res (get create-keyspace-options option-name)]
+    res
+    (throw (IllegalArgumentException. (str "Create Keyspace option "
+                                           " was not found, pick one of ("
+                                           (clojure.string/join "," (keys create-keyspace-options))
+                                           ")")))))
+
+(let [order
+      {:if-not-exists 1
+       :with-options  2}
+      renderers
+      {:with-options  (fn with-options-statement [query-builder options]
+                        (reduce
+                         (fn [opts [option-name option-vals]]
+                           ((resolve-create-keyspace-option option-name) opts option-vals))
+                         (.withOptions query-builder)
+                         options))
+       :if-not-exists (fn if-not-exists-query [query-builder _]
+                        (.ifNotExists query-builder))}]
+  (defn create-keyspace
+    [keyspace-name & statements]
+    (->> statements
+         (sort-by #(get order (first %)))
+         (reduce (fn [builder [statement-name statement-args]]
+                   ((get renderers statement-name) builder statement-args))
+                 (CreateKeyspace. (name keyspace-name)))
+         (maybe-stringify))))
+
 (def ? (QueryBuilder/bindMarker))
