@@ -445,7 +445,7 @@
                                                        :c :varchar
                                                        :d :varchar
                                                        :primary-key [[:a :b] :c :d]))
-                        (with-options {:compact-storage true})
+                        (with {:compact-storage true})
                         ))))
 
   (is (= "
@@ -495,7 +495,7 @@
          (normalize-string
           (alter-table :foo
                        (alter-column :foo :int)
-                       (with-options {:default-ttl 100})
+                       (with {:default-ttl 100})
                        ))))
 
   (is (= "DROP TABLE foo"
@@ -528,7 +528,7 @@
 
   (is (= "CREATE KEYSPACE IF NOT EXISTS foo WITH REPLICATION = {class: 'SimpleStrategy', replication_factor: 1};"
          (create-keyspace "foo"
-                          (with-options
+                          (with
                             {:replication
                              {"class"              "SimpleStrategy"
                               "replication_factor" 1}})

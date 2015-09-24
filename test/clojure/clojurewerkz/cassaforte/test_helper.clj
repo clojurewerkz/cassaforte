@@ -1,7 +1,7 @@
 (ns clojurewerkz.cassaforte.test-helper
   (:refer-clojure :exclude [update])
-  (:require [clojurewerkz.cassaforte.client :as client]
-            [clojurewerkz.cassaforte.cql :refer :all]
+  (:require [clojurewerkz.cassaforte.client    :as client]
+            [clojurewerkz.cassaforte.cql       :refer :all]
             [clojurewerkz.cassaforte.query.dsl :refer :all]))
 
 (declare ___test-session)
@@ -15,13 +15,12 @@
   [f]
 
   (let [session (make-test-session)]
-
     (drop-keyspace session :new_cql_keyspace (if-exists))
 
     (create-keyspace session "new_cql_keyspace"
                      (with {:replication
-                            {:class "SimpleStrategy"
-                             :replication_factor 1 }}))
+                            {"class"              "SimpleStrategy"
+                             "replication_factor" 1 }}))
 
     (use-keyspace session :new_cql_keyspace)
 
