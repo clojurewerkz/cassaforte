@@ -20,12 +20,6 @@
             [clojurewerkz.cassaforte.client :as cc])
   (:import com.datastax.driver.core.Session))
 
-(defn ^:private compile-query-
-  "Compiles query from given `builder` and `query-params`"
-  [builder query-params]
-  ;; TODO: mapcat identity here?
-  (apply builder (flatten query-params)))
-
 ;;
 ;; Schema operations
 ;;
@@ -35,7 +29,7 @@
    including all column families in it, and all data contained in those column families."
   [^Session session ks & query-params]
   (cc/execute session
-              (compile-query- new-query-api/drop-keyspace (cons ks query-params))))
+              (apply new-query-api/drop-keyspace ks query-params)))
 
 (defn create-keyspace
   "Creates a new top-level keyspace. A keyspace is a namespace that
@@ -48,9 +42,9 @@
                    (with {:replication
                           {:class \"SimpleStrategy\"
                            :replication_factor 1}}))"
-  [^Session session & query-params]
+  [^Session session keyspace & query-params]
   (cc/execute session
-              (compile-query- q/create-keyspace-query query-params)))
+              (apply new-query-api/create-keyspace (cons keyspace query-params))))
 
 (defn create-index
   "Creates a new (automatic) secondary index for a given (existing)
@@ -65,18 +59,18 @@
                     (if-not-exists))"
   [^Session session & query-params]
   (cc/execute session
-              (compile-query- q/create-index-query query-params )))
+              (apply new-query-api/create-index query-params)))
 
-(defn drop-index
-  "Drop an existing secondary index. The argument of the statement
-   is the index name.
+;; (defn drop-index
+;;   "Drop an existing secondary index. The argument of the statement
+;;    is the index name.
 
-   Example, drops an index on `users` table, `city` column:
+;;    Example, drops an index on `users` table, `city` column:
 
-       (drop-index th/session :users_city)"
-  [^Session session & query-params]
-  (cc/execute session
-              (compile-query- q/drop-index-query query-params) ))
+;;        (drop-index th/session :users_city)"
+;;   [^Session session & query-params]
+;;   (cc/execute session
+;;               (apply new-query-api/drop-index query-params) ))
 
 (defn create-table
   "Creates a new table. A table is a set of rows (usually
@@ -94,7 +88,7 @@
                                      :primary-key [:name]}))"
   [^Session session & query-params]
   (cc/execute session
-              (compile-query- q/create-table-query query-params)))
+              (apply new-query-api/create-table query-params)))
 
 (def create-column-family create-table)
 
@@ -103,7 +97,7 @@
    all data in it."
   [^Session session ks]
   (cc/execute session
-              (q/drop-table-query ks)))
+              (new-query-api/drop-table ks)))
 
 (defn use-keyspace
   "Takes an existing keyspace name as argument and set it as the per-session current working keyspace.
@@ -111,21 +105,21 @@
    unless otherwise specified, until another USE statement is issued or the connection terminates."
   [^Session session ks]
   (cc/execute session
-              (q/use-keyspace-query ks)))
+              (new-query-api/use-keyspace ks)))
 
 (defn alter-table
   "Alters a table definition. Use it to add new
    columns, drop existing ones, change the type of existing columns, or update the table options."
   [^Session session & query-params]
   (cc/execute session
-              (compile-query- q/alter-table-query query-params)))
+              (apply new-query-api/alter-table query-params)))
 
-(defn alter-keyspace
-  "Alters properties of an existing keyspace. The
-   supported properties are the same that for `create-keyspace`"
-  [^Session session & query-params]
-  (cc/execute session
-              (compile-query- q/alter-keyspace-query query-params)))
+;; (defn alter-keyspace
+;;   "Alters properties of an existing keyspace. The
+;;    supported properties are the same that for `create-keyspace`"
+;;   [^Session session & query-params]
+;;   (cc/execute session
+;;               (apply q/alter-keyspace-query query-params)))
 
 ;;
 ;; DB Operations
@@ -147,31 +141,31 @@
   (cc/async
    (apply insert session query-params)))
 
-(defn ^:private batch-query-from-
-  [table records]
-  (->> records
-       (map (comp (partial apply (partial q/insert-query table)) flatten vector))
-       (apply q/queries)))
+;; (defn ^:private batch-query-from-
+;;   [table records]
+;;   (->> records
+;;        (map (comp (partial apply (partial new-query-api/insert table)) flatten vector))
+;;        (apply q/queries)))
 
-(defn insert-batch
-  "Performs a batch insert (inserts multiple records into a table at the same time).
-  To specify additional clauses for a record (such as where or using), wrap that record
-  and the clauses in a vector"
-  [^Session session table records]
-  (let [query-params (batch-query-from- table records)]
-    (cc/execute session (q/batch-query query-params))))
+;; (defn insert-batch
+;;   "Performs a batch insert (inserts multiple records into a table at the same time).
+;;   To specify additional clauses for a record (such as where or using), wrap that record
+;;   and the clauses in a vector"
+;;   [^Session session table records]
+;;   (let [query-params (batch-query-from- table records)]
+;;     (cc/execute session (q/batch-query query-params))))
 
-(defn insert-batch-async
-  "Same as insert-batch but returns a future"
-  [^Session session table records]
-  (cc/async
-   (insert-batch session table records)))
+;; (defn insert-batch-async
+;;   "Same as insert-batch but returns a future"
+;;   [^Session session table records]
+;;   (cc/async
+;;    (insert-batch session table records)))
 
-(defn atomic-batch
-  "Executes a group of operations as an atomic batch (BEGIN BATCH ... APPLY BATCH)"
-  [^Session session & clauses]
-  (cc/execute session
-              (compile-query- q/batch-query clauses)))
+;; (defn atomic-batch
+;;   "Executes a group of operations as an atomic batch (BEGIN BATCH ... APPLY BATCH)"
+;;   [^Session session & clauses]
+;;   (cc/execute session
+;;               (apply q/batch-query clauses)))
 
 (defn update
   "Updates one or more columns for a given row in a table. The `where` clause
@@ -179,9 +173,7 @@
    Other columns values are specified through assignment within the `set` clause."
   [^Session session & query-params]
   (cc/execute session
-              (apply new-query-api/update query-params)
-              ;; (compile-query- q/update-query query-params)
-              ))
+              (apply new-query-api/update query-params)))
 
 (defn update-async
   "Same as update but returns a future"
@@ -197,7 +189,7 @@
    for this function should always be table name."
   [^Session session table & query-params]
   (cc/execute session
-              (compile-query- q/delete-query (cons table query-params))))
+              (apply new-query-api/delete (cons table query-params))))
 
 (defn delete-async
   "Same as delete but returns a future"
@@ -223,42 +215,42 @@
    not removing the table itself."
   [^Session session table]
   (cc/execute session
-              (q/truncate-query table)))
+              (new-query-api/truncate table)))
 
-(defn create-user
-  [^Session session & query-params]
-  (cc/execute session
-              (compile-query- q/create-user-query query-params)))
+;; (defn create-user
+;;   [^Session session & query-params]
+;;   (cc/execute session
+;;               (apply q/create-user-query query-params)))
 
-(defn alter-user
-  [^Session session & query-params]
-  (cc/execute session
-              (compile-query- q/alter-user-query query-params)))
+;; (defn alter-user
+;;   [^Session session & query-params]
+;;   (cc/execute session
+;;               (apply q/alter-user-query query-params)))
 
-(defn drop-user
-  [^Session session & query-params]
-  (cc/execute session
-              (compile-query- q/drop-user-query query-params)))
+;; (defn drop-user
+;;   [^Session session & query-params]
+;;   (cc/execute session
+;;               (apply q/drop-user-query query-params)))
 
-(defn grant
-  [^Session session & query-params]
-  (cc/execute session
-              (compile-query- q/grant-query query-params)))
+;; (defn grant
+;;   [^Session session & query-params]
+;;   (cc/execute session
+;;               (apply q/grant-query query-params)))
 
-(defn revoke
-  [^Session session & query-params]
-  (cc/execute session
-              (compile-query- q/revoke-query query-params)))
+;; (defn revoke
+;;   [^Session session & query-params]
+;;   (cc/execute session
+;;               (apply q/revoke-query query-params)))
 
-(defn list-users
-  [^Session session & query-params]
-  (cc/execute session
-              (compile-query- q/list-users-query query-params)))
+;; (defn list-users
+;;   [^Session session & query-params]
+;;   (cc/execute session
+;;               (apply q/list-users-query query-params)))
 
-(defn list-permissions
-  [^Session session & query-params]
-  (cc/execute session
-              (compile-query- q/list-perm-query query-params)))
+;; (defn list-permissions
+;;   [^Session session & query-params]
+;;   (cc/execute session
+;;               (apply q/list-perm-query query-params)))
 
 ;;
 ;; Higher level DB functions
@@ -274,89 +266,89 @@
   (assert (not cc/*prepared-statement*) "get-one query can't be executed as a prepared query")
   (first
    (cc/execute session
-               (compile-query- q/select-query query-params))))
+               (apply new-query-api/select query-params))))
 
-(defn perform-count
-  "Helper function to perform count on a table with given query. Count queries are slow in Cassandra,
-   in order to get a rough idea of how many items you have in certain table, use `nodetool cfstats`,
-   for more complex cases, you can wither do a full table scan or perform a count with this function,
-   please note that it does not have any performance guarantees and is potentially expensive.
+;; (defn perform-count
+;;   "Helper function to perform count on a table with given query. Count queries are slow in Cassandra,
+;;    in order to get a rough idea of how many items you have in certain table, use `nodetool cfstats`,
+;;    for more complex cases, you can wither do a full table scan or perform a count with this function,
+;;    please note that it does not have any performance guarantees and is potentially expensive.
 
-   Doesn't work as a prepared query."
-  [^Session session table & query-params]
-  (assert (not cc/*prepared-statement*) "Count query can't be executed as a prepared query")
-  (:count
-   (first
-    (select session table
-            (cons
-             (q/columns (q/count*))
-             query-params)))))
+;;    Doesn't work as a prepared query."
+;;   [^Session session table & query-params]
+;;   (assert (not cc/*prepared-statement*) "Count query can't be executed as a prepared query")
+;;   (:count
+;;    (first
+;;     (select session table
+;;             (cons
+;;              (q/columns (q/count*))
+;;              query-params)))))
 
 ;;
 ;; Higher-level helper functions for schema
 ;;
 
-(defn describe-keyspace
-  "Returns a keyspace description, taken from `system.schema_keyspaces`."
-  [^Session session ks]
-  (assert (not cc/*prepared-statement*) "Describe Keyspace query can't be executed as a prepared query")
-  (first
-   (select session :system.schema_keyspaces
-           (q/where {:keyspace_name (name ks)}))))
+;; (defn describe-keyspace
+;;   "Returns a keyspace description, taken from `system.schema_keyspaces`."
+;;   [^Session session ks]
+;;   (assert (not cc/*prepared-statement*) "Describe Keyspace query can't be executed as a prepared query")
+;;   (first
+;;    (select session :system.schema_keyspaces
+;;            (q/where {:keyspace_name (name ks)}))))
 
-(defn describe-table
-  "Returns a table description, taken from `system.schema_columnfamilies`."
-  [^Session session ks table]
-  (assert (not cc/*prepared-statement*) "Describe Table query can't be executed as a prepared query")
-  (first
-   (select session :system.schema_columnfamilies
-           (q/where {:keyspace_name (name ks)
-                     :columnfamily_name (name table)}))))
+;; (defn describe-table
+;;   "Returns a table description, taken from `system.schema_columnfamilies`."
+;;   [^Session session ks table]
+;;   (assert (not cc/*prepared-statement*) "Describe Table query can't be executed as a prepared query")
+;;   (first
+;;    (select session :system.schema_columnfamilies
+;;            (q/where {:keyspace_name (name ks)
+;;                      :columnfamily_name (name table)}))))
 
-(defn describe-columns
-  "Returns table columns description, taken from `system.schema_columns`."
-  [^Session session ks table]
-  (assert (not cc/*prepared-statement*) "Describe Columns query can't be executed as a prepared query")
-  (select session :system.schema_columns
-          (q/where {:keyspace_name (name ks)
-                    :columnfamily_name (name table)})))
+;; (defn describe-columns
+;;   "Returns table columns description, taken from `system.schema_columns`."
+;;   [^Session session ks table]
+;;   (assert (not cc/*prepared-statement*) "Describe Columns query can't be executed as a prepared query")
+;;   (select session :system.schema_columns
+;;           (q/where {:keyspace_name (name ks)
+;;                     :columnfamily_name (name table)})))
 
 ;;
 ;; Higher-level collection manipulation
 ;;
 
-(defn- load-chunk
-  "Returns next chunk for the lazy table iteration"
-  [^Session session table partition-key chunk-size last-pk]
-  (if (nil? (first last-pk))
-    (select session table
-            (q/limit chunk-size))
-    (select session table
-            (q/where [[> (apply q/token partition-key) (apply q/token last-pk)]])
-            (q/limit chunk-size))))
+;; (defn- load-chunk
+;;   "Returns next chunk for the lazy table iteration"
+;;   [^Session session table partition-key chunk-size last-pk]
+;;   (if (nil? (first last-pk))
+;;     (select session table
+;;             (q/limit chunk-size))
+;;     (select session table
+;;             (q/where [[> (apply q/token partition-key) (apply q/token last-pk)]])
+;;             (q/limit chunk-size))))
 
-(defn iterate-table
-  "Lazily iterates through a table, returning chunks of chunk-size."
-  ([^Session session table partition-key chunk-size]
-     (iterate-table session table (if (sequential? partition-key)
-                                    partition-key
-                                    [partition-key])
-                    chunk-size []))
-  ([^Session session table partition-key chunk-size c]
-     (lazy-cat c
-               (let [last-pk    (map #(get (last c) %) partition-key)
-                     next-chunk (load-chunk session table partition-key chunk-size last-pk)]
-                 (if (empty? next-chunk)
-                   []
-                   (iterate-table session table partition-key chunk-size next-chunk))))))
+;; (defn iterate-table
+;;   "Lazily iterates through a table, returning chunks of chunk-size."
+;;   ([^Session session table partition-key chunk-size]
+;;      (iterate-table session table (if (sequential? partition-key)
+;;                                     partition-key
+;;                                     [partition-key])
+;;                     chunk-size []))
+;;   ([^Session session table partition-key chunk-size c]
+;;      (lazy-cat c
+;;                (let [last-pk    (map #(get (last c) %) partition-key)
+;;                      next-chunk (load-chunk session table partition-key chunk-size last-pk)]
+;;                  (if (empty? next-chunk)
+;;                    []
+;;                    (iterate-table session table partition-key chunk-size next-chunk))))))
 
-(defn copy-table
-  "Copies data from one table to another, transforming rows
-   using provided function (`transform-fn`)"
-  ([^Session session from-table to-table partition-key]
-     (copy-table session from-table to-table partition-key 16384))
-  ([^Session session from-table to-table partition-key chunk-size]
-     (copy-table session from-table to-table partition-key identity chunk-size))
-  ([^Session session from-table to-table partition-key transform-fn chunk-size]
-     (doseq [row (iterate-table session from-table partition-key chunk-size)]
-       (insert session to-table (transform-fn row)))))
+;; (defn copy-table
+;;   "Copies data from one table to another, transforming rows
+;;    using provided function (`transform-fn`)"
+;;   ([^Session session from-table to-table partition-key]
+;;      (copy-table session from-table to-table partition-key 16384))
+;;   ([^Session session from-table to-table partition-key chunk-size]
+;;      (copy-table session from-table to-table partition-key identity chunk-size))
+;;   ([^Session session from-table to-table partition-key transform-fn chunk-size]
+;;      (doseq [row (iterate-table session from-table partition-key chunk-size)]
+;;        (insert session to-table (transform-fn row)))))
