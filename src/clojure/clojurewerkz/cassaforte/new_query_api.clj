@@ -20,10 +20,12 @@
 
 (defn maybe-stringify
   [statement]
+  (println (.getQueryString  statement))
   (if *batch*
     statement
     ;; TODO: make sure that we _CAN_ finish the query (check if it's complete)
-    (.toString statement)))
+    ;; (.setForceNoValues)
+    (.getQueryString  statement)))
 
 (alias/alias-ns 'clojurewerkz.cassaforte.query.query-builder)
 (alias/alias-ns 'clojurewerkz.cassaforte.query.dsl)
@@ -188,6 +190,7 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (QueryBuilder/insertInto (name table-name)))
+         (#(.setForceNoValues % true)) ;; TODO: shouldn't be the case with prepared
          (maybe-stringify))))
 
 ;;
@@ -319,9 +322,9 @@
 
 (defn truncate
   ([table-name]
-     (.toString (QueryBuilder/truncate (name table-name))))
+   (.toString (QueryBuilder/truncate (name table-name))))
   ([table-name keyspace]
-     (.toString (QueryBuilder/truncate (name keyspace) (name table-name)))))
+   (.toString (QueryBuilder/truncate (name keyspace) (name table-name)))))
 
 (defmacro queries
   [& statements]
@@ -365,10 +368,6 @@
 ;;
 ;; Schema Builder
 ;;
-
-(defn column-definitions
-  [m]
-  [:column-definitions m])
 
 (defn- make-column-type
   [column-name column-defs]
@@ -628,5 +627,10 @@
                    ((get renderers statement-name) builder statement-args))
                  (CreateKeyspace. (name keyspace-name)))
          (maybe-stringify))))
+
+(defn use-keyspace
+  [keyspace-name]
+  ;; TODO: rewrite to java class
+  (str "USE " (name keyspace-name)))
 
 (def ? (QueryBuilder/bindMarker))
