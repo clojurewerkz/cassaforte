@@ -81,7 +81,7 @@
 ;; Alter Table
 ;;
 
-(defn with-options
+(defn with
   [options]
   [:with-options options])
 
@@ -96,3 +96,11 @@
 (defn alter-column
   [column-name column-type]
   [:alter-column [column-name column-type]])
+
+(defn column-definitions
+  [m]
+  [:column-definitions m])
+
+;;
+;;
+;;
