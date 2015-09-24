@@ -29,14 +29,14 @@ public class KeyspaceOptions extends SchemaStatement {
 
     boolean putComma = false;
     if (replication.isPresent()) {
-      dropStatement.append("REPLICATION = {");
+      dropStatement.append("replication = {");
 
 
       int l = replication.get().entrySet().size();
       for (Map.Entry<String, Object> e: replication.get().entrySet()) {
-        dropStatement.append(e.getKey() + ": ");
+        dropStatement.append("'" + e.getKey() + "'" + ": ");
         if (e.getValue() instanceof String) {
-          dropStatement.append(" '" + e.getValue() + "'");
+          dropStatement.append("'" + e.getValue() + "'");
         } else {
           dropStatement.append(e.getValue());
         }
