@@ -61,7 +61,11 @@
                   (if-not-exists))
 
     (let [td      (describe-table s "new_cql_keyspace" "people")
+          tables (describe-tables s "new_cql_keyspace")
           columns (describe-columns s "new_cql_keyspace" "people")]
+
+      (is (= "people" (get-in tables [0 :columnfamily_name])))
+
       (is (or
            (= "org.apache.cassandra.db.marshal.DateType"
               (get-in columns [0 :validator]))
