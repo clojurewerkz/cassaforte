@@ -47,16 +47,6 @@
   `(binding [*async* true]
      (do ~body)))
 
-(def *prepared-statement* false)
-(defmacro prepare
-  "Prepare a single statement, return prepared statement"
-  ([body]
-   `(binding [*prepared-statement* true]
-      ~body))
-  ([session body]
-   `(binding [*prepared-statement* true]
-      (.prepare ~session ~body))))
-
 ;;
 ;; Protocols
 ;;
@@ -76,14 +66,13 @@
   (build-statement [query]
     (build-statement (SimpleStatement. query)))
 
-  clojure.lang.IPersistentMap
-  (build-statement [raw-statement]
-    ;; TODO: ?? NOW WHAT
-    )
-
   Statement
   (build-statement [s]
-    s))
+    s)
+
+  Object
+  (build-statement [s]
+    (throw (RuntimeException. "Can't build the statement out of the" (type s)))))
 
 (defprotocol Listenable
   (add-listener [_ runnable executor]))
@@ -260,16 +249,16 @@
   [^PreparedStatement statement values]
   (.bind statement (to-array values)))
 
+;; (defn execute-async)
+
 (defn execute
   "Executes a statement"
   ([^Session session query]
-   (if *prepared-statement*
-     (.prepare session query)
-     (let [^Statement built-statement (build-statement query)]
-       (if *async*
-         (AsyncResult. (.executeAsync session built-statement))
-         (-> (.execute session built-statement)
-             (conv/to-clj))))))
+   (let [^Statement built-statement (build-statement query)]
+     (if *async*
+       (AsyncResult. (.executeAsync session built-statement))
+       (-> (.execute session built-statement)
+           (conv/to-clj)))))
   ([^Session session query & {:keys [retry-policy
                                      consistency-level
                                      fetch-size
@@ -311,22 +300,6 @@
            .getCluster
            .getMetadata
            .getAllHosts)))
-
-;;
-;; Prepared Statements
-;;
-
-(defmacro forcing-prepared-statements
-  "Forces prepared statements for operations executed in the body"
-  [& body]
-  `(binding [cc/*prepared-statement* true]
-     ~@body))
-
-(defmacro without-prepared-statements
-  "Disables prepared statements for operations executed in the body"
-  [& body]
-  `(binding [cc/*prepared-statement* false]
-     ~@body))
 
 ;; defn get-replicas
 ;; defn get-cluster-name
