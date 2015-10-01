@@ -18,15 +18,6 @@
 
 (def ^:dynamic *batch* false)
 
-(defn maybe-stringify
-  [statement]
-  (println (.getQueryString  statement))
-  (if *batch*
-    statement
-    ;; TODO: make sure that we _CAN_ finish the query (check if it's complete)
-    ;; (.setForceNoValues)
-    (.getQueryString  statement)))
-
 (alias/alias-ns 'clojurewerkz.cassaforte.query.query-builder)
 (alias/alias-ns 'clojurewerkz.cassaforte.query.dsl)
 (alias/alias-ns 'clojurewerkz.cassaforte.query.column)
@@ -76,8 +67,7 @@
        (fn [acc [query-type column value]]
          (if-let [eq-type (query-type-map query-type)]
            (conj acc ((query-type-map query-type) (name column) value))
-           (throw (IllegalArgumentException. (str query-type " is not a valid Clause")))
-           ))
+           (throw (IllegalArgumentException. (str query-type " is not a valid Clause")))))
        []
        construct))
     clojure.lang.IPersistentMap
@@ -157,7 +147,6 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (QueryBuilder/select))
-         (maybe-stringify)
          )))
 
 ;;
@@ -191,7 +180,7 @@
                    ((get renderers statement-name) builder statement-args))
                  (QueryBuilder/insertInto (name table-name)))
          (#(.setForceNoValues % true)) ;; TODO: shouldn't be the case with prepared
-         (maybe-stringify))))
+)))
 
 ;;
 ;; Update Query
@@ -244,7 +233,7 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (QueryBuilder/update (name table-name)))
-         (maybe-stringify))))
+)))
 
 ;;
 ;; Delete Query
@@ -314,7 +303,7 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (QueryBuilder/delete))
-         (maybe-stringify))))
+)))
 
 ;;
 ;; Truncate
@@ -328,8 +317,7 @@
 
 (defmacro queries
   [& statements]
-  [:queries `(binding [*batch* true]
-               ~(vec statements))])
+  [:queries statements])
 
 (let [order
       {:queries 1
@@ -351,7 +339,7 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  batch-type)
-         (maybe-stringify)))
+         ))
 
   (defn batch
     [& statements]
@@ -444,7 +432,7 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (SchemaBuilder/createTable (name table-name)))
-         (maybe-stringify))))
+)))
 
 ;;
 ;; Alter table
@@ -511,7 +499,7 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (SchemaBuilder/alterTable (name table-name)))
-         (maybe-stringify))))
+)))
 
 (let [order
       {:if-exists 1}
@@ -525,7 +513,7 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (SchemaBuilder/dropTable (name table-name)))
-         (maybe-stringify))))
+)))
 
 (let [order
       {:ont-table          1
@@ -546,7 +534,7 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (SchemaBuilder/createIndex (name index-name)))
-         (maybe-stringify))))
+)))
 
 (defn on-table
   [table-name]
@@ -592,7 +580,7 @@
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (DropKeyspace. (name keyspace-name)))
-         (maybe-stringify))))
+)))
 
 (def ^:private create-keyspace-options
   {:replication    (fn [opts replication] (.replication opts replication))
@@ -625,8 +613,7 @@
          (sort-by #(get order (first %)))
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
-                 (CreateKeyspace. (name keyspace-name)))
-         (maybe-stringify))))
+                 (CreateKeyspace. (name keyspace-name))))))
 
 (defn use-keyspace
   [keyspace-name]
