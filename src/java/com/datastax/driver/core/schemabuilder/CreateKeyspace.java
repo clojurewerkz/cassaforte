@@ -30,7 +30,7 @@ public class CreateKeyspace extends SchemaStatement {
 
   @Override
   String buildInternal() {
-    StringBuilder createStatement = new StringBuilder("CREATE KEYSPACE ");
+    StringBuilder createStatement = new StringBuilder(STATEMENT_START).append("CREATE KEYSPACE ");
     if (ifNotExists) {
       createStatement.append("IF NOT EXISTS ");
     }
@@ -48,11 +48,11 @@ public class CreateKeyspace extends SchemaStatement {
 
     @Override
     String buildInternal() {
-      String renderedStatement = statement.buildInternal();
-      renderedStatement += " WITH";
-      renderedStatement += super.buildInternal();
-      renderedStatement += ";";
-      return renderedStatement;
+      StringBuilder renderedStatement = new StringBuilder(statement.buildInternal());
+      renderedStatement.append(" WITH");
+      renderedStatement.append(super.buildInternal());
+      renderedStatement.append(";");
+      return renderedStatement.toString();
 
     }
   }

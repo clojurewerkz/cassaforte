@@ -10,7 +10,6 @@ public class KeyspaceOptions extends SchemaStatement {
   private Optional<Boolean>             durableWrites = Optional.absent();
 
   public KeyspaceOptions() {
-
   }
 
   public KeyspaceOptions replication(Map<String, Object> replication) {
