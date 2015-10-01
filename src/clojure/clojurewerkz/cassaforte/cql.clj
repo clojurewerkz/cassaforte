@@ -263,7 +263,6 @@
 
    Doesn't work as a prepared query."
   [^Session session & query-params]
-  (assert (not cc/*prepared-statement*) "get-one query can't be executed as a prepared query")
   (first
    (cc/execute session
                (apply new-query-api/select query-params))))
