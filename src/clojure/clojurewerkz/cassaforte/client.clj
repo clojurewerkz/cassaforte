@@ -249,12 +249,17 @@
   [^PreparedStatement statement values]
   (.bind statement (to-array values)))
 
+(defn prepare
+  [session statement values]
+  (.prepare session statement))
+
 ;; (defn execute-async)
 
 (defn execute
   "Executes a statement"
   ([^Session session query]
    (let [^Statement built-statement (build-statement query)]
+     ;; (println built-statement)
      (if *async*
        (AsyncResult. (.executeAsync session built-statement))
        (-> (.execute session built-statement)
