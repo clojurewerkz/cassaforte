@@ -83,40 +83,42 @@
                 (where qc))
         (let [x (first (select s t (where qc)))]
           (is (= "updated payload" (:payload x))))
-        (truncate s t)))))
+        (truncate s t))))
 
-;; (deftest test-delete
-;;   (testing "Delete whole row"
-;;     (dotimes [i 3]
-;;       (insert s :users {:name (str "name" i) :age (int i)}))
-;;     (is (= 3 (perform-count s :users)))
-;;     (delete s :users
-;;             (where {:name "name1"}))
-;;     (is (= 2 (perform-count s :users)))
-;;     (truncate s :users))
+  (deftest test-delete
+    (testing "Delete whole row"
+      (dotimes [i 3]
+        (insert s :users {:name (str "name" i) :age (int i)}))
+      (is (= 3 (perform-count s :users)))
+      (delete s :users
+              (where {:name "name1"}))
+      (is (= 2 (perform-count s :users)))
+      (truncate s :users))
 
-;;   (testing "Delete a column"
-;;     (insert s :users {:name "name1" :age (int 19)})
-;;     (delete s :users
-;;             (columns :age)
-;;             (where {:name "name1"}))
-;;     (is (nil? (:age (select s :users))))
-;;     (truncate s :users)))
+    (testing "Delete a column"
+      (insert s :users {:name "name1" :age (int 19)})
+      (delete s :users
+              (columns :age)
+              (where {:name "name1"}))
+      (is (nil? (:age (select s :users))))
+      (truncate s :users)))
 
-;; (deftest test-insert-with-timestamp
-;;   (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-;;     (insert s :users r
-;;             (using :timestamp (.getTime (java.util.Date.))))
-;;     (is (= r (first (select s :users))))
-;;     (truncate s :users)))
+  (deftest test-insert-with-timestamp
+    (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+      (insert s :users r
+              (using {:timestamp (.getTime (java.util.Date.))}))
+      (is (= r (first (select s :users))))
+      (truncate s :users)))
 
-;; (deftest test-ttl
-;;   (dotimes [i 3]
-;;     (insert s :users {:name (str "name" i) :city (str "city" i) :age (int i)}
-;;             (using :ttl (int 2))))
-;;   (is (= 3 (perform-count s :users)))
-;;   (Thread/sleep 2100)
-;;   (is (= 0 (perform-count s :users))))
+  (deftest test-ttl
+    (dotimes [i 3]
+      (insert s :users {:name (str "name" i)
+                        :city (str "city" i)
+                        :age  (int i)}
+              (using {:ttl (int 2)})))
+    (is (= 3 (perform-count s :users)))
+    (Thread/sleep 2100)
+    (is (= 0 (perform-count s :users)))))
 
 
 ;; (deftest test-counter
