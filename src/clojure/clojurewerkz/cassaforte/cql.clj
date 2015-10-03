@@ -17,7 +17,8 @@
    for key operations built on top of CQL."
   (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.new-query-api :as new-query-api]
-            [clojurewerkz.cassaforte.client :as cc])
+            [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.query.dsl :as dsl])
   (:import com.datastax.driver.core.Session))
 
 ;;
@@ -256,32 +257,19 @@
 ;; Higher level DB functions
 ;;
 
-(defn get-one
-  "Executes query to get exactly one result. Does not add `limit` clause to the query, this is
-   a convenience function only. Please use `limit` clause if you execute queries that potentially
-   return more than a single result.
+(defn perform-count
+  "Helper function to perform count on a table with given query. Count queries are slow in Cassandra,
+   in order to get a rough idea of how many items you have in certain table, use `nodetool cfstats`,
+   for more complex cases, you can wither do a full table scan or perform a count with this function,
+   please note that it does not have any performance guarantees and is potentially expensive.
 
    Doesn't work as a prepared query."
-  [^Session session & query-params]
-  (first
-   (cc/execute session
-               (apply new-query-api/select query-params))))
+  [^Session session table & query-params]
 
-;; (defn perform-count
-;;   "Helper function to perform count on a table with given query. Count queries are slow in Cassandra,
-;;    in order to get a rough idea of how many items you have in certain table, use `nodetool cfstats`,
-;;    for more complex cases, you can wither do a full table scan or perform a count with this function,
-;;    please note that it does not have any performance guarantees and is potentially expensive.
-
-;;    Doesn't work as a prepared query."
-;;   [^Session session table & query-params]
-;;   (assert (not cc/*prepared-statement*) "Count query can't be executed as a prepared query")
-;;   (:count
-;;    (first
-;;     (select session table
-;;             (cons
-;;              (q/columns (q/count*))
-;;              query-params)))))
+  (println query-params)
+  (:count
+   (first
+    (apply select session table (dsl/count-all) query-params))))
 
 ;;
 ;; Higher-level helper functions for schema
