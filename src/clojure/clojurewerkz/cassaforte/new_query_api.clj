@@ -6,7 +6,7 @@
             Select$Selection Select Select$Where
             BindMarker
             Clause]
-           [com.datastax.driver.core RegularStatement]
+           [com.datastax.driver.core RegularStatement SimpleStatement]
            [com.datastax.driver.core.schemabuilder SchemaBuilder SchemaBuilder$Direction
             CreateKeyspace DropKeyspace
             SchemaBuilder$Caching SchemaBuilder$KeyCaching])
@@ -178,9 +178,7 @@
          (sort-by #(get order (first %)))
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
-                 (QueryBuilder/insertInto (name table-name)))
-         (#(.setForceNoValues % true)) ;; TODO: shouldn't be the case with prepared
-)))
+                 (QueryBuilder/insertInto (name table-name))))))
 
 ;;
 ;; Update Query
@@ -617,7 +615,7 @@
 
 (defn use-keyspace
   [keyspace-name]
-  ;; TODO: rewrite to java class
-  (str "USE " (name keyspace-name)))
+  (SimpleStatement.
+   (str "USE " (name keyspace-name))))
 
 (def ? (QueryBuilder/bindMarker))
