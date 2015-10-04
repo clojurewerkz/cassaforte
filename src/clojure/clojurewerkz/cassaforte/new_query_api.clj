@@ -313,7 +313,7 @@
   ([table-name keyspace]
    (QueryBuilder/truncate (name keyspace) (name table-name))))
 
-(defmacro queries
+(defn queries
   [& statements]
   [:queries statements])
 
@@ -336,8 +336,7 @@
          (sort-by #(get order (first %)))
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
-                 batch-type)
-         ))
+                 batch-type)))
 
   (defn batch
     [& statements]
