@@ -35,8 +35,8 @@
           (catch Exception _ nil))
         (create-keyspace s "new_cql_keyspace"
                          (with {:replication
-                                {:class "SimpleStrategy"
-                                 :replication_factor 1 }}))
+                                {"class"              "SimpleStrategy"
+                                 "replication_factor" 1 }}))
         (let [s2 (client/connect-with-uri "cql://127.0.0.1:9042/new_cql_keyspace")]
           (is (= (.isClosed s2) false))
           (client/disconnect s2)
