@@ -309,9 +309,9 @@
 
 (defn truncate
   ([table-name]
-   (.toString (QueryBuilder/truncate (name table-name))))
+   (QueryBuilder/truncate (name table-name)))
   ([table-name keyspace]
-   (.toString (QueryBuilder/truncate (name keyspace) (name table-name)))))
+   (QueryBuilder/truncate (name keyspace) (name table-name))))
 
 (defmacro queries
   [& statements]
