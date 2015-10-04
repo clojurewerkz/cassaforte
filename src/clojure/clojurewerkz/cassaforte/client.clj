@@ -72,7 +72,7 @@
 
   Object
   (build-statement [s]
-    (throw (RuntimeException. "Can't build the statement out of the" (type s)))))
+    (throw (RuntimeException. (str "Can't build the statement out of the" (type s))))))
 
 (defprotocol Listenable
   (add-listener [_ runnable executor]))
