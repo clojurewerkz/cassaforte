@@ -265,8 +265,6 @@
 
    Doesn't work as a prepared query."
   [^Session session table & query-params]
-
-  (println query-params)
   (:count
    (first
     (apply select session table (dsl/count-all) query-params))))
