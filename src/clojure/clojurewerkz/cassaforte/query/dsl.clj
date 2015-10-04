@@ -102,5 +102,15 @@
   [:column-definitions m])
 
 ;;
+;; Index
 ;;
-;;
+
+(defn on-table
+  [table-name]
+  [:on-table (name table-name)])
+(defn and-column
+  [column-name]
+  [:and-column (name column-name)])
+(defn and-keys-of-column
+  [column-name]
+  [:and-keys-of-column (name column-name)])

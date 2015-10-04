@@ -509,20 +509,19 @@
          (sort-by #(get order (first %)))
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
-                 (SchemaBuilder/dropTable (name table-name)))
-)))
+                 (SchemaBuilder/dropTable (name table-name))))))
 
 (let [order
-      {:ont-table          1
+      {:on-table           1
        :and-column         2
        :and-keys-of-column 2}
       renderers
       {:on-table           (fn on-table-query [query-builder table-name]
-                             (.onTable query-builder table-name))
+                             (.onTable query-builder (name table-name)))
        :and-column         (fn and-column [query-builder column-name]
-                             (.andColumn query-builder column-name))
+                             (.andColumn query-builder (name column-name)))
        :and-keys-of-column (fn and-keys-of-column [query-builder column-name]
-                             (.andKeysOfColumn query-builder column-name))
+                             (.andKeysOfColumn query-builder (name column-name)))
        }]
   (defn create-index
     [index-name & statements]
@@ -530,18 +529,7 @@
          (sort-by #(get order (first %)))
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
-                 (SchemaBuilder/createIndex (name index-name)))
-)))
-
-(defn on-table
-  [table-name]
-  [:on-table (name table-name)])
-(defn and-column
-  [column-name]
-  [:and-column (name column-name)])
-(defn and-keys-of-column
-  [column-name]
-  [:and-keys-of-column (name column-name)])
+                 (SchemaBuilder/createIndex (name index-name))))))
 
 ;; CreateType createType(String typeName)
 ;; CreateType createType(String keyspaceName, String typeName)
