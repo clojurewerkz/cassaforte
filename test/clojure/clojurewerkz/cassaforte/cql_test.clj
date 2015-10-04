@@ -122,9 +122,9 @@
 
   (deftest test-counter
     (testing "Increment by"
-        (update s :user_counters
-                {:user_count (new-query-api/increment-by 5)}
-                (where {:name "user1"}))
+      (update s :user_counters
+              {:user_count (new-query-api/increment-by 5)}
+              (where {:name "user1"}))
 
       (is (= 5 (-> (select s :user_counters)
                    first
@@ -176,8 +176,28 @@
   (deftest test-index-filtering-range
     (create-index s :city
                   (new-query-api/on-table :users)
-                  (new-query-api/and-column :city)
-                  )
+                  (new-query-api/and-column :city))
+    (create-index s :age
+                  (new-query-api/on-table :users)
+                  (new-query-api/and-column :age))
+
+    (dotimes [i 10]
+      (insert s :users {:name (str "name_" i)
+                        :city "Munich"
+                        :age  (int i)}))
+
+    (is (= (set (range 6 10))
+           (->> (select s :users
+                        (where [[= :city "Munich"]
+                                [> :age (int 5)]])
+                        (allow-filtering))
+                (map :age)
+                set))))
+
+  (deftest test-index-filtering-range-alt-syntax
+    (create-index s :city
+                  (new-query-api/on-table :users)
+                  (new-query-api/and-column :city))
     (create-index s :age
                   (new-query-api/on-table :users)
                   (new-query-api/and-column :age))
@@ -195,39 +215,29 @@
              (->> res
                   (map :age)
                   set))))
-    ;; (truncate s :users)
-    ))
+    (truncate s :users))
 
-;; (deftest test-index-filtering-range-alt-syntax
-;;   (create-index s :users :city)
-;;   (create-index s :users :age)
-;;   (dotimes [i 10]
-;;     (insert s :users {:name (str "name_" i) :city "Munich" :age (int i)}))
+  (deftest test-index-exact-match
+    (create-index s :city
+                  (new-query-api/on-table :users)
+                  (new-query-api/and-column :city))
+    (create-index s :age
+                  (new-query-api/on-table :users)
+                  (new-query-api/and-column :age))
 
-;;   (let [res (select s :users
-;;                     (where [[= :city "Munich"]
-;;                             [> :age (int 5)]])
-;;                     (allow-filtering true))]
-;;     (is (= (set (range 6 10))
-;;            (->> res
-;;                 (map :age)
-;;                 set))))
-;;   (truncate s :users))
+    (dotimes [i 10]
+      (insert s :users {:name (str "name_" i)
+                        :city (str "city_" i)
+                        :age  (int i)}))
 
-;; (deftest test-index-exact-match
-;;   (create-index s :users :city)
-;;   (dotimes [i 10]
-;;     (insert s :users {:name (str "name_" i) :city (str "city_" i) :age (int i)}))
-
-
-;;   (let [res (select s :users
-;;                     (where {:city "city_5"})
-;;                     (allow-filtering true))]
-;;     (is (= 5
-;;            (-> res
-;;                first
-;;                :age))))
-;;   (truncate s :users))
+    (let [res (select s :users
+                      (where {:city "city_5"})
+                      (allow-filtering))]
+      (is (= 5
+             (-> res
+                 first
+                 :age))))
+    (truncate s :users)))
 
 ;; (deftest test-select-where
 ;;   (insert s :users {:name "Alex"   :city "Munich"        :age (int 19)})
