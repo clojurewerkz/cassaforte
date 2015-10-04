@@ -98,10 +98,11 @@
        :what-columns 1
        :what-column  1
        :from         2
-       :where        3
-       :order        4
-       :limit        4
-       :filtering    5}
+       :filtering    3
+       :where        4
+       :order        5
+       :limit        6
+       }
       renderers
       {:what-count   (fn count-all-query [query-builder _]
                        (.countAll query-builder))
