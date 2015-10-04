@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.client :as client]
             [clojurewerkz.cassaforte.cql    :refer :all]
-            [clojurewerkz.cassaforte.query  :refer :all]
+            [clojurewerkz.cassaforte.query.dsl :refer :all]
             [clojure.test                   :refer :all])
   (:import [com.datastax.driver.core.policies TokenAwarePolicy RoundRobinPolicy]))
 
