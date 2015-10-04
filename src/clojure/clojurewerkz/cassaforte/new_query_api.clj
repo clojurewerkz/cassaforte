@@ -110,8 +110,8 @@
                        (.fcall query-builder name (to-array args)))
        :what-columns (fn what-columns-query [query-builder columns]
                        (reduce (fn [builder column]
-                                 (if (string? column)
-                                   (.column builder column)
+                                 (if (or (string? column) (instance? clojure.lang.Named column))
+                                   (.column builder (name column))
                                    (column builder)))
                                query-builder
                                columns))
@@ -128,7 +128,11 @@
        :what-all     (fn all-query [query-builder _]
                        (.all query-builder))
        :order        (fn order-by-query [query-builder orderings]
-                       (.orderBy query-builder (into-array orderings)))
+                       (.orderBy query-builder (into-array (->> orderings
+                                                                (map #(if (or (string? %)
+                                                                              (instance? clojure.lang.Named %))
+                                                                        (QueryBuilder/asc (name %))
+                                                                        %))))))
 
        :limit        (fn limit-query [query-builder lim]
                        (.limit query-builder lim))
