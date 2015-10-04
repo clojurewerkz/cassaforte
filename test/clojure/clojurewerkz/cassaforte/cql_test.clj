@@ -162,28 +162,41 @@
       (is (= 50000005000500 (-> s
                                 (select :user_counters)
                                 first
-                                :user_count))))))
+                                :user_count)))))
 
-;; (deftest test-counter-2
-;;   (dotimes [i 100]
-;;     (update s :user_counters {:user_count [+ 1]} (where {:name "user1"})))
-;;   (is (= 100 (:user_count (first (select s :user_counters))))))
+  (deftest test-counter-2
+    (dotimes [i 100]
+      (update s :user_counters
+              {:user_count (new-query-api/increment)}
+              (where {:name "user1"})))
+    (is (= 100 (-> (select s :user_counters)
+                   first
+                   :user_count))))
 
-;; (deftest test-index-filtering-range
-;;   (create-index s :users :city)
-;;   (create-index s :users :age)
-;;   (dotimes [i 10]
-;;     (insert s :users {:name (str "name_" i) :city "Munich" :age (int i)}))
+  (deftest test-index-filtering-range
+    (create-index s :city
+                  (new-query-api/on-table :users)
+                  (new-query-api/and-column :city)
+                  )
+    (create-index s :age
+                  (new-query-api/on-table :users)
+                  (new-query-api/and-column :age))
 
-;;   (let [res (select s :users
-;;                     (where [[= :city "Munich"]
-;;                             [> :age (int 5)]])
-;;                     (allow-filtering true))]
-;;     (is (= (set (range 6 10))
-;;            (->> res
-;;                 (map :age)
-;;                 set))))
-;;   (truncate s :users))
+    (dotimes [i 10]
+      (insert s :users {:name (str "name_" i)
+                        :city "Munich"
+                        :age  (int i)}))
+
+    (let [res (select s :users
+                      (where [[= :city "Munich"]
+                              [> :age (int 5)]])
+                      (allow-filtering))]
+      (is (= (set (range 6 10))
+             (->> res
+                  (map :age)
+                  set))))
+    ;; (truncate s :users)
+    ))
 
 ;; (deftest test-index-filtering-range-alt-syntax
 ;;   (create-index s :users :city)
