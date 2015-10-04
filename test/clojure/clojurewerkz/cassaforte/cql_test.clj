@@ -65,7 +65,6 @@
                [=  :created_at (uuids/start-of (cc/to-long (date-time 2014 11 13 12)))]]]
       (testing "Bulk update"
         (truncate s t)
-        (println (perform-count s t))
         (is (= 0 (perform-count s t)))
         (doseq [i  (range 1 15)]
           (let [dt (date-time 2014 11 i 12)
@@ -118,20 +117,52 @@
               (using {:ttl (int 2)})))
     (is (= 3 (perform-count s :users)))
     (Thread/sleep 2100)
-    (is (= 0 (perform-count s :users)))))
+    (is (= 0 (perform-count s :users))))
 
 
-;; (deftest test-counter
-;;   (update s :user_counters {:user_count (increment-by 5)} (where {:name "user1"}))
-;;   (is (= 5 (:user_count (first (select s :user_counters)))))
-;;   (update s :user_counters {:user_count (decrement-by 5)} (where {:name "user1"}))
-;;   (is (= 0 (:user_count (first (select s :user_counters)))))
-;;   (update s :user_counters {:user_count [+ 500]} (where {:name "user1"}))
-;;   (is (= 500 (:user_count (first (select s :user_counters)))))
-;;   (update s :user_counters {:user_count [+ 5000000]} (where {:name "user1"}))
-;;   (is (= 5000500 (:user_count (first (select s :user_counters)))))
-;;   (update s :user_counters {:user_count [+ 50000000000000]} (where {:name "user1"}))
-;;   (is (= 50000005000500 (:user_count (first (select s :user_counters))))))
+  (deftest test-counter
+    (testing "Increment by"
+        (update s :user_counters
+                {:user_count (new-query-api/increment-by 5)}
+                (where {:name "user1"}))
+
+      (is (= 5 (-> (select s :user_counters)
+                   first
+                   :user_count))))
+
+    (testing "Decrement by"
+      (update s :user_counters
+              {:user_count (new-query-api/decrement-by 5)}
+              (where {:name "user1"}))
+
+      (is (= 0 (-> (select s :user_counters)
+                   first
+                   :user_count))))
+
+    (testing "Increment with explicit params"
+      (update s :user_counters
+              {:user_count (new-query-api/increment-by 500)}
+              (where {:name "user1"}))
+      (is (= 500 (-> (select s :user_counters)
+                     first
+                     :user_count))))
+
+    (testing "Decrement with explicit params"
+      (update s :user_counters
+              {:user_count (new-query-api/increment-by 5000000)}
+              (where {:name "user1"}))
+      (is (= 5000500 (-> (select s :user_counters)
+                         first
+                         :user_count))))
+
+    (testing "Increment with a large number"
+      (update s :user_counters
+              {:user_count (new-query-api/increment-by 50000000000000)}
+              (where {:name "user1"}))
+      (is (= 50000005000500 (-> s
+                                (select :user_counters)
+                                first
+                                :user_count))))))
 
 ;; (deftest test-counter-2
 ;;   (dotimes [i 100]
