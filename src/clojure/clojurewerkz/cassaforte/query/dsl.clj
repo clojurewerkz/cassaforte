@@ -1,4 +1,5 @@
-(ns clojurewerkz.cassaforte.query.dsl)
+(ns clojurewerkz.cassaforte.query.dsl
+  (:import [com.datastax.driver.core.querybuilder QueryBuilder]))
 
 ;;
 ;; SELECT Statement
@@ -14,8 +15,15 @@
 
 (defn all
   []
-  ;; TODO: resolve API inconsistency
   [:what-all nil])
+
+(defn unix-timestamp-of
+  [column-name]
+  [:what-fcall ["unixTimestampOf" [(QueryBuilder/raw (name column-name))]]])
+
+(defn date-of
+  [column-name]
+  [:what-fcall ["dateOf" [(QueryBuilder/raw (name column-name))]]])
 
 (defn columns
   [& columns]
