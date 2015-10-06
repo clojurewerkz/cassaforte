@@ -143,11 +143,25 @@
                           (fcall "intToBlob"
                                  (cname "b")))))
 
+  (is (renders-to "SELECT unixTimestampOf(created_at) FROM events LIMIT 5;"
+                  (select :events
+                          (unix-timestamp-of :created_at)
+                          (limit 5))))
+
+  (is (renders-to "INSERT INTO events(created_at,message) VALUES (now(),'Message 1');"
+                  (insert :events
+                          {:created_at (now)
+                           :message    "Message 1"})))
 
   (is (renders-to "SELECT * FROM foo WHERE k>42 LIMIT 42;";
                   (select :foo
                           (where [[:> :k 42]])
                           (limit 42))))
+
+  (is (renders-to "SELECT * FROM events WHERE message IN ('Message 7','Message 8','Message 9','Message 10') AND created_at>=minTimeuuid(1001);"
+                  (select :events
+                    (where [[:in :message ["Message 7" "Message 8" "Message 9" "Message 10"]]
+                            [>= :created_at (min-timeuuid 1001)]]))))
 
   (is (renders-to "SELECT * FROM foo WHERE token(k)>token(42);"
                   (select :foo
