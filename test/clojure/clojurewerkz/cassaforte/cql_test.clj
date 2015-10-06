@@ -309,120 +309,103 @@
                  (where {:username "Alex"})
                  (order-by (new-query-api/desc :post_id))))))
 
-;; (deftest test-select-range-query
-;;   (create-table s :tv_series
-;;                 (column-definitions {:series_title  :varchar
-;;                                      :episode_id    :int
-;;                                      :episode_title :text
-;;                                      :primary-key   [:series_title :episode_id]}))
-;;   (dotimes [i 20]
-;;     (insert s :tv_series {:series_title "Futurama" :episode_id i :episode_title (str "Futurama Title " i)})
-;;     (insert s :tv_series {:series_title "Simpsons" :episode_id i :episode_title (str "Simpsons Title " i)}))
+(deftest test-select-range-query
+  (create-table *session* :tv_series
+                (column-definitions {:series_title  :varchar
+                                     :episode_id    :int
+                                     :episode_title :text
+                                     :primary-key   [:series_title :episode_id]}))
+  (dotimes [i 20]
+    (insert *session* :tv_series
+            {:series_title  "Futurama"
+             :episode_id    i
+             :episode_title (str "Futurama Title " i)})
+    (insert *session* :tv_series
+            {:series_title  "Simpsons"
+             :episode_id    i
+             :episode_title (str "Simpsons Title " i)}))
 
-;;   (is (= (set (range 11 20))
-;;          (->> (select s :tv_series
-;;                       (where [[= :series_title "Futurama"]
-;;                               [> :episode_id 10]]))
-;;               (map :episode_id )
-;;               set)))
+  (is (= (set (range 11 20))
+         (->> (select *session* :tv_series
+                      (where [[= :series_title "Futurama"]
+                              [> :episode_id 10]]))
+              (map :episode_id )
+              set)))
 
-;;   (is (= (set (range 11 16))
-;;          (->> (select s :tv_series
-;;                       (where [[=  :series_title "Futurama"]
-;;                               [>  :episode_id 10]
-;;                               [<= :episode_id 15]]))
-;;               (map :episode_id)
-;;               set)))
+  (is (= (set (range 11 16))
+         (->> (select *session* :tv_series
+                      (where [[=  :series_title "Futurama"]
+                              [>  :episode_id 10]
+                              [<= :episode_id 15]]))
+              (map :episode_id)
+              set)))
 
-;;   (is (= (set (range 0 15))
-;;          (->> (select s :tv_series
-;;                       (where [[= :series_title "Futurama"]
-;;                               [< :episode_id 15]]))
-;;               (map :episode_id)
-;;               set)))
+  (is (= (set (range 0 15))
+         (->> (select *session* :tv_series
+                      (where [[= :series_title "Futurama"]
+                              [< :episode_id 15]]))
+              (map :episode_id)
+              set)))
 
-;;   (drop-table s :tv_series))
+  (drop-table *session* :tv_series))
 
-;; (deftest test-timeuuid-now-and-unix-timestamp-of
-;;   (create-table s :events
-;;                 (column-definitions {:message      :varchar
-;;                                      :created_at   :timeuuid
-;;                                      :primary-key  [:created_at]}))
+(deftest test-timeuuid-now-and-unix-timestamp-of
+  (let [dt (-> 2 seconds ago)
+        ts (cc/to-long dt)]
+    (dotimes [i 20]
+      (insert *session* :events
+              {:created_at (new-query-api/now)
+               :message    (format "Message %d" i)}))
+    (let [xs  (select *session* :events
+                      (new-query-api/unix-timestamp-of :created_at)
+                      (limit 5))
+          ts' (get (first xs) (keyword "unixTimestampOf(created_at)"))]
+      (is (> ts' ts)))))
 
-;;   (let [dt (-> 2 seconds ago)
-;;         ts (cc/to-long dt)]
-;;     (dotimes [i 20]
-;;       (insert s :events {:created_at (fns/now) :message (format "Message %d" i)}))
-;;     (let [xs  (select s :events
-;;                       (columns (fns/unix-timestamp-of :created_at))
-;;                       (limit 5))
-;;           ts' (get (first xs) (keyword "unixTimestampOf(created_at)"))]
-;;       (is (> ts' ts))))
+(deftest test-timeuuid-dateof
+  (let [dt (-> 2 seconds ago)]
+    (dotimes [i 20]
+      (insert *session* :events
+              {:created_at (new-query-api/now)
+               :message (format "Message %d" i)}))
+    (let [xs  (select *session* :events
+                      (new-query-api/date-of :created_at)
+                      (limit 5))
+          dt' (cc/from-date (get (first xs) (keyword "dateOf(created_at)")))]
+      (is (before? dt dt')))))
 
-;;   (drop-table s :events))
+(deftest test-timeuuid-min-open-range-query
+  (dotimes [i 10]
+    (let [dt (date-time 2014 11 17 23 i)]
+      (insert *session* :events_for_in_and_range_query
+              {:created_at (uuids/start-of (cc/to-long dt))
+               :city       "London, UK"
+               :message    (format "Message %d" i)})))
+  (let [xs  (select *session* :events_for_in_and_range_query
+                    (where [[:in :message ["Message 7" "Message 8" "Message 9" "Message 10"]]
+                            [>= :created_at (-> (date-time 2014 11 17 23 8)
+                                                .toDate
+                                                new-query-api/min-timeuuid)]]))]
+    (is (= #{"Message 8" "Message 9"}
+           (set (map :message xs))))))
 
-;; (deftest test-timeuuid-dateof
-;;   (create-table s :events
-;;                 (column-definitions {:message      :varchar
-;;                                      :created_at   :timeuuid
-;;                                      :primary-key  [:created_at]}))
-
-;;   (let [dt (-> 2 seconds ago)]
-;;     (dotimes [i 20]
-;;       (insert s :events {:created_at (fns/now) :message (format "Message %d" i)}))
-;;     (let [xs  (select s :events
-;;                       (columns (fns/date-of :created_at))
-;;                       (limit 5))
-;;           dt' (cc/from-date (get (first xs) (keyword "dateOf(created_at)")))]
-;;       (is (before? dt dt'))))
-
-;;   (drop-table s :events))
-
-;; (deftest test-timeuuid-min-open-range-query
-;;   (create-table s :events
-;;                 (column-definitions {:message      :varchar
-;;                                      :city         :varchar
-;;                                      :created_at   :timeuuid
-;;                                      :primary-key  [:message :created_at]}))
-;;   (create-index s :events :created_at)
-;;   (dotimes [i 10]
-;;     (let [dt (date-time 2014 11 17 23 i)]
-;;       (insert s :events {:created_at (uuids/start-of (cc/to-long dt))
-;;                          :city       "London, UK"
-;;                          :message    (format "Message %d" i)})))
-;;   (let [xs  (select s :events
-;;                     (where [[:in :message ["Message 7" "Message 8" "Message 9" "Message 10"]]
-;;                             [>= :created_at (-> (date-time 2014 11 17 23 8)
-;;                                                 .toDate
-;;                                                 fns/min-timeuuid)]]))]
-;;     (is (= #{"Message 8" "Message 9"}
-;;            (set (map :message xs)))))
-
-;;   (drop-table s :events))
-
-;; (deftest test-timeuuid-min-max-timeuuid-range-query
-;;   (create-table s :events
-;;                 (column-definitions {:message      :varchar
-;;                                      :created_at   :timeuuid
-;;                                      :primary-key  [:message :created_at]}))
-;;   (create-index s :events :created_at)
-;;   (dotimes [i 10]
-;;     (let [dt (date-time 2014 11 17 23 i)]
-;;       (insert s :events {:created_at (uuids/start-of (cc/to-long dt))
-;;                          :message    (format "Message %d" i)})))
-;;   (let [xs  (select s :events
-;;                     (where [[:in :message ["Message 5" "Message 6" "Message 7"
-;;                                            "Message 8" "Message 9"]]
-;;                             [>= :created_at (-> (date-time 2014 11 17 23 6)
-;;                                                 .toDate
-;;                                                 fns/min-timeuuid)]
-;;                             [<= :created_at (-> (date-time 2014 11 17 23 8)
-;;                                                 .toDate
-;;                                                 fns/max-timeuuid)]]))]
-;;     (is (= #{"Message 6" "Message 7" "Message 8"}
-;;            (set (map :message xs)))))
-
-;;   (drop-table s :events))
+(deftest test-timeuuid-min-max-timeuuid-range-query
+  (dotimes [i 10]
+    (let [dt (date-time 2014 11 17 23 i)]
+      (insert *session* :events_for_in_and_range_query
+              {:created_at (uuids/start-of (cc/to-long dt))
+               :message    (format "Message %d" i)})))
+  (let [xs  (select *session* :events_for_in_and_range_query
+                    (where [[:in :message ["Message 5" "Message 6" "Message 7"
+                                           "Message 8" "Message 9"]]
+                            [>= :created_at (-> (date-time 2014 11 17 23 6)
+                                                .toDate
+                                                new-query-api/min-timeuuid)]
+                            [<= :created_at (-> (date-time 2014 11 17 23 8)
+                                                .toDate
+                                                new-query-api/max-timeuuid)]]))]
+    (is (= #{"Message 6" "Message 7" "Message 8"}
+           (set (map :message xs))))))
 
 
 ;; (deftest test-paginate
