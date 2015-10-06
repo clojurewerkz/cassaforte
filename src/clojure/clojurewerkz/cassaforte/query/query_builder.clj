@@ -20,10 +20,21 @@
   [& column-names]
   (QueryBuilder/token (into-array column-names)))
 
-(defn function-call
+(defn function-call ;; Maybe rename to raw-function-call?
   [name & args]
   (QueryBuilder/fcall name (object-array args)))
 
+(defn now
+  []
+  (function-call "now"))
+
+(defn min-timeuuid
+  [v]
+  (function-call "minTimeuuid" v))
+
+(defn max-timeuuid
+  [v]
+  (function-call "maxTimeuuid" v))
 
 (defn asc
   [^String column-name]
