@@ -110,7 +110,8 @@
                        (.fcall query-builder name (to-array args)))
        :what-columns (fn what-columns-query [query-builder columns]
                        (reduce (fn [builder column]
-                                 (if (or (string? column) (instance? clojure.lang.Named column))
+                                 (if (or (string? column)
+                                         (instance? clojure.lang.Named column))
                                    (.column builder (name column))
                                    (column builder)))
                                query-builder
