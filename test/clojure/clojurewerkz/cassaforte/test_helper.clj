@@ -43,6 +43,17 @@
                                          :user_count  :counter
                                          :primary-key [:name]}))
 
+      (create-table session :events
+                    (column-definitions {:message      :varchar
+                                         :created_at   :timeuuid
+                                         :primary-key  [:created_at]}))
+
+      (create-table session :events_for_in_and_range_query
+                    (column-definitions {:message      :varchar
+                                         :city         :varchar
+                                         :created_at   :timeuuid
+                                         :primary-key  [:message :created_at]}))
+
       (create-table session :events_by_device_id_and_date
                     (column-definitions {:date        :varchar
                                          :device_id   :varchar
