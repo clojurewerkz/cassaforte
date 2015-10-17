@@ -140,7 +140,6 @@
                                                                         %))))))
 
        :paginate     (fn paginate-query [query-builder [limit m]]
-                       (println m)
                        (-> query-builder
                            (where-clause  m)
                            (.limit limit)))
