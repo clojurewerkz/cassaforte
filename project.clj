@@ -6,7 +6,8 @@
                       :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies      [[org.clojure/clojure                          "1.7.0"]
                       [com.datastax.cassandra/cassandra-driver-core "2.1.6"]
-                      [com.datastax.cassandra/cassandra-driver-dse  "2.1.6"]]
+                      [com.datastax.cassandra/cassandra-driver-dse  "2.1.6"]
+                      [org.clojure/core.match                       "0.3.0-alpha4"]]
   :source-paths      ["src/clojure"]
   :test-paths        ["test/clojure" "test/java"]
   :java-source-paths ["test/java" "src/java"]
