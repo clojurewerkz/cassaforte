@@ -51,6 +51,16 @@
                                    [:in :baz [5 6 7]]
                                    ]))))
 
+  (is (renders-to "SELECT * FROM tv_series WHERE series_title='Futurama' LIMIT 10;"
+                  (select :tv_series
+                          (paginate :key :episode_id :per-page 10
+                                    :where {:series_title "Futurama"}))))
+
+  (is (renders-to "SELECT * FROM tv_series WHERE series_title='Futurama' AND episode_id>10 LIMIT 10;"
+                  (select :tv_series
+                          (paginate :key :episode_id :per-page 10 :last-key 10
+                                  :where {:series_title "Futurama"}))))
+
   (is (renders-to  "SELECT * FROM foo WHERE foo='bar' ORDER BY foo ASC;"
                    (select :foo
                            (order-by (asc :foo))
