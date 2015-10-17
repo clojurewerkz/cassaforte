@@ -455,33 +455,25 @@
                                  {:name "Alex" :city "Munich" :age (int 19)}))
     (is (= r (first (select *session* :users (limit 1)))))))
 
-;; (deftest test-insert-without-prepared-statements
-;;   (comment
-;;     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-;;       (client/without-prepared-statements
-;;        (insert s :users r))
-;;       (is (= r (get-one s :users)))
-;;       (truncate s :users))))
+(deftest test-raw-cql-insert
+  (testing "With default session"
+    (client/execute *session* "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
+    (is (= {:name "Alex" :city "Munich" :age (int 19)}
+           (first (client/execute *session* "SELECT * FROM users;"))))
+    (client/execute *session* "TRUNCATE users;"))
+  (testing "Prepared statement"
+    (client/execute *session*
+                    (client/bind
+                     (client/prepare *session* "INSERT INTO users (name, city, age) VALUES (?, ?, ?);")
+                     ["Alex" "Munich" (int 19)]))
+    (is (= {:name "Alex" :city "Munich" :age (int 19)}
+           (first (client/execute *session* "SELECT * FROM users;"))))
+    (client/execute *session* "TRUNCATE users;")))
 
-;; (deftest test-raw-cql-insert
-;;   (testing "With default session"
-;;     (client/execute s "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
-;;     (is (= {:name "Alex" :city "Munich" :age (int 19)}
-;;            (first (client/execute s "SELECT * FROM users;"))))
-;;     (client/execute s "TRUNCATE users;"))
-;;   (testing "Prepared statement"
-;;     (client/execute s
-;;                     (client/bind
-;;                      (client/prepare s "INSERT INTO users (name, city, age) VALUES (?, ?, ?);")
-;;                      ["Alex" "Munich" (int 19)]))
-;;     (is (= {:name "Alex" :city "Munich" :age (int 19)}
-;;            (first (client/execute s "SELECT * FROM users;"))))
-;;     (client/execute s "TRUNCATE users;")))
-
-;; (deftest test-insert-nils
-;;   (let [r {:name "Alex" :city "Munich" :age nil}]
-;;     (client/execute s
-;;                     (client/bind
-;;                      (client/prepare s "INSERT INTO users (name, city, age) VALUES (?, ?, ?);")
-;;                      ["Alex" "Munich" nil]))
-;;     (is (= r (first (select s :users))))))
+(deftest test-insert-nils
+  (let [r {:name "Alex" :city "Munich" :age nil}]
+    (client/execute *session*
+                    (client/bind
+                     (client/prepare *session* "INSERT INTO users (name, city, age) VALUES (?, ?, ?);")
+                     ["Alex" "Munich" nil]))
+    (is (= r (first (select *session* :users))))))
