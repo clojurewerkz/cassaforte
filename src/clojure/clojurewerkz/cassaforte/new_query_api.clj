@@ -11,8 +11,9 @@
             CreateKeyspace DropKeyspace
             SchemaBuilder$Caching SchemaBuilder$KeyCaching])
   (:require [clojurewerkz.cassaforte.aliases :as alias]
-            clojurewerkz.cassaforte.query.query-builder
-            clojurewerkz.cassaforte.query.types))
+            [clojure.core.match              :refer [match]]
+            [clojurewerkz.cassaforte.query.query-builder]
+            [clojurewerkz.cassaforte.query.types]))
 
 (set! *warn-on-reflection* false)
 
@@ -44,7 +45,7 @@
       gte (fn [^String column ^Object value]
             (QueryBuilder/gte column value))]
 
-  (def ^:private query-type-map
+  (def ^:private query-type-mappings
     {:in in
      :=  eq
      =   eq
@@ -64,10 +65,12 @@
     clojure.lang.IPersistentVector
     (to-clauses [construct]
       (reduce
-       (fn [acc [query-type column value]]
-         (if-let [eq-type (query-type-map query-type)]
-           (conj acc ((query-type-map query-type) (name column) value))
-           (throw (IllegalArgumentException. (str query-type " is not a valid Clause")))))
+       (fn [acc v]
+         (conj acc
+               (match v
+                      [column value]     (eq (name column) value)
+                      [op column value]  ((get query-type-mappings op) (name column) value)
+                      :else (throw (IllegalArgumentException. (str v " is not a valid Clause"))))))
        []
        construct))
     clojure.lang.IPersistentMap
