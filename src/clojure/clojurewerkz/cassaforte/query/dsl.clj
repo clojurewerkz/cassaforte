@@ -122,3 +122,21 @@
 (defn and-keys-of-column
   [column-name]
   [:and-keys-of-column (name column-name)])
+
+
+;;
+;;
+;;
+
+(defn paginate
+  "Paginate through the collection of results
+
+   Params:
+     * `where` - where query to lock a partition key
+     * `key` - key to paginate on
+     * `last-key` - last seen value of the key, next chunk of results will contain all keys that follow that value
+     * `per-page` - how many results per page"
+  ([& {:keys [key last-key per-page where] :or {:page 0}}]
+   [:paginate [per-page (if last-key
+                          (conj (vec where) [> key last-key])
+                          where)]]))

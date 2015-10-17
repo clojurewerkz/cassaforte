@@ -95,13 +95,18 @@
       (conj statements (all))
       statements)))
 
-(let [order
+(let [where-clause (fn [query-builder m]
+                     (reduce #(.and %1 %2)
+                             (.where query-builder)
+                             (to-clauses m)))
+      order
       {:what-count   1
        :what-fcall   1
        :what-columns 1
        :what-column  1
        :from         2
        :filtering    3
+       :paginate     4
        :where        4
        :order        5
        :limit        6
@@ -124,11 +129,7 @@
                          (if as
                            (.as c as)
                            c)))
-       :where        (fn where-query [query-builder m]
-                       (let [query-builder (.where query-builder)]
-                         (doseq [clause (to-clauses m)]
-                           (.and query-builder clause))
-                         query-builder))
+       :where        where-clause
        :what-all     (fn all-query [query-builder _]
                        (.all query-builder))
        :order        (fn order-by-query [query-builder orderings]
@@ -138,6 +139,11 @@
                                                                         (QueryBuilder/asc (name %))
                                                                         %))))))
 
+       :paginate     (fn paginate-query [query-builder [limit m]]
+                       (println m)
+                       (-> query-builder
+                           (where-clause  m)
+                           (.limit limit)))
        :limit        (fn limit-query [query-builder lim]
                        (.limit query-builder lim))
 
