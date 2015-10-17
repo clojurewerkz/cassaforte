@@ -247,10 +247,14 @@
   (client/execute s
   (client/bind prepared [\"Alex\" \"Munich\" (int 19)]))"
   [^PreparedStatement statement values]
-  (.bind statement (to-array values)))
+  ;; TODO: matching
+  (if (map? values)
+    (.bind statement (to-array (vals values)))
+    (.bind statement (to-array values))
+    ))
 
 (defn prepare
-  [session statement values]
+  [session statement]
   (.prepare session statement))
 
 ;; (defn execute-async)
