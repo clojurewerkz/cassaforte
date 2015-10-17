@@ -1,6 +1,6 @@
 (ns clojurewerkz.cassaforte.cql-test
   (:refer-clojure :exclude [update])
-  (:require [clojurewerkz.cassaforte.test-helper :as th :refer [*session*]]
+  (:require [clojurewerkz.cassaforte.test-helper :as th :refer [*session* with-table]]
             [clojurewerkz.cassaforte.client      :as client]
             [clojurewerkz.cassaforte.policies    :as cp]
             [clojurewerkz.cassaforte.uuids       :as uuids]
@@ -309,46 +309,6 @@
                  (where {:username "Alex"})
                  (order-by (new-query-api/desc :post_id))))))
 
-(deftest test-select-range-query
-  (create-table *session* :tv_series
-                (column-definitions {:series_title  :varchar
-                                     :episode_id    :int
-                                     :episode_title :text
-                                     :primary-key   [:series_title :episode_id]}))
-  (dotimes [i 20]
-    (insert *session* :tv_series
-            {:series_title  "Futurama"
-             :episode_id    i
-             :episode_title (str "Futurama Title " i)})
-    (insert *session* :tv_series
-            {:series_title  "Simpsons"
-             :episode_id    i
-             :episode_title (str "Simpsons Title " i)}))
-
-  (is (= (set (range 11 20))
-         (->> (select *session* :tv_series
-                      (where [[= :series_title "Futurama"]
-                              [> :episode_id 10]]))
-              (map :episode_id )
-              set)))
-
-  (is (= (set (range 11 16))
-         (->> (select *session* :tv_series
-                      (where [[=  :series_title "Futurama"]
-                              [>  :episode_id 10]
-                              [<= :episode_id 15]]))
-              (map :episode_id)
-              set)))
-
-  (is (= (set (range 0 15))
-         (->> (select *session* :tv_series
-                      (where [[= :series_title "Futurama"]
-                              [< :episode_id 15]]))
-              (map :episode_id)
-              set)))
-
-  (drop-table *session* :tv_series))
-
 (deftest test-timeuuid-now-and-unix-timestamp-of
   (let [dt (-> 2 seconds ago)
         ts (cc/to-long dt)]
@@ -408,30 +368,72 @@
            (set (map :message xs))))))
 
 
-;; (deftest test-paginate
-;;   (create-table s :tv_series
-;;                 (column-definitions {:series_title  :varchar
-;;                                      :episode_id    :int
-;;                                      :episode_title :text
-;;                                      :primary-key [:series_title :episode_id]}))
-;;   (dotimes [i 20]
-;;     (insert s :tv_series {:series_title "Futurama" :episode_id i :episode_title (str "Futurama Title " i)})
-;;     (insert s :tv_series {:series_title "Simpsons" :episode_id i :episode_title (str "Simpsons Title " i)}))
+(deftest test-select-range-query
+  (create-table *session* :tv_series
+                (column-definitions {:series_title  :varchar
+                                     :episode_id    :int
+                                     :episode_title :text
+                                     :primary-key   [:series_title :episode_id]}))
+  (dotimes [i 20]
+    (insert *session* :tv_series
+            {:series_title  "Futurama"
+             :episode_id    i
+             :episode_title (str "Futurama Title " i)})
+    (insert *session* :tv_series
+            {:series_title  "Simpsons"
+             :episode_id    i
+             :episode_title (str "Simpsons Title " i)}))
+
+  (is (= (set (range 11 20))
+         (->> (select *session* :tv_series
+                      (where [[= :series_title "Futurama"]
+                              [> :episode_id 10]]))
+              (map :episode_id )
+              set)))
+
+  (is (= (set (range 11 16))
+         (->> (select *session* :tv_series
+                      (where [[=  :series_title "Futurama"]
+                              [>  :episode_id 10]
+                              [<= :episode_id 15]]))
+              (map :episode_id)
+              set)))
+
+  (is (= (set (range 0 15))
+         (->> (select *session* :tv_series
+                      (where [[= :series_title "Futurama"]
+                              [< :episode_id 15]]))
+              (map :episode_id)
+              set)))
+
+  (drop-table *session* :tv_series))
+
+(deftest test-paginate
+  (with-table :tv_series
+    (dotimes [i 20]
+      (insert *session* :tv_series
+              {:series_title  "Futurama"
+               :episode_id    i
+               :episode_title (str "Futurama Title " i)})
+      (insert *session* :tv_series
+              {:series_title  "Simpsons"
+               :episode_id    i
+               :episode_title (str "Simpsons Title " i)}))
 
 
-;;   (is (= (set (range 0 10))
-;;          (->> (select s :tv_series
-;;                       (paginate :key :episode_id :per-page 10 :where {:series_title "Futurama"}))
-;;               (map :episode_id)
-;;               set)))
+    (is (= (set (range 0 10))
+           (->> (select *session* :tv_series
+                        (paginate :key :episode_id :per-page 10
+                                  :where {:series_title "Futurama"}))
+                (map :episode_id)
+                set)))
 
-;;   (is (= (set (range 11 20))
-;;          (->> (select s :tv_series
-;;                       (paginate :key :episode_id :per-page 10 :last-key 10 :where { :series_title "Futurama"}))
-;;               (map :episode_id)
-;;               set)))
-
-;;   (drop-table s :tv_series))
+    (is (= (set (range 11 20))
+           (->> (select *session* :tv_series
+                        (paginate :key :episode_id :per-page 10 :last-key 10
+                                  :where {:series_title "Futurama"}))
+                (map :episode_id)
+                set)))))
 
 ;; (deftest test-insert-with-consistency-level
 ;;   (let [r {:name "Alex" :city "Munich" :age (int 19)}]
