@@ -435,21 +435,25 @@
                 (map :episode_id)
                 set)))))
 
-;; (deftest test-insert-with-consistency-level
-;;   (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-;;     (client/execute s
-;;                     "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);"
-;;                     :consistency-level (cp/consistency-level :quorum))
-;;     (is (= r (get-one s :users)))
-;;     (truncate s :users)))
+(deftest test-insert-with-consistency-level
+  (let [r {:name "Alex" :city "Munich" :age (int 19)}]
+    (client/execute *session*
+                    "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);"
+                    :consistency-level (cp/consistency-level :quorum))
+    (is (= r (first (select *session* :users (limit 1)))))
+    (truncate *session* :users)))
 
-;; (deftest test-insert-with-forced-prepared-statements
-;;   (comment
-;;     (let [r {:name "Alex" :city "Munich" :age (int 19)}]
-;;       (client/forcing-prepared-statements
-;;        (insert s :users r))
-;;       (is (= r (get-one s :users)))
-;;       (truncate s :users))))
+(deftest test-insert-with-forced-prepared-statements
+  (let [r        {:name "Alex" :city "Munich" :age (int 19)}
+        prepared (client/prepare *session*
+                  (new-query-api/insert :users
+                                        {:name new-query-api/?
+                                         :city new-query-api/?
+                                         :age  new-query-api/?}))]
+    (client/execute *session*
+                    (client/bind prepared
+                                 {:name "Alex" :city "Munich" :age (int 19)}))
+    (is (= r (first (select *session* :users (limit 1)))))))
 
 ;; (deftest test-insert-without-prepared-statements
 ;;   (comment
