@@ -5,6 +5,12 @@
             [clojurewerkz.cassaforte.query.dsl :refer :all]))
 
 (def ^:dynamic *session*)
+
+(def table-definitions
+  {:tv_series {:series_title  :varchar
+               :episode_id    :int
+               :episode_title :text
+               :primary-key [:series_title :episode_id]}})
 (defn with-temporary-keyspace
   [f]
 
@@ -69,3 +75,11 @@
       (finally
         (client/disconnect! session)))
     ))
+
+(defmacro with-table
+  [table-name & body]
+  `(do
+     (create-table *session* ~table-name
+                   (column-definitions (get table-definitions ~table-name)))
+     ~@body
+     (drop-table *session*  ~table-name)))
