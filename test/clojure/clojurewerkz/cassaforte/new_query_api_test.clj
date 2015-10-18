@@ -29,6 +29,14 @@
                (column "asd"))))
 
   (is (renders-to
+       "SELECT * FROM foo;"
+       (select (all) (from :foo))))
+
+  (is (renders-to
+       "SELECT * FROM foo.bar;"
+       (select (all) (from :foo :bar))))
+
+  (is (renders-to
        "SELECT first,second FROM \"table-name\";"
        (select "table-name"
                (column "first")
