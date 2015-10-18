@@ -528,6 +528,11 @@
           (alter-table :foo
                        (add-column :bar :varchar)))))
 
+  (is (= "ALTER TABLE foo RENAME baz TO ban"
+         (normalize-string
+          (alter-table :foo
+                       (rename-column :baz :ban)))))
+
   (is (= "ALTER TABLE foo DROP bar"
          (normalize-string
           (alter-table :foo

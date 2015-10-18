@@ -99,6 +99,10 @@
   [column-name column-type]
   [:add-column [column-name column-type]])
 
+(defn rename-column
+  [from to]
+  [:rename-column [from to]])
+
 (defn drop-column
   [column-name]
   [:drop-column column-name])

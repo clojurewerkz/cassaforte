@@ -483,32 +483,38 @@
                                            (clojure.string/join "," (keys alter-options))
                                            ")")))))
 (let [order
-      {:with-options 1
-       :add-column   2
-       :alter-column 3
-       :drop-column  4}
+      {:with-options  1
+       :add-column    2
+       :rename-column 2
+       :alter-column  3
+       :drop-column   4}
       renderers
-      {:with-options (fn with-options-statement [query-builder options]
-                       (reduce
-                        (fn [opts [option-name option-vals]]
-                          ((resolve-alter-option option-name) opts option-vals))
-                        (.withOptions query-builder)
-                        options)
-                       query-builder)
+      {:with-options  (fn with-options-statement [query-builder options]
+                        (reduce
+                         (fn [opts [option-name option-vals]]
+                           ((resolve-alter-option option-name) opts option-vals))
+                         (.withOptions query-builder)
+                         options)
+                        query-builder)
 
 
-       :add-column   (fn add-column-statement [query-builder [column-name column-type]]
-                       (-> query-builder
-                           (.addColumn (name column-name))
-                           (.type (resolve-primitive-type column-type))))
+       :add-column    (fn add-column-statement [query-builder [column-name column-type]]
+                        (-> query-builder
+                            (.addColumn (name column-name))
+                            (.type (resolve-primitive-type column-type))))
 
-       :alter-column (fn alter-column-statement [query-builder [column-name column-type]]
-                       (-> query-builder
-                           (.alterColumn (name column-name))
-                           (.type (resolve-primitive-type column-type))))
+       :rename-column (fn rename-column-statement [query-builder [from to]]
+                        (-> query-builder
+                            (.renameColumn (name from))
+                            (.to (name to))))
 
-       :drop-column  (fn drop-column-statement [query-builder column-name]
-                       (.dropColumn query-builder (name column-name)))
+       :alter-column  (fn alter-column-statement [query-builder [column-name column-type]]
+                        (-> query-builder
+                            (.alterColumn (name column-name))
+                            (.type (resolve-primitive-type column-type))))
+
+       :drop-column   (fn drop-column-statement [query-builder column-name]
+                        (.dropColumn query-builder (name column-name)))
 
        }]
 
