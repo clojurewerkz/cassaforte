@@ -26,7 +26,7 @@ public class KeyspaceOptions extends SchemaStatement {
   String buildInternal() {
     StringBuilder dropStatement = new StringBuilder(" ");
 
-    boolean putComma = false;
+    boolean putSeparator = false;
     if (replication.isPresent()) {
 
       dropStatement.append("replication = {");
@@ -47,14 +47,14 @@ public class KeyspaceOptions extends SchemaStatement {
       }
 
 			dropStatement.append('}');
-      putComma = true;
+      putSeparator = true;
     }
 
 
 
     if (durableWrites.isPresent()) {
-      if (putComma) {
-        dropStatement.append(',');
+      if (putSeparator) {
+        dropStatement.append(" AND");
       }
 
       dropStatement.append(" DURABLE_WRITES = " + durableWrites.get().toString());
