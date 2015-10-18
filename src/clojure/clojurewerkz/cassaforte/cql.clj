@@ -136,12 +136,6 @@
   (cc/execute session
               (apply new-query-api/insert query-params)))
 
-(defn insert-async
-  "Same as insert but returns a future"
-  [^Session session & query-params]
-  (cc/async
-   (apply insert session query-params)))
-
 ;; (defn ^:private batch-query-from-
 ;;   [table records]
 ;;   (->> records
@@ -155,12 +149,6 @@
 ;;   [^Session session table records]
 ;;   (let [query-params (batch-query-from- table records)]
 ;;     (cc/execute session (q/batch-query query-params))))
-
-;; (defn insert-batch-async
-;;   "Same as insert-batch but returns a future"
-;;   [^Session session table records]
-;;   (cc/async
-;;    (insert-batch session table records)))
 
 ;; (defn atomic-batch
 ;;   "Executes a group of operations as an atomic batch (BEGIN BATCH ... APPLY BATCH)"
@@ -176,12 +164,6 @@
   (cc/execute session
               (apply new-query-api/update query-params)))
 
-(defn update-async
-  "Same as update but returns a future"
-  [^Session session & query-params]
-  (cc/async
-   (apply update session query-params)))
-
 (defn delete
   "Deletes columns and rows. If the `columns` clause is provided,
    only those columns are deleted from the row indicated by the `where` clause, please refer to
@@ -192,24 +174,12 @@
   (cc/execute session
               (apply new-query-api/delete (cons table query-params))))
 
-(defn delete-async
-  "Same as delete but returns a future"
-  [^Session session table & query-params]
-  (cc/async
-   (apply delete session table query-params)))
-
 (defn select
   "Retrieves one or more columns for one or more rows in a table.
    It returns a result set, where every row is a collection of columns returned by the query."
   [^Session session & query-params]
   (cc/execute session
               (apply new-query-api/select query-params)))
-
-(defn select-async
-  "Same as select but returns a future"
-  [^Session session & query-params]
-  (cc/async
-   (apply select session query-params)))
 
 (defn truncate
   "Truncates a table: permanently and irreversably removes all rows from the table,
@@ -273,31 +243,28 @@
 ;; Higher-level helper functions for schema
 ;;
 
-;; (defn describe-keyspace
-;;   "Returns a keyspace description, taken from `system.schema_keyspaces`."
-;;   [^Session session ks]
-;;   (assert (not cc/*prepared-statement*) "Describe Keyspace query can't be executed as a prepared query")
-;;   (first
-;;    (select session :system.schema_keyspaces
-;;            (q/where {:keyspace_name (name ks)}))))
+(defn describe-keyspace
+  "Describes a keyspace"
+  [^Session session ks]
+  (first (select session
+                 (dsl/from :system :schema_keyspaces)
+                 (dsl/where {:keyspace_name (name ks)}))))
 
-;; (defn describe-table
-;;   "Returns a table description, taken from `system.schema_columnfamilies`."
-;;   [^Session session ks table]
-;;   (assert (not cc/*prepared-statement*) "Describe Table query can't be executed as a prepared query")
-;;   (first
-;;    (select session :system.schema_columnfamilies
-;;            (q/where {:keyspace_name (name ks)
-;;                      :columnfamily_name (name table)}))))
+(defn describe-table
+  "Describes a table"
+  [^Session session ks table]
+  (first (select session
+                 (dsl/from :system :schema_columnfamilies)
+                 (dsl/where {:columnfamily_name (name table)
+                             :keyspace_name     (name ks)}))))
 
-;; (defn describe-columns
-;;   "Returns table columns description, taken from `system.schema_columns`."
-;;   [^Session session ks table]
-;;   (assert (not cc/*prepared-statement*) "Describe Columns query can't be executed as a prepared query")
-;;   (select session :system.schema_columns
-;;           (q/where {:keyspace_name (name ks)
-;;                     :columnfamily_name (name table)})))
-
+(defn describe-columns
+  "Describes a table"
+  [^Session session ks table]
+  (select session
+          (dsl/from :system :schema_columns)
+          (dsl/where {:columnfamily_name (name table)
+                      :keyspace_name     (name ks)})))
 ;;
 ;; Higher-level collection manipulation
 ;;
