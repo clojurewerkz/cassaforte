@@ -28,6 +28,7 @@ public class KeyspaceOptions extends SchemaStatement {
 
     boolean putComma = false;
     if (replication.isPresent()) {
+
       dropStatement.append("replication = {");
 
 
@@ -45,8 +46,11 @@ public class KeyspaceOptions extends SchemaStatement {
         }
       }
 
+			dropStatement.append('}');
       putComma = true;
     }
+
+
 
     if (durableWrites.isPresent()) {
       if (putComma) {
@@ -56,7 +60,7 @@ public class KeyspaceOptions extends SchemaStatement {
       dropStatement.append(" DURABLE_WRITES = " + durableWrites.get().toString());
     }
 
-    dropStatement.append('}');
+
     return dropStatement.toString();
   }
 }

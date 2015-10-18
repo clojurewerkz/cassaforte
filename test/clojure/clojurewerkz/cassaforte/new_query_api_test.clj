@@ -581,6 +581,15 @@
                            (if-not-exists))))))
 
 (deftest test-alter-keyspace
+  (is (= "ALTER KEYSPACE new_cql_keyspace WITH replication = {'class': 'NetworkTopologyStrategy', 'dc1': 1, 'dc2': 2}, DURABLE_WRITES = false;"
+         (normalize-string
+          (alter-keyspace "new_cql_keyspace"
+                          (with {:durable-writes false
+                                 :replication    {"class" "NetworkTopologyStrategy"
+                                                  "dc1"   1
+                                                  "dc2"   2}})))))
+
+
   (is (= "ALTER KEYSPACE foo WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};"
          (normalize-string
           (alter-keyspace "foo"
