@@ -40,17 +40,20 @@
     (is (or
          (= 2 (count columns)) ;; Cassandra versions
          (= 3 (count columns))))))
+
+(deftest test-create-alter-keyspace
+  (alter-keyspace *session* "new_cql_keyspace"
+                  (with {:durable-writes false
+                         :replication    {"class" "NetworkTopologyStrategy"
+                                          "dc1"   1
+                                          "dc2"   2}}))
+  (let [res (describe-keyspace *session* "new_cql_keyspace")]
+    (is (= "new_cql_keyspace" (:keyspace_name res)))
+    (is (= false (:durable_writes res)))
+    (is (= "{\"dc2\":\"2\",\"dc1\":\"1\"}" (:strategy_options res)))))
+
 (comment
-  (deftest test-create-alter-keyspace
-    (alter-keyspace s "new_cql_keyspace"
-                    (with {:durable_writes false
-                           :replication    {:class "NetworkTopologyStrategy"
-                                            :dc1 1
-                                            :dc2 2}}))
-    (let [res (describe-keyspace s "new_cql_keyspace")]
-      (is (= "new_cql_keyspace" (:keyspace_name res)))
-      (is (= false (:durable_writes res)))
-      (is (= "{\"dc2\":\"2\",\"dc1\":\"1\"}" (:strategy_options res)))))
+
 
 
 
