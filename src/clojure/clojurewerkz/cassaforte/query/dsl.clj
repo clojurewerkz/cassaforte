@@ -50,8 +50,10 @@
   [:filtering nil])
 
 (defn from
-  [table-name]
-  [:from (name table-name)])
+  ([table-name]
+   [:from (name table-name)])
+  ([keyspace-name table-name]
+   [:from [(name keyspace-name) (name table-name)]]))
 
 ;;
 ;; Insert Query

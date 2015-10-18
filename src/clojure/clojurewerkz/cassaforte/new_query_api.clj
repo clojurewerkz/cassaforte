@@ -8,7 +8,7 @@
             Clause]
            [com.datastax.driver.core RegularStatement SimpleStatement]
            [com.datastax.driver.core.schemabuilder SchemaBuilder SchemaBuilder$Direction
-            CreateKeyspace DropKeyspace
+            CreateKeyspace AlterKeyspace DropKeyspace
             SchemaBuilder$Caching SchemaBuilder$KeyCaching])
   (:require [clojurewerkz.cassaforte.aliases :as alias]
             [clojure.core.match              :refer [match]]
@@ -19,10 +19,25 @@
 
 (def ^:dynamic *batch* false)
 
+;;
+;; Imports
+;;
 (alias/alias-ns 'clojurewerkz.cassaforte.query.query-builder)
 (alias/alias-ns 'clojurewerkz.cassaforte.query.dsl)
 (alias/alias-ns 'clojurewerkz.cassaforte.query.column)
 (alias/alias-ns 'clojurewerkz.cassaforte.query.types)
+
+;;
+;; Helpers
+;;
+
+(defn render-statements
+  [init order renderers statements]
+  (->> statements
+       (sort-by #(get order (first %)))
+       (reduce (fn [builder [statement-name statement-args]]
+                 ((get renderers statement-name) builder statement-args))
+               init)))
 
 ;;
 ;; WHERE Statement
@@ -588,6 +603,7 @@
                                            (clojure.string/join "," (keys create-keyspace-options))
                                            ")")))))
 
+
 (let [order
       {:if-not-exists 1
        :with-options  2}
@@ -602,11 +618,27 @@
                         (.ifNotExists query-builder))}]
   (defn create-keyspace
     [keyspace-name & statements]
-    (->> statements
-         (sort-by #(get order (first %)))
-         (reduce (fn [builder [statement-name statement-args]]
-                   ((get renderers statement-name) builder statement-args))
-                 (CreateKeyspace. (name keyspace-name))))))
+    (render-statements (CreateKeyspace. (name keyspace-name))
+                       order
+                       renderers
+                       statements)))
+
+
+(let [order
+      {:with-options 1}
+      renderers
+      {:with-options  (fn with-options-statement [query-builder options]
+                        (reduce
+                         (fn [opts [option-name option-vals]]
+                           ((resolve-create-keyspace-option option-name) opts option-vals))
+                         (.withOptions query-builder)
+                         options))}]
+  (defn alter-keyspace
+    [keyspace-name & statements]
+    (render-statements (AlterKeyspace. (name keyspace-name))
+                       order
+                       renderers
+                       statements)))
 
 (defn use-keyspace
   [keyspace-name]
