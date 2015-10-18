@@ -11,9 +11,9 @@
                :episode_id    :int
                :episode_title :text
                :primary-key [:series_title :episode_id]}})
+
 (defn with-temporary-keyspace
   [f]
-
   (let [session (client/connect ["127.0.0.1"])]
     (try
       (drop-keyspace session :new_cql_keyspace (if-exists))
@@ -75,6 +75,27 @@
       (finally
         (client/disconnect! session)))
     ))
+
+(defn with-keyspace
+  [f]
+  (let [session (client/connect ["127.0.0.1"])]
+    (try
+      (drop-keyspace session "new_cql_keyspace"
+                     (if-exists))
+      (create-keyspace session "new_cql_keyspace"
+                       (with {:replication
+                              {"class"              "SimpleStrategy"
+                               "replication_factor" 1 }})
+                       (if-not-exists))
+      (use-keyspace session "new_cql_keyspace")
+
+      (binding [*session* session]
+        (f))
+
+      (finally
+        (drop-keyspace session "new_cql_keyspace"
+                       (if-exists))
+        (client/disconnect! session)))))
 
 (defmacro with-table
   [table-name & body]
