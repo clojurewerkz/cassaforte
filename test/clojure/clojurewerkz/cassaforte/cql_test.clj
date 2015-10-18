@@ -1,19 +1,19 @@
 (ns clojurewerkz.cassaforte.cql-test
   (:refer-clojure :exclude [update])
-  (:require [clojurewerkz.cassaforte.test-helper :as th :refer [*session* with-table]]
-            [clojurewerkz.cassaforte.client      :as client]
-            [clojurewerkz.cassaforte.policies    :as cp]
-            [clojurewerkz.cassaforte.uuids       :as uuids]
+  (:require [clojurewerkz.cassaforte.test-helper   :as th :refer [*session* with-table]]
+            [clojurewerkz.cassaforte.client        :as client]
+            [clojurewerkz.cassaforte.policies      :as cp]
+            [clojurewerkz.cassaforte.uuids         :as uuids]
 
-            [clj-time.format                     :as tf]
-            [clj-time.coerce                     :as cc]
-            [clj-time.core                       :refer [seconds ago before? date-time] :as tc]
+            [clj-time.format                       :as tf]
+            [clj-time.coerce                       :as cc]
+            [clj-time.core                         :refer [seconds ago before? date-time] :as tc]
 
-            [clojurewerkz.cassaforte.cql         :refer :all]
+            [clojurewerkz.cassaforte.cql           :refer :all]
 
-            [clojure.test                        :refer :all]
+            [clojure.test                          :refer :all]
             [clojurewerkz.cassaforte.new-query-api :as new-query-api]
-            [clojurewerkz.cassaforte.query.dsl :refer :all]
+            [clojurewerkz.cassaforte.query.dsl     :refer :all]
             ))
 
 
