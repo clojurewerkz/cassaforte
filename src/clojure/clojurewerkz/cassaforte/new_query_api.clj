@@ -139,14 +139,19 @@
        :filtering    (fn filtering-query [query-builder _]
                        (.allowFiltering query-builder))
 
-       :from         (fn from-query [query-builder table-name]
-                       (.from query-builder (name table-name)))
+       :from         (fn from-query [query-builder t]
+                       (match t
+                              [keyspace table] (.from query-builder (name keyspace) (name table))
+                              table            (.from query-builder (name table)))
+
+                       )
        }]
   (defn select
-    [table-name & statements]
-    (->> (conj statements (from table-name))
+    [& statements];; table-name &
+    (->> (if (sequential? (first statements))
+           statements
+           (conj (next statements) (from (first statements))))
          (sort-by #(get order (first %)))
-         ;; (map second)
          (reduce (fn [builder [statement-name statement-args]]
                    ((get renderers statement-name) builder statement-args))
                  (QueryBuilder/select))
