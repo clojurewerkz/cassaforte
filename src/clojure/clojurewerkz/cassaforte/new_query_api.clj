@@ -85,16 +85,6 @@
 ;; Select Query
 ;;
 
-(defn- complete-select-query
-  [statements]
-  (let [query-map (into {} statements)]
-    (if (nil? (or (:what-columns query-map)
-                  (:what-column query-map)
-                  (:what-count query-map)
-                  (:what-fcall query-map)))
-      (conj statements (all))
-      statements)))
-
 (let [where-clause (fn [query-builder m]
                      (reduce #(.and %1 %2)
                              (.where query-builder)
@@ -155,7 +145,6 @@
   (defn select
     [table-name & statements]
     (->> (conj statements (from table-name))
-         (complete-select-query)
          (sort-by #(get order (first %)))
          ;; (map second)
          (reduce (fn [builder [statement-name statement-args]]
