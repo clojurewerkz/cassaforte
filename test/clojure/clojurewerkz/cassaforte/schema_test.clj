@@ -52,66 +52,61 @@
     (is (= false (:durable_writes res)))
     (is (= "{\"dc2\":\"2\",\"dc1\":\"1\"}" (:strategy_options res)))))
 
-(comment
+(deftest test-create-table-with-indices
+  (create-table *session* :people
+                (column-definitions {:name        :varchar
+                                     :title       :varchar
+                                     :birth_date  :timestamp
+                                     :primary-key [:name]}))
+  (create-index *session* :people_title
+                (on-table :people)
+                (and-column :title))
+  ;; (drop-index *session* :people_title)
+  (drop-table *session* :people))
 
+(deftest test-create-alter-table-add-column
+  (create-table *session* :userstmp
+                (column-definitions {:name        :varchar
+                                     :title       :varchar
+                                     :primary-key [:name]}))
+  (changes-by
+   #(alter-table *session* :userstmp
+                 (add-column :birth_date :timestamp))
+   #(count (describe-columns *session* "new_cql_keyspace" "userstmp"))
+   1)
+  (drop-table *session* :userstmp))
 
-
-
-  (deftest test-create-table-with-indices
-    (create-table s :people
-                  (column-definitions {:name        :varchar
-                                       :title       :varchar
-                                       :birth_date  :timestamp
-                                       :primary-key [:name]}))
-    (create-index s :people :title
-                  (index-name :people_title))
-    (drop-index   s :people_title)
-    (drop-table s :people))
-
-  (deftest test-create-alter-table-add-column
-    (create-table s :userstmp
-                  (column-definitions {:name        :varchar
-                                       :title       :varchar
-                                       :primary-key [:name]}))
-    (changes-by
-     #(alter-table s :userstmp
-                   (add-column :birth_date :timestamp))
-     #(count (describe-columns s "new_cql_keyspace" "userstmp"))
-     1)
-    (drop-table s :userstmp))
-
-  (deftest test-create-alter-table-rename
-    (create-table s :peopletmp
+(deftest test-create-alter-table-rename
+    (create-table *session* :peopletmp
                   (column-definitions {:naome       :varchar
                                        :title       :varchar
                                        :primary-key [:naome]}))
 
     (changes-from-to
-     #(alter-table s :peopletmp
+     #(alter-table *session* :peopletmp
                    (rename-column :naome :name))
-     #(:key_aliases (describe-table s "new_cql_keyspace" "peopletmp"))
+     #(:key_aliases (describe-table *session* "new_cql_keyspace" "peopletmp"))
      "[\"naome\"]"
      "[\"name\"]"))
 
-  (deftest test-create-table-with-compound-key
-    (create-table s :people
-                  (column-definitions {:first_name :varchar
-                                       :last_name  :varchar
-                                       :city       :varchar
-                                       :info :text
-                                       :primary-key [:first_name :last_name :city]}))
-    (let [cfd (describe-table s "new_cql_keyspace" "people")]
-      (is (= "[\"first_name\"]" (:key_aliases cfd)))
-      (is (= "[\"last_name\",\"city\"]" (:column_aliases cfd)))))
+(deftest test-create-table-with-compound-key
+  (create-table *session* :people
+                (column-definitions {:first_name :varchar
+                                     :last_name  :varchar
+                                     :city       :varchar
+                                     :info :text
+                                     :primary-key [:first_name :last_name :city]}))
+  (let [cfd (describe-table *session* "new_cql_keyspace" "people")]
+    (is (= "[\"first_name\"]" (:key_aliases cfd)))
+    (is (= "[\"last_name\",\"city\"]" (:column_aliases cfd)))))
 
-  (deftest test-create-table-with-composite-parition-key
-    (create-table s :people
-                  (column-definitions {:first_name :varchar
-                                       :last_name  :varchar
-                                       :city       :varchar
-                                       :info :text
-                                       :primary-key [[:first_name :last_name] :city]}))
-    (let [cfd (describe-table s "new_cql_keyspace" :people)]
-      (is (= "[\"first_name\",\"last_name\"]" (:key_aliases cfd)))
-      (is (= "[\"city\"]" (:column_aliases cfd)))))
-  )
+(deftest test-create-table-with-composite-parition-key
+  (create-table *session* :people
+                (column-definitions {:first_name :varchar
+                                     :last_name  :varchar
+                                     :city       :varchar
+                                     :info :text
+                                     :primary-key [[:first_name :last_name] :city]}))
+  (let [cfd (describe-table *session* "new_cql_keyspace" :people)]
+    (is (= "[\"first_name\",\"last_name\"]" (:key_aliases cfd)))
+    (is (= "[\"city\"]" (:column_aliases cfd)))))
