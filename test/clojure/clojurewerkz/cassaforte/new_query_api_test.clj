@@ -8,7 +8,6 @@
 (defn normalize-string
   [s]
   (-> s
-      ;; (.setForceNoValues true)
       (.getQueryString)
       (clojure.string/replace "\t" "  ")
       (clojure.string/replace #"^\n" "")
@@ -67,7 +66,7 @@
   (is (renders-to "SELECT * FROM tv_series WHERE series_title='Futurama' AND episode_id>10 LIMIT 10;"
                   (select :tv_series
                           (paginate :key :episode_id :per-page 10 :last-key 10
-                                  :where {:series_title "Futurama"}))))
+                                    :where {:series_title "Futurama"}))))
 
   (is (renders-to  "SELECT * FROM foo WHERE foo='bar' ORDER BY foo ASC;"
                    (select :foo
@@ -178,8 +177,8 @@
 
   (is (renders-to "SELECT * FROM events WHERE message IN ('Message 7','Message 8','Message 9','Message 10') AND created_at>=minTimeuuid(1001);"
                   (select :events
-                    (where [[:in :message ["Message 7" "Message 8" "Message 9" "Message 10"]]
-                            [>= :created_at (min-timeuuid 1001)]]))))
+                          (where [[:in :message ["Message 7" "Message 8" "Message 9" "Message 10"]]
+                                  [>= :created_at (min-timeuuid 1001)]]))))
 
   (is (renders-to "SELECT * FROM foo WHERE token(k)>token(42);"
                   (select :foo
@@ -580,3 +579,12 @@
                              {"class"              "SimpleStrategy"
                               "replication_factor" 1}})
                            (if-not-exists))))))
+
+(deftest test-alter-keyspace
+  (is (= "ALTER KEYSPACE foo WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};"
+         (normalize-string
+          (alter-keyspace "foo"
+                          (with
+                           {:replication
+                            {"class"              "SimpleStrategy"
+                             "replication_factor" 1}}))))))
