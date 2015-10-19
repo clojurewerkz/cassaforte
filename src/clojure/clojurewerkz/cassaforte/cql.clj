@@ -115,12 +115,12 @@
   (cc/execute session
               (apply new-query-api/alter-table query-params)))
 
-;; (defn alter-keyspace
-;;   "Alters properties of an existing keyspace. The
-;;    supported properties are the same that for `create-keyspace`"
-;;   [^Session session & query-params]
-;;   (cc/execute session
-;;               (apply q/alter-keyspace-query query-params)))
+(defn alter-keyspace
+  "Alters properties of an existing keyspace. The
+   supported properties are the same that for `create-keyspace`"
+  [^Session session & query-params]
+  (cc/execute session
+              (apply new-query-api/alter-keyspace query-params)))
 
 ;;
 ;; DB Operations
@@ -136,25 +136,22 @@
   (cc/execute session
               (apply new-query-api/insert query-params)))
 
-;; (defn ^:private batch-query-from-
-;;   [table records]
-;;   (->> records
-;;        (map (comp (partial apply (partial new-query-api/insert table)) flatten vector))
-;;        (apply q/queries)))
 
-;; (defn insert-batch
-;;   "Performs a batch insert (inserts multiple records into a table at the same time).
-;;   To specify additional clauses for a record (such as where or using), wrap that record
-;;   and the clauses in a vector"
-;;   [^Session session table records]
-;;   (let [query-params (batch-query-from- table records)]
-;;     (cc/execute session (q/batch-query query-params))))
+(defn insert-batch
+  "Performs a batch insert (inserts multiple records into a table at the same time).
+  To specify additional clauses for a record (such as where or using), wrap that record
+  and the clauses in a vector"
+  [^Session session table records]
+  (println (new-query-api/batch
+               (apply
+                new-query-api/queries
+                (map #(new-query-api/insert table %) records))))
+  (cc/execute session
+              (new-query-api/batch
+               (apply
+                new-query-api/queries
+                (map #(new-query-api/insert table %) records)))))
 
-;; (defn atomic-batch
-;;   "Executes a group of operations as an atomic batch (BEGIN BATCH ... APPLY BATCH)"
-;;   [^Session session & clauses]
-;;   (cc/execute session
-;;               (apply q/batch-query clauses)))
 
 (defn update
   "Updates one or more columns for a given row in a table. The `where` clause
