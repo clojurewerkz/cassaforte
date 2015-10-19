@@ -142,10 +142,6 @@
   To specify additional clauses for a record (such as where or using), wrap that record
   and the clauses in a vector"
   [^Session session table records]
-  (println (new-query-api/batch
-               (apply
-                new-query-api/queries
-                (map #(new-query-api/insert table %) records))))
   (cc/execute session
               (new-query-api/batch
                (apply
