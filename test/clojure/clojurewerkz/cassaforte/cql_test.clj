@@ -477,3 +477,22 @@
                      (client/prepare *session* "INSERT INTO users (name, city, age) VALUES (?, ?, ?);")
                      ["Alex" "Munich" nil]))
     (is (= r (first (select *session* :users))))))
+
+(deftest test-insert-batch-plain-without-prepared-statements
+  (let [input [{:name "Alex" :city "Munich" :age (int 19)}
+               {:name "Robert" :city "Berlin" :age (int 25)}]]
+    (insert-batch *session* :users input)
+    (is (= (sort-by :name input)
+           (sort-by :name (select *session* :users))))))
+
+(deftest test-insert-with-atomic-batch-without-prepared-statements
+  (client/execute *session*
+   (new-query-api/unlogged-batch
+    (new-query-api/queries
+     (new-query-api/insert :users
+                           {:name "Alex" :city "Munich" :age (int 19)})
+     (new-query-api/insert :users
+                           {:name "Fritz" :city "Hamburg" :age (int 28)}))))
+  (is (= [{:name "Alex" :city "Munich" :age (int 19)}
+          {:name "Fritz" :city "Hamburg" :age (int 28)}]
+         (sort-by :name (select *session* :users)))))
