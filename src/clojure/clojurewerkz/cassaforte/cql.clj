@@ -251,6 +251,14 @@
                  (dsl/where {:columnfamily_name (name table)
                              :keyspace_name     (name ks)}))))
 
+
+(defn describe-tables
+  "Returns all the tables description, taken from system.schema_columnfamilies "
+  [^Session session ks]
+  (select session :system.schema_columnfamilies
+          (q/where {:keyspace_name (name ks)
+                    })))
+
 (defn describe-columns
   "Describes a table"
   [^Session session ks table]
