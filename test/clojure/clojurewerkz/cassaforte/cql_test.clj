@@ -93,35 +93,30 @@
               {:payload "updated payload"}
               (where qc))
       (let [x (first (select *session* t (where qc)))]
-        (is (= "updated payload" (:payload x))))
-      (truncate *session* t))))
+        (is (= "updated payload" (:payload x)))))))
 
-(deftest test-delete
-  (testing "Delete whole row"
-    (dotimes [i 3]
-      (insert *session* :users {:name (str "name" i)
-                                :age (int i)}))
-    (is (= 3 (perform-count *session* :users)))
-    (delete *session* :users
-            (where {:name "name1"}))
-    (is (= 2 (perform-count *session* :users)))
-    (truncate *session* :users))
+(deftest test-delete-row
+  (dotimes [i 3]
+    (insert *session* :users {:name (str "name" i)
+                              :age (int i)}))
+  (is (= 3 (perform-count *session* :users)))
+  (delete *session* :users
+          (where {:name "name1"}))
+  (is (= 2 (perform-count *session* :users))))
 
-  (testing "Delete a column"
-    (insert *session* :users {:name "name1" :age (int 19)})
-    (delete *session* :users
-            (columns :age)
-            (where {:name "name1"}))
-    (is (nil? (:age (select *session* :users))))
-    (truncate *session* :users)))
+(deftest test-delete-column
+  (insert *session* :users {:name "name1" :age (int 19)})
+  (delete *session* :users
+          (columns :age)
+          (where {:name "name1"}))
+  (is (nil? (:age (select *session* :users)))))
 
 (deftest test-insert-with-timestamp
   (let [r {:name "Alex" :city "Munich" :age (int 19)}]
     (insert *session* :users
             r
             (using {:timestamp (.getTime (java.util.Date.))}))
-    (is (= r (first (select *session* :users))))
-    (truncate *session* :users)))
+    (is (= r (first (select *session* :users))))))
 
 (deftest test-ttl
   (dotimes [i 3]
@@ -451,35 +446,33 @@
     (client/execute *session*
                     "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);"
                     :consistency-level (cp/consistency-level :quorum))
-    (is (= r (first (select *session* :users (limit 1)))))
-    (truncate *session* :users)))
+    (is (= r (first (select *session* :users (limit 1)))))))
 
 (deftest test-insert-with-forced-prepared-statements
   (let [r        {:name "Alex" :city "Munich" :age (int 19)}
         prepared (client/prepare *session*
-                  (new-query-api/insert :users
-                                        {:name new-query-api/?
-                                         :city new-query-api/?
-                                         :age  new-query-api/?}))]
+                                 (new-query-api/insert :users
+                                                       {:name new-query-api/?
+                                                        :city new-query-api/?
+                                                        :age  new-query-api/?}))]
     (client/execute *session*
                     (client/bind prepared
                                  {:name "Alex" :city "Munich" :age (int 19)}))
     (is (= r (first (select *session* :users (limit 1)))))))
 
 (deftest test-raw-cql-insert
-  (testing "With default session"
-    (client/execute *session* "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
-    (is (= {:name "Alex" :city "Munich" :age (int 19)}
-           (first (client/execute *session* "SELECT * FROM users;"))))
-    (client/execute *session* "TRUNCATE users;"))
-  (testing "Prepared statement"
-    (client/execute *session*
-                    (client/bind
-                     (client/prepare *session* "INSERT INTO users (name, city, age) VALUES (?, ?, ?);")
-                     ["Alex" "Munich" (int 19)]))
-    (is (= {:name "Alex" :city "Munich" :age (int 19)}
-           (first (client/execute *session* "SELECT * FROM users;"))))
-    (client/execute *session* "TRUNCATE users;")))
+  (client/execute *session* "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
+  (is (= {:name "Alex" :city "Munich" :age (int 19)}
+         (first (client/execute *session* "SELECT * FROM users;"))))
+  (client/execute *session* "TRUNCATE users;"))
+
+(deftest test-raw-cql-with-prepared
+  (client/execute *session*
+                  (client/bind
+                   (client/prepare *session* "INSERT INTO users (name, city, age) VALUES (?, ?, ?);")
+                   ["Alex" "Munich" (int 19)]))
+  (is (= {:name "Alex" :city "Munich" :age (int 19)}
+         (first (client/execute *session* "SELECT * FROM users;")))))
 
 (deftest test-insert-nils
   (let [r {:name "Alex" :city "Munich" :age nil}]
@@ -498,12 +491,12 @@
 
 (deftest test-insert-with-atomic-batch-without-prepared-statements
   (client/execute *session*
-   (new-query-api/unlogged-batch
-    (new-query-api/queries
-     (new-query-api/insert :users
-                           {:name "Alex" :city "Munich" :age (int 19)})
-     (new-query-api/insert :users
-                           {:name "Fritz" :city "Hamburg" :age (int 28)}))))
+                  (new-query-api/unlogged-batch
+                   (new-query-api/queries
+                    (new-query-api/insert :users
+                                          {:name "Alex" :city "Munich" :age (int 19)})
+                    (new-query-api/insert :users
+                                          {:name "Fritz" :city "Hamburg" :age (int 28)}))))
   (is (= [{:name "Alex" :city "Munich" :age (int 19)}
           {:name "Fritz" :city "Hamburg" :age (int 28)}]
          (sort-by :name (select *session* :users)))))
