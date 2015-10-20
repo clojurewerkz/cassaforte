@@ -18,7 +18,7 @@
 
 (defn token
   [& column-names]
-  (QueryBuilder/token (into-array column-names)))
+  (QueryBuilder/token (into-array (map name column-names))))
 
 (defn function-call ;; Maybe rename to raw-function-call?
   [name & args]
@@ -144,7 +144,3 @@
   [values]
   (fn [column-name]
     (QueryBuilder/putAll column-name values)))
-
-;;
-;;
-;;

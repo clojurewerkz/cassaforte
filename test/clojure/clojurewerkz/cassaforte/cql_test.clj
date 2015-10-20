@@ -1,6 +1,6 @@
 (ns clojurewerkz.cassaforte.cql-test
   (:refer-clojure :exclude [update])
-  (:require [clojurewerkz.cassaforte.test-helper   :as th :refer [*session* with-table]]
+  (:require [clojurewerkz.cassaforte.test-helper   :refer [*session* with-table with-temporary-keyspace]]
             [clojurewerkz.cassaforte.client        :as client]
             [clojurewerkz.cassaforte.policies      :as cp]
             [clojurewerkz.cassaforte.uuids         :as uuids]
@@ -17,8 +17,7 @@
             ))
 
 
-(use-fixtures :each th/with-temporary-keyspace)
-
+(use-fixtures :each with-temporary-keyspace)
 
 (deftest test-insert
   (let [r {:name "Alex" :city "Munich" :age (int 19)}]

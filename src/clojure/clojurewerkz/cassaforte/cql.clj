@@ -17,8 +17,7 @@
    for key operations built on top of CQL."
   (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.new-query-api :as new-query-api]
-            [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.query.dsl :as dsl])
+            [clojurewerkz.cassaforte.client        :as cc])
   (:import com.datastax.driver.core.Session))
 
 ;;
@@ -230,7 +229,7 @@
   [^Session session table & query-params]
   (:count
    (first
-    (apply select session table (dsl/count-all) query-params))))
+    (apply select session table (new-query-api/count-all) query-params))))
 
 ;;
 ;; Higher-level helper functions for schema
@@ -240,60 +239,62 @@
   "Describes a keyspace"
   [^Session session ks]
   (first (select session
-                 (dsl/from :system :schema_keyspaces)
-                 (dsl/where {:keyspace_name (name ks)}))))
+                 (new-query-api/from :system :schema_keyspaces)
+                 (new-query-api/where {:keyspace_name (name ks)}))))
 
 (defn describe-table
   "Describes a table"
   [^Session session ks table]
   (first (select session
-                 (dsl/from :system :schema_columnfamilies)
-                 (dsl/where {:columnfamily_name (name table)
+                 (new-query-api/from :system :schema_columnfamilies)
+                 (new-query-api/where {:columnfamily_name (name table)
                              :keyspace_name     (name ks)}))))
 
 
 (defn describe-tables
   "Returns all the tables description, taken from system.schema_columnfamilies "
   [^Session session ks]
-  (select session :system.schema_columnfamilies
-          (q/where {:keyspace_name (name ks)
-                    })))
+  (select session
+          (new-query-api/from :system :schema_columnfamilies)
+          (new-query-api/where {:keyspace_name     (name ks)})))
 
 (defn describe-columns
   "Describes a table"
   [^Session session ks table]
   (select session
-          (dsl/from :system :schema_columns)
-          (dsl/where {:columnfamily_name (name table)
+          (new-query-api/from :system :schema_columns)
+          (new-query-api/where {:columnfamily_name (name table)
                       :keyspace_name     (name ks)})))
 ;;
 ;; Higher-level collection manipulation
 ;;
 
-;; (defn- load-chunk
-;;   "Returns next chunk for the lazy table iteration"
-;;   [^Session session table partition-key chunk-size last-pk]
-;;   (if (nil? (first last-pk))
-;;     (select session table
-;;             (q/limit chunk-size))
-;;     (select session table
-;;             (q/where [[> (apply q/token partition-key) (apply q/token last-pk)]])
-;;             (q/limit chunk-size))))
+(defn- load-chunk
+  "Returns next chunk for the lazy table iteration"
+  [^Session session table partition-key chunk-size last-pk]
+  (if (nil? (first last-pk))
+    (select session table
+            (new-query-api/limit chunk-size))
+    (select session table
+            (new-query-api/where [[>
+                                   (apply new-query-api/token partition-key)
+                                   (apply new-query-api/function-call "token" last-pk)]])
+            (new-query-api/limit chunk-size))))
 
-;; (defn iterate-table
-;;   "Lazily iterates through a table, returning chunks of chunk-size."
-;;   ([^Session session table partition-key chunk-size]
-;;      (iterate-table session table (if (sequential? partition-key)
-;;                                     partition-key
-;;                                     [partition-key])
-;;                     chunk-size []))
-;;   ([^Session session table partition-key chunk-size c]
-;;      (lazy-cat c
-;;                (let [last-pk    (map #(get (last c) %) partition-key)
-;;                      next-chunk (load-chunk session table partition-key chunk-size last-pk)]
-;;                  (if (empty? next-chunk)
-;;                    []
-;;                    (iterate-table session table partition-key chunk-size next-chunk))))))
+(defn iterate-table
+  "Lazily iterates through a table, returning chunks of chunk-size."
+  ([^Session session table partition-key chunk-size]
+     (iterate-table session table (if (sequential? partition-key)
+                                    partition-key
+                                    [partition-key])
+                    chunk-size []))
+  ([^Session session table partition-key chunk-size c]
+     (lazy-cat c
+               (let [last-pk    (map #(get (last c) %) partition-key)
+                     next-chunk (load-chunk session table partition-key chunk-size last-pk)]
+                 (if (empty? next-chunk)
+                   []
+                   (iterate-table session table partition-key chunk-size next-chunk))))))
 
 ;; (defn copy-table
 ;;   "Copies data from one table to another, transforming rows
