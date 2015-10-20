@@ -296,13 +296,13 @@
                    []
                    (iterate-table session table partition-key chunk-size next-chunk))))))
 
-;; (defn copy-table
-;;   "Copies data from one table to another, transforming rows
-;;    using provided function (`transform-fn`)"
-;;   ([^Session session from-table to-table partition-key]
-;;      (copy-table session from-table to-table partition-key 16384))
-;;   ([^Session session from-table to-table partition-key chunk-size]
-;;      (copy-table session from-table to-table partition-key identity chunk-size))
-;;   ([^Session session from-table to-table partition-key transform-fn chunk-size]
-;;      (doseq [row (iterate-table session from-table partition-key chunk-size)]
-;;        (insert session to-table (transform-fn row)))))
+(defn copy-table
+  "Copies data from one table to another, transforming rows
+   using provided function (`transform-fn`)"
+  ([^Session session from-table to-table partition-key]
+     (copy-table session from-table to-table partition-key 16384))
+  ([^Session session from-table to-table partition-key chunk-size]
+     (copy-table session from-table to-table partition-key identity chunk-size))
+  ([^Session session from-table to-table partition-key transform-fn chunk-size]
+     (doseq [row (iterate-table session from-table partition-key chunk-size)]
+       (insert session to-table (transform-fn row)))))
