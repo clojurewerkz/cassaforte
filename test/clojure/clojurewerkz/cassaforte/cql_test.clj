@@ -13,7 +13,6 @@
 
             [clojure.test                        :refer :all]
             [clojurewerkz.cassaforte.query       :as query]
-            [clojurewerkz.cassaforte.query.dsl   :refer :all]
             ))
 
 

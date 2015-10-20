@@ -1,8 +1,7 @@
 (ns clojurewerkz.cassaforte.test-helper
   (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.client    :as client]
-            [clojurewerkz.cassaforte.cql       :refer :all]
-            [clojurewerkz.cassaforte.query.dsl :refer :all]))
+            [clojurewerkz.cassaforte.cql       :refer :all]))
 
 (def ^:dynamic *session*)
 

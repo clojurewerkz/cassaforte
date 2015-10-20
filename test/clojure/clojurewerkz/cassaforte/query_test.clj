@@ -11,8 +11,7 @@
       (.getQueryString)
       (clojure.string/replace "\t" "  ")
       (clojure.string/replace #"^\n" "")
-      (clojure.string/replace #"^\s+" "")
-      ))
+      (clojure.string/replace #"^\s+" "")))
 
 (defmacro renders-to
   [query result]

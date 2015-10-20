@@ -3,7 +3,6 @@
   (:require [clojurewerkz.cassaforte.client      :as client]
             [clojurewerkz.cassaforte.test-helper :refer [*session* with-table with-temporary-keyspace]]
             [clojurewerkz.cassaforte.cql         :refer :all]
-            [clojurewerkz.cassaforte.query.dsl   :refer :all]
             [clojure.test                        :refer :all]
             ))
 

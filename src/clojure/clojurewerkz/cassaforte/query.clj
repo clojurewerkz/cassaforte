@@ -11,9 +11,7 @@
             CreateKeyspace AlterKeyspace DropKeyspace
             SchemaBuilder$Caching SchemaBuilder$KeyCaching])
   (:require [clojurewerkz.cassaforte.aliases :as alias]
-            [clojure.core.match              :refer [match]]
-            [clojurewerkz.cassaforte.query.query-builder]
-            [clojurewerkz.cassaforte.query.types]))
+            [clojure.core.match              :refer [match]]))
 
 (set! *warn-on-reflection* false)
 
@@ -22,6 +20,7 @@
 ;;
 ;; Imports
 ;;
+
 (alias/alias-ns 'clojurewerkz.cassaforte.query.query-builder)
 (alias/alias-ns 'clojurewerkz.cassaforte.query.dsl)
 (alias/alias-ns 'clojurewerkz.cassaforte.query.column)

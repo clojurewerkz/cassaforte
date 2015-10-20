@@ -16,9 +16,19 @@
   "Main namespace for working with CQL, prepared statements. Convenience functions
   for key operations built on top of CQL."
   (:refer-clojure :exclude [update])
-  (:require [clojurewerkz.cassaforte.query  :as query]
-            [clojurewerkz.cassaforte.client :as cc])
+  (:require [clojurewerkz.cassaforte.query   :as query]
+            [clojurewerkz.cassaforte.aliases :as alias]
+            [clojurewerkz.cassaforte.client  :as cc])
   (:import com.datastax.driver.core.Session))
+
+;;
+;; Imports
+;;
+
+(alias/alias-ns 'clojurewerkz.cassaforte.query.query-builder)
+(alias/alias-ns 'clojurewerkz.cassaforte.query.dsl)
+(alias/alias-ns 'clojurewerkz.cassaforte.query.column)
+(alias/alias-ns 'clojurewerkz.cassaforte.query.types)
 
 ;;
 ;; Schema operations

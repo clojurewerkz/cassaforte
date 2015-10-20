@@ -2,7 +2,6 @@
   (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.test-helper :refer [*session* with-keyspace]]
             [clojurewerkz.cassaforte.cql         :refer :all]
-            [clojurewerkz.cassaforte.query.dsl   :refer :all]
             [clojure.test                        :refer :all]
             ))
 
