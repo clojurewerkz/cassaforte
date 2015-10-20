@@ -1,4 +1,4 @@
-(ns clojurewerkz.cassaforte.new-query-api
+(ns clojurewerkz.cassaforte.query
   "Functions for building dynamic CQL queries, in case you feel
   that `cql` namespace is too limiting for you."
   (:refer-clojure :exclude [update])

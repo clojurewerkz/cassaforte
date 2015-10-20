@@ -1,7 +1,7 @@
-(ns clojurewerkz.cassaforte.new-query-api-test
+(ns clojurewerkz.cassaforte.query-test
   (:import [com.datastax.driver.core.utils Bytes])
-  (:require [clojure.test                          :refer :all]
-            [clojurewerkz.cassaforte.new-query-api :refer :all]))
+  (:require [clojure.test                  :refer :all]
+            [clojurewerkz.cassaforte.query :refer :all]))
 
 (def force-novalues #(.setForceNoValues % true))
 

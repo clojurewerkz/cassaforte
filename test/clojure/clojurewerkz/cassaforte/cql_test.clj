@@ -1,19 +1,19 @@
 (ns clojurewerkz.cassaforte.cql-test
   (:refer-clojure :exclude [update])
-  (:require [clojurewerkz.cassaforte.test-helper   :refer [*session* with-table with-temporary-keyspace]]
-            [clojurewerkz.cassaforte.client        :as client]
-            [clojurewerkz.cassaforte.policies      :as cp]
-            [clojurewerkz.cassaforte.uuids         :as uuids]
+  (:require [clojurewerkz.cassaforte.test-helper :refer [*session* with-table with-temporary-keyspace]]
+            [clojurewerkz.cassaforte.client      :as client]
+            [clojurewerkz.cassaforte.policies    :as cp]
+            [clojurewerkz.cassaforte.uuids       :as uuids]
 
-            [clj-time.format                       :as tf]
-            [clj-time.coerce                       :as cc]
-            [clj-time.core                         :refer [seconds ago before? date-time] :as tc]
+            [clj-time.format                     :as tf]
+            [clj-time.coerce                     :as cc]
+            [clj-time.core                       :refer [seconds ago before? date-time] :as tc]
 
-            [clojurewerkz.cassaforte.cql           :refer :all]
+            [clojurewerkz.cassaforte.cql         :refer :all]
 
-            [clojure.test                          :refer :all]
-            [clojurewerkz.cassaforte.new-query-api :as new-query-api]
-            [clojurewerkz.cassaforte.query.dsl     :refer :all]
+            [clojure.test                        :refer :all]
+            [clojurewerkz.cassaforte.query       :as query]
+            [clojurewerkz.cassaforte.query.dsl   :refer :all]
             ))
 
 
@@ -131,7 +131,7 @@
 (deftest test-counter
   (testing "Increment by"
     (update *session* :user_counters
-            {:user_count (new-query-api/increment-by 5)}
+            {:user_count (query/increment-by 5)}
             (where {:name "user1"}))
 
     (is (= 5 (-> (select *session* :user_counters)
@@ -140,7 +140,7 @@
 
   (testing "Decrement by"
     (update *session* :user_counters
-            {:user_count (new-query-api/decrement-by 5)}
+            {:user_count (query/decrement-by 5)}
             (where {:name "user1"}))
 
     (is (= 0 (-> (select *session* :user_counters)
@@ -149,7 +149,7 @@
 
   (testing "Increment with explicit params"
     (update *session* :user_counters
-            {:user_count (new-query-api/increment-by 500)}
+            {:user_count (query/increment-by 500)}
             (where {:name "user1"}))
     (is (= 500 (-> (select *session* :user_counters)
                    first
@@ -157,7 +157,7 @@
 
   (testing "Decrement with explicit params"
     (update *session* :user_counters
-            {:user_count (new-query-api/increment-by 5000000)}
+            {:user_count (query/increment-by 5000000)}
             (where {:name "user1"}))
     (is (= 5000500 (-> (select *session* :user_counters)
                        first
@@ -165,7 +165,7 @@
 
   (testing "Increment with a large number"
     (update *session* :user_counters
-            {:user_count (new-query-api/increment-by 50000000000000)}
+            {:user_count (query/increment-by 50000000000000)}
             (where {:name "user1"}))
     (is (= 50000005000500 (-> *session*
                               (select :user_counters)
@@ -175,7 +175,7 @@
 (deftest test-counter-2
   (dotimes [i 100]
     (update *session* :user_counters
-            {:user_count (new-query-api/increment)}
+            {:user_count (query/increment)}
             (where {:name "user1"})))
   (is (= 100 (-> (select *session* :user_counters)
                  first
@@ -183,11 +183,11 @@
 
 (deftest test-index-filtering-range
   (create-index *session* :city
-                (new-query-api/on-table :users)
-                (new-query-api/and-column :city))
+                (query/on-table :users)
+                (query/and-column :city))
   (create-index *session* :age
-                (new-query-api/on-table :users)
-                (new-query-api/and-column :age))
+                (query/on-table :users)
+                (query/and-column :age))
 
   (dotimes [i 10]
     (insert *session* :users {:name (str "name_" i)
@@ -204,11 +204,11 @@
 
 (deftest test-index-filtering-range-alt-syntax
   (create-index *session* :city
-                (new-query-api/on-table :users)
-                (new-query-api/and-column :city))
+                (query/on-table :users)
+                (query/and-column :city))
   (create-index *session* :age
-                (new-query-api/on-table :users)
-                (new-query-api/and-column :age))
+                (query/on-table :users)
+                (query/and-column :age))
 
   (dotimes [i 10]
     (insert *session* :users {:name (str "name_" i)
@@ -227,11 +227,11 @@
 
 (deftest test-index-exact-match
   (create-index *session* :city
-                (new-query-api/on-table :users)
-                (new-query-api/and-column :city))
+                (query/on-table :users)
+                (query/and-column :city))
   (create-index *session* :age
-                (new-query-api/on-table :users)
-                (new-query-api/and-column :age))
+                (query/on-table :users)
+                (query/and-column :age))
 
   (dotimes [i 10]
     (insert *session* :users {:name (str "name_" i)
@@ -312,17 +312,17 @@
          (select *session* :user_posts
                  (columns :post_id)
                  (where {:username "Alex"})
-                 (order-by (new-query-api/desc :post_id))))))
+                 (order-by (query/desc :post_id))))))
 
 (deftest test-timeuuid-now-and-unix-timestamp-of
   (let [dt (-> 2 seconds ago)
         ts (cc/to-long dt)]
     (dotimes [i 20]
       (insert *session* :events
-              {:created_at (new-query-api/now)
+              {:created_at (query/now)
                :message    (format "Message %d" i)}))
     (let [xs  (select *session* :events
-                      (new-query-api/unix-timestamp-of :created_at)
+                      (query/unix-timestamp-of :created_at)
                       (limit 5))
           ts' (get (first xs) (keyword "unixTimestampOf(created_at)"))]
       (is (> ts' ts)))))
@@ -331,10 +331,10 @@
   (let [dt (-> 2 seconds ago)]
     (dotimes [i 20]
       (insert *session* :events
-              {:created_at (new-query-api/now)
+              {:created_at (query/now)
                :message (format "Message %d" i)}))
     (let [xs  (select *session* :events
-                      (new-query-api/date-of :created_at)
+                      (query/date-of :created_at)
                       (limit 5))
           dt' (cc/from-date (get (first xs) (keyword "dateOf(created_at)")))]
       (is (before? dt dt')))))
@@ -350,7 +350,7 @@
                     (where [[:in :message ["Message 7" "Message 8" "Message 9" "Message 10"]]
                             [>= :created_at (-> (date-time 2014 11 17 23 8)
                                                 .toDate
-                                                new-query-api/min-timeuuid)]]))]
+                                                query/min-timeuuid)]]))]
     (is (= #{"Message 8" "Message 9"}
            (set (map :message xs))))))
 
@@ -365,10 +365,10 @@
                                            "Message 8" "Message 9"]]
                             [>= :created_at (-> (date-time 2014 11 17 23 6)
                                                 .toDate
-                                                new-query-api/min-timeuuid)]
+                                                query/min-timeuuid)]
                             [<= :created_at (-> (date-time 2014 11 17 23 8)
                                                 .toDate
-                                                new-query-api/max-timeuuid)]]))]
+                                                query/max-timeuuid)]]))]
     (is (= #{"Message 6" "Message 7" "Message 8"}
            (set (map :message xs))))))
 
@@ -450,10 +450,10 @@
 (deftest test-insert-with-forced-prepared-statements
   (let [r        {:name "Alex" :city "Munich" :age (int 19)}
         prepared (client/prepare *session*
-                                 (new-query-api/insert :users
-                                                       {:name new-query-api/?
-                                                        :city new-query-api/?
-                                                        :age  new-query-api/?}))]
+                                 (query/insert :users
+                                               {:name query/?
+                                                :city query/?
+                                                :age  query/?}))]
     (client/execute *session*
                     (client/bind prepared
                                  {:name "Alex" :city "Munich" :age (int 19)}))
@@ -490,12 +490,12 @@
 
 (deftest test-insert-with-atomic-batch-without-prepared-statements
   (client/execute *session*
-                  (new-query-api/unlogged-batch
-                   (new-query-api/queries
-                    (new-query-api/insert :users
-                                          {:name "Alex" :city "Munich" :age (int 19)})
-                    (new-query-api/insert :users
-                                          {:name "Fritz" :city "Hamburg" :age (int 28)}))))
+                  (query/unlogged-batch
+                   (query/queries
+                    (query/insert :users
+                                  {:name "Alex" :city "Munich" :age (int 19)})
+                    (query/insert :users
+                                  {:name "Fritz" :city "Hamburg" :age (int 28)}))))
   (is (= [{:name "Alex" :city "Munich" :age (int 19)}
           {:name "Fritz" :city "Hamburg" :age (int 28)}]
          (sort-by :name (select *session* :users)))))
