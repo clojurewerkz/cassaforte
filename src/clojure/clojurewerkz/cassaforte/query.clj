@@ -42,35 +42,30 @@
 ;; WHERE Statement
 ;;
 
-(let [eq  (fn [^String column ^Object value]
-            (QueryBuilder/eq column value))
-      in  (fn [^String column values]
-            (QueryBuilder/in column values))
+(let [eq                  (fn [^String column ^Object value]
+                            (QueryBuilder/eq column value))
+      in                  (fn [^String column values]
+                            (QueryBuilder/in column values))
+      lt                  (fn [^String column ^Object value]
+                            (QueryBuilder/lt column value))
+      gt                  (fn [^String column ^Object value]
+                            (QueryBuilder/gt column value))
+      lte                 (fn [^String column ^Object value]
+                            (QueryBuilder/lte column value))
+      gte                 (fn [^String column ^Object value]
+                            (QueryBuilder/gte column value))
 
-      lt  (fn [^String column ^Object value]
-            (QueryBuilder/lt column value))
-
-      gt  (fn [^String column ^Object value]
-            (QueryBuilder/gt column value))
-
-      lte (fn [^String column ^Object value]
-            (QueryBuilder/lte column value))
-
-      gte (fn [^String column ^Object value]
-            (QueryBuilder/gte column value))]
-
-  (def ^:private query-type-mappings
-    {:in in
-     :=  eq
-     =   eq
-     :>  gt
-     >   gt
-     :>= gte
-     >=  gte
-     :<  lt
-     <   lt
-     :<= lte
-     <=  lte})
+      query-type-mappings {:in in
+                           :=  eq
+                           =   eq
+                           :>  gt
+                           >   gt
+                           :>= gte
+                           >=  gte
+                           :<  lt
+                           <   lt
+                           :<= lte
+                           <=  lte}]
 
   (defprotocol WhereBuilder
     (to-clauses [construct]))
@@ -82,9 +77,9 @@
        (fn [acc v]
          (conj acc
                (match v
-                      [column value]     (eq (name column) value)
-                      [op column value]  ((get query-type-mappings op) (name column) value)
-                      :else (throw (IllegalArgumentException. (str v " is not a valid Clause"))))))
+                      [column value]    (eq (name column) value)
+                      [op column value] ((get query-type-mappings op) (name column) value)
+                      :else             (throw (IllegalArgumentException. (str v " is not a valid Clause"))))))
        []
        construct))
     clojure.lang.IPersistentMap
@@ -103,29 +98,28 @@
                      (reduce #(.and %1 %2)
                              (.where query-builder)
                              (to-clauses m)))
-      order
-      {:what-count   1
-       :what-fcall   1
-       :what-columns 1
-       :what-column  1
-       :from         2
-       :filtering    3
-       :paginate     4
-       :where        4
-       :order        5
-       :limit        6
-       }
+      order        {:what-count   1
+                    :what-fcall   1
+                    :what-columns 1
+                    :what-column  1
+                    :from         2
+                    :filtering    3
+                    :paginate     4
+                    :where        4
+                    :order        5
+                    :limit        6
+                    }
       renderers
       {:what-count   (fn count-all-query [query-builder _]
                        (.countAll query-builder))
        :what-fcall   (fn fcall-query [query-builder [name args]]
                        (.fcall query-builder name (to-array args)))
        :what-columns (fn what-columns-query [query-builder columns]
-                       (reduce (fn [builder column]
-                                 (if (or (string? column)
-                                         (instance? clojure.lang.Named column))
-                                   (.column builder (name column))
-                                   (column builder)))
+                       (reduce (fn [builder column-or-fn]
+                                 (if (or (string? column-or-fn)
+                                         (instance? clojure.lang.Named column-or-fn))
+                                   (.column builder (name column-or-fn))
+                                   (column-or-fn builder)))
                                query-builder
                                columns))
        :what-column  (fn what-column-query [query-builder [column {:keys [as]}]]
@@ -137,11 +131,13 @@
        :what-all     (fn all-query [query-builder _]
                        (.all query-builder))
        :order        (fn order-by-query [query-builder orderings]
-                       (.orderBy query-builder (into-array (->> orderings
-                                                                (map #(if (or (string? %)
-                                                                              (instance? clojure.lang.Named %))
-                                                                        (QueryBuilder/asc (name %))
-                                                                        %))))))
+                       (.orderBy query-builder
+                                 (->> orderings
+                                      (map #(if (or (string? %)
+                                                    (instance? clojure.lang.Named %))
+                                              (QueryBuilder/asc (name %))
+                                              %))
+                                      into-array)))
 
        :paginate     (fn paginate-query [query-builder [limit m]]
                        (-> query-builder
@@ -149,27 +145,20 @@
                            (.limit limit)))
        :limit        (fn limit-query [query-builder lim]
                        (.limit query-builder lim))
-
        :filtering    (fn filtering-query [query-builder _]
                        (.allowFiltering query-builder))
-
        :from         (fn from-query [query-builder t]
                        (match t
                               [keyspace table] (.from query-builder (name keyspace) (name table))
-                              table            (.from query-builder (name table)))
-
-                       )
-       }]
+                              table            (.from query-builder (name table))))}]
   (defn select
-    [& statements];; table-name &
-    (->> (if (sequential? (first statements))
-           statements
-           (conj (next statements) (from (first statements))))
-         (sort-by #(get order (first %)))
-         (reduce (fn [builder [statement-name statement-args]]
-                   ((get renderers statement-name) builder statement-args))
-                 (QueryBuilder/select))
-         )))
+    [& statements]
+    (render-statements (QueryBuilder/select)
+                       order
+                       renderers
+                       (if (sequential? (first statements))
+                         statements
+                         (conj (next statements) (from (first statements)))))))
 
 ;;
 ;; INSERT Query
@@ -179,28 +168,27 @@
   {:timestamp #(QueryBuilder/timestamp %)
    :ttl       #(QueryBuilder/ttl %)})
 
-(let [order       {:values        1
-                   :value         1
-                   :values-map    1
-                   :values-seq    1
-                   :using         2
-                   :if-not-exists 3}
-      renderers
-      {:if-not-exists (fn value-query [query-builder _]
-                        (.ifNotExists query-builder))
-       :values-map    (fn values-query [query-builder m]
-                        (.values query-builder (into-array (map name (keys m))) (object-array (vals m))))
-       :using         (fn using-query [query-builder m]
-                        (doseq [[key value] m]
-                          (.using query-builder ((get with-values key) value)))
-                        query-builder)}]
+(let [order     {:values        1
+                 :value         1
+                 :values-map    1
+                 :values-seq    1
+                 :using         2
+                 :if-not-exists 3}
+
+      renderers {:if-not-exists (fn value-query [query-builder _]
+                                  (.ifNotExists query-builder))
+                 :values-map    (fn values-query [query-builder m]
+                                  (.values query-builder (into-array (map name (keys m))) (object-array (vals m))))
+                 :using         (fn using-query [query-builder m]
+                                  (doseq [[key value] m]
+                                    (.using query-builder ((get with-values key) value)))
+                                  query-builder)}]
   (defn insert
     [table-name values & statements]
-    (->> (conj statements [:values-map values])
-         (sort-by #(get order (first %)))
-         (reduce (fn [builder [statement-name statement-args]]
-                   ((get renderers statement-name) builder statement-args))
-                 (QueryBuilder/insertInto (name table-name))))))
+    (render-statements (QueryBuilder/insertInto (name table-name))
+                       order
+                       renderers
+                       (conj statements [:values-map values]))))
 
 ;;
 ;; Update Query
@@ -248,12 +236,10 @@
                          query-builder))}]
   (defn update
     [table-name records & statements]
-    (->> (conj statements (update-records-statement records))
-         (sort-by #(get order (first %)))
-         (reduce (fn [builder [statement-name statement-args]]
-                   ((get renderers statement-name) builder statement-args))
-                 (QueryBuilder/update (name table-name)))
-)))
+    (render-statements (QueryBuilder/update (name table-name))
+                       order
+                       renderers
+                       (conj statements (update-records-statement records)))))
 
 ;;
 ;; Delete Query
@@ -318,12 +304,10 @@
 
   (defn delete
     [table-name & statements]
-    (->> (conj statements (from (name table-name)))
-         (sort-by #(get order (first %)))
-         (reduce (fn [builder [statement-name statement-args]]
-                   ((get renderers statement-name) builder statement-args))
-                 (QueryBuilder/delete))
-)))
+    (render-statements (QueryBuilder/delete)
+                       order
+                       renderers
+                       (conj statements (from (name table-name))))))
 
 ;;
 ;; Truncate
@@ -353,12 +337,11 @@
                     (.using query-builder ((get with-values key) value)))
                   query-builder)}]
   (defn- generic-batch
-    [batch-type statements]
-    (->> statements
-         (sort-by #(get order (first %)))
-         (reduce (fn [builder [statement-name statement-args]]
-                   ((get renderers statement-name) builder statement-args))
-                 batch-type)))
+    [batch statements]
+    (render-statements batch
+                       order
+                       renderers
+                       statements))
 
   (defn batch
     [& statements]
@@ -446,32 +429,30 @@
                              (.ifNotExists query-builder))}]
   (defn create-table
     [table-name & statements]
-    (->> statements
-         (sort-by #(get order (first %)))
-         (reduce (fn [builder [statement-name statement-args]]
-                   ((get renderers statement-name) builder statement-args))
-                 (SchemaBuilder/createTable (name table-name)))
-)))
+    (render-statements (SchemaBuilder/createTable (name table-name))
+                       order
+                       renderers
+                       statements)))
 
 ;;
 ;; Alter table
 ;;
 
 (def ^:private alter-options
-  {:default-ttl                 (fn [opts val] (.defaultTimeToLive opts (int val)))
-   :bloom-filter-fp-chance      (fn [opts val] (.bloomFilterFPChance opts val))
-   :caching                     (fn [opts val] (.caching opts val))
-   :gc-grace-seconds            (fn [opts val] (.gcGraceSeconds opts val))
-   :min-index-interval          (fn [opts val] (.minIndexInterval opts val))
-   :index-interval              (fn [opts val] (.indexInterval opts val))
-   :max-index-interval          (fn [opts val] (.maxIndexInterval opts val))
-   :comment                     (fn [opts val] (.comment opts val))
-   :read-repair-chance          (fn [opts val] (.readRepairChance opts val))
-   :speculative-retry           (fn [opts val] (.speculativeRetry opts val))
-   :dc-local-read-repair-chance (fn [opts val] (.dcLocalReadRepairChance opts val))
-   :memtable-flush-period-in-ms (fn [opts val] (.memtableFlushPeriodInMillis opts val))
-   :compaction-options          (fn [opts val] (.compactionOptions opts val))
-   :compression-options         (fn [opts val] (.compressionOptions opts val))})
+  {:default-ttl                 (fn [opts val] (.defaultTimeToLive            opts (int val)))
+   :bloom-filter-fp-chance      (fn [opts val] (.bloomFilterFPChance          opts val))
+   :caching                     (fn [opts val] (.caching                      opts val))
+   :gc-grace-seconds            (fn [opts val] (.gcGraceSeconds               opts val))
+   :min-index-interval          (fn [opts val] (.minIndexInterval             opts val))
+   :index-interval              (fn [opts val] (.indexInterval                opts val))
+   :max-index-interval          (fn [opts val] (.maxIndexInterval             opts val))
+   :comment                     (fn [opts val] (.comment                      opts val))
+   :read-repair-chance          (fn [opts val] (.readRepairChance             opts val))
+   :speculative-retry           (fn [opts val] (.speculativeRetry             opts val))
+   :dc-local-read-repair-chance (fn [opts val] (.dcLocalReadRepairChance      opts val))
+   :memtable-flush-period-in-ms (fn [opts val] (.memtableFlushPeriodInMillis  opts val))
+   :compaction-options          (fn [opts val] (.compactionOptions            opts val))
+   :compression-options         (fn [opts val] (.compressionOptions           opts val))})
 
 (defn resolve-alter-option
   [option-name]
@@ -519,12 +500,10 @@
 
   (defn alter-table
     [table-name & statements]
-    (->> statements
-         (sort-by #(get order (first %)))
-         (reduce (fn [builder [statement-name statement-args]]
-                   ((get renderers statement-name) builder statement-args))
-                 (SchemaBuilder/alterTable (name table-name)))
-)))
+    (render-statements (SchemaBuilder/alterTable (name table-name))
+                       order
+                       renderers
+                       statements)))
 
 (let [order
       {:if-exists 1}
@@ -533,11 +512,10 @@
                     (.ifExists query-builder))}]
   (defn drop-table
     [table-name & statements]
-    (->> statements
-         (sort-by #(get order (first %)))
-         (reduce (fn [builder [statement-name statement-args]]
-                   ((get renderers statement-name) builder statement-args))
-                 (SchemaBuilder/dropTable (name table-name))))))
+    (render-statements (SchemaBuilder/dropTable (name table-name))
+                       order
+                       renderers
+                       statements)))
 
 (let [order
       {:on-table           1
@@ -553,32 +531,10 @@
        }]
   (defn create-index
     [index-name & statements]
-    (->> statements
-         (sort-by #(get order (first %)))
-         (reduce (fn [builder [statement-name statement-args]]
-                   ((get renderers statement-name) builder statement-args))
-                 (SchemaBuilder/createIndex (name index-name))))))
-
-;; CreateType createType(String typeName)
-;; CreateType createType(String keyspaceName, String typeName)
-;; Drop dropType(String typeName)
-;; Drop dropType(String keyspaceName, String typeName)
-;; UDTType frozen(String udtName)
-;; UDTType udtLiteral(String literal)
-;; TableOptions.CompactionOptions.SizeTieredCompactionStrategyOptions sizedTieredStategy()
-;; TableOptions.CompactionOptions.LeveledCompactionStrategyOptions leveledStrategy()
-;; TableOptions.CompactionOptions.DateTieredCompactionStrategyOptions dateTieredStrategy()
-;; TableOptions.CompressionOptions noCompression()
-;; TableOptions.CompressionOptions lz4()
-;; TableOptions.CompressionOptions snappy()
-;; TableOptions.CompressionOptions deflate()
-;; TableOptions.SpeculativeRetryValue noSpeculativeRetry()
-;; TableOptions.SpeculativeRetryValue always()
-;; TableOptions.SpeculativeRetryValue percentile(int percentile)
-;; TableOptions.SpeculativeRetryValue millisecs(int millisecs)
-;; TableOptions.CachingRowsPerPartition noRows()
-;; TableOptions.CachingRowsPerPartition allRows()
-;; TableOptions.CachingRowsPerPartition rows(int rowNumber)
+    (render-statements (SchemaBuilder/createIndex (name index-name))
+                       order
+                       renderers
+                       statements)))
 
 
 (let [order
@@ -588,12 +544,10 @@
                     (.ifExists query-builder))}]
   (defn drop-keyspace
     [keyspace-name & statements]
-    (->> statements
-         (sort-by #(get order (first %)))
-         (reduce (fn [builder [statement-name statement-args]]
-                   ((get renderers statement-name) builder statement-args))
-                 (DropKeyspace. (name keyspace-name)))
-)))
+    (render-statements (DropKeyspace. (name keyspace-name))
+                       order
+                       renderers
+                       statements)))
 
 (def ^:private create-keyspace-options
   {:replication    (fn [opts replication] (.replication opts replication))
@@ -650,4 +604,23 @@
   (SimpleStatement.
    (str "USE " (name keyspace-name))))
 
-(def ? (QueryBuilder/bindMarker))
+;; CreateType createType(String typeName)
+;; CreateType createType(String keyspaceName, String typeName)
+;; Drop dropType(String typeName)
+;; Drop dropType(String keyspaceName, String typeName)
+;; UDTType frozen(String udtName)
+;; UDTType udtLiteral(String literal)
+;; TableOptions.CompactionOptions.SizeTieredCompactionStrategyOptions sizedTieredStategy()
+;; TableOptions.CompactionOptions.LeveledCompactionStrategyOptions leveledStrategy()
+;; TableOptions.CompactionOptions.DateTieredCompactionStrategyOptions dateTieredStrategy()
+;; TableOptions.CompressionOptions noCompression()
+;; TableOptions.CompressionOptions lz4()
+;; TableOptions.CompressionOptions snappy()
+;; TableOptions.CompressionOptions deflate()
+;; TableOptions.SpeculativeRetryValue noSpeculativeRetry()
+;; TableOptions.SpeculativeRetryValue always()
+;; TableOptions.SpeculativeRetryValue percentile(int percentile)
+;; TableOptions.SpeculativeRetryValue millisecs(int millisecs)
+;; TableOptions.CachingRowsPerPartition noRows()
+;; TableOptions.CachingRowsPerPartition allRows()
+;; TableOptions.CachingRowsPerPartition rows(int rowNumber)

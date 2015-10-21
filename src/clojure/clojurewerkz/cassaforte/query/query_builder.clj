@@ -144,3 +144,5 @@
   [values]
   (fn [column-name]
     (QueryBuilder/putAll column-name values)))
+
+(def ? (QueryBuilder/bindMarker))
