@@ -13,7 +13,7 @@
   (:require [clojurewerkz.cassaforte.aliases :as alias]
             [clojure.core.match              :refer [match]]))
 
-(set! *warn-on-reflection* false)
+(set! *warn-on-reflection* true)
 
 (def ^:dynamic *batch* false)
 
@@ -44,7 +44,7 @@
 
 (let [eq                  (fn [^String column ^Object value]
                             (QueryBuilder/eq column value))
-      in                  (fn [^String column values]
+      in                  (fn [^String column ^java.util.List values]
                             (QueryBuilder/in column values))
       lt                  (fn [^String column ^Object value]
                             (QueryBuilder/lt column value))
@@ -94,8 +94,12 @@
 ;; Select Query
 ;;
 
-(let [where-clause (fn [query-builder m]
-                     (reduce #(.and %1 %2)
+(defn and-clause
+  [^Select$Where where ^Clause clause]
+  (.and where clause))
+
+(let [where-clause (fn [^Select query-builder m]
+                     (reduce and-clause
                              (.where query-builder)
                              (to-clauses m)))
       order        {:what-count   1
