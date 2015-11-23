@@ -237,15 +237,16 @@
 
   With string statement:
 
-  (client/bind
-  (client/prepare s \"INSERT INTO users (name, city, age) VALUES (?, ?, ?);\")
-  [\"Alex\" \"Munich\" (int 19)])
-
-  With queries:
-
-  (let [prepared (client/prepare (insert s :users {:name ? :city ? :age  ?}))]
-  (client/execute s
-  (client/bind prepared [\"Alex\" \"Munich\" (int 19)]))"
+    (let [r        {:name \"Alex\" :city \"Munich\" :age (int 19)}
+          prepared (client/prepare session
+                                   (insert :users
+                                           {:name ?
+                                            :city ?
+                                            :age  ?}))]
+      (client/execute session
+                      (client/bind prepared
+                                   {:name \"Alex\" :city \"Munich\" :age (int 19)})))
+  "
   [^PreparedStatement statement values]
   ;; TODO: matching
   (if (map? values)
