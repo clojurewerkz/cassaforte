@@ -1,3 +1,130 @@
+## Changes between 2.1.0 and 3.0.0
+
+### Major performance improvements
+
+Cassaforte has undergone a big change of moving out from `hayt` to use
+`QueryBuilder` provided by the DataStax `java-driver`. Now many queries
+got much faster because of the way QueryBuilder is creating statements:
+they're not getting all inlined/serialized into Strings and embedded
+into the Query anymore but are transferred in a binary form.
+
+Conversion to Clojure data types was previously causing high GC pressure
+and lots of Reflection lookups, as it was using Clojure Protocols.
+Right now we're using more lightweight constructs which reduce GC
+pressure and amount of lookups, replacing them by the direct calls.
+
+### Using is now accepting a `hash-map``
+
+Right now, you have to wrap statements withing using within `{}`, for
+example:
+
+```clj
+(insert *session* :users {:name "Alex"}
+                         (using {:ttl (int 2)}))
+```
+
+## Aggregate/Column Specifiers aren't nested within columns
+
+You can now perform `count(*)` queries as follows
+
+```clj
+(select :foo
+        (count-all))
+```
+
+In order to use `fcall`, you can specify it in the same way you'd usually
+specify columns:
+
+```clj
+(select :foo
+        (fcall "intToBlob" (cname "b")))
+```
+
+To perform `unixTimestampOf` conversion, you can use `unix-timestamp-of`
+
+```clj
+(select :events
+        (unix-timestamp-of :created_at))
+```
+
+To make an explicit `*` query, you can use `(all)`, however if no columns are
+specified, it will be added implicitly:
+
+```clj
+(select (all)
+        (from :foo :bar))
+```
+
+You can also specify columns separately now:
+
+```clj
+(select "table-name"
+        (column "first")
+        (column "second"))
+```
+
+All the mentioned operations can be also used in combination.
+
+## Options are now string-only
+
+In order to avoid unnecessary conversion, options keys are now string-only (note `class` and
+`replication_factor here`):
+
+```clj
+(create-keyspace "foo"
+                 (with
+                  {:replication
+                   {"class"              "SimpleStrategy"
+                    "replication_factor" 1}})
+                 (if-not-exists))
+```
+
+## `allow-filtering` doesn't require any arguments now
+
+You can just use `allow-filtering` without passing `true` to it:
+
+```clj
+(select :foo
+        (where [[= :foo "bar"]])
+        (order-by (asc :foo))
+        (allow-filtering))
+```
+
+## Create Index operations are now much more explicit.
+
+New API is much more intuitive and explicit: you can specify if you'd like to create
+an index on `column` or `keys`:
+
+```clj
+(create-index "foo"
+              (on-table "bar")
+              (and-column "baz"))
+
+(create-index "foo"
+              (on-table "bar")
+              (and-keys-of-column "baz"))
+```
+
+You can find more inofrmation on creating indexes on `keys` (here)[http://docs.datastax.com/en/cql/3.1/cql/cql_reference/create_index_r.html?scroll=reference_ds_eqm_nmd_xj__CreatIdxCollKey].
+
+## Increments/decrements API changed
+
+Now, in order to counters, you can use `increment`, `increment-by`, `decrement` and `decrement-by`:
+
+```clj
+(update :foo
+        {:a (increment-by 1)})
+
+(update :foo
+        {:a (increment)})
+
+(update :foo
+        {:a (decrement-by 1)})
+
+(update :foo
+        {:a (decrement)})
+```
+
 ## Changes between 2.0.0 and 2.1.0
 
 ### Fetch Size
@@ -43,7 +170,7 @@ It is now possible to prepare statements for later execution, for example:
 Alternatively, you can use string queries in prepare:
 
 ```clojure
-(def my-prepared-statement 
+(def my-prepared-statement
   (client/prepare session "INSERT INTO users (name, city, age) VALUES (?, ?, ?);"))
 ```
 
@@ -83,7 +210,7 @@ You can override `retry-policy` and `consistency-level` for each query you run:
                 :consistency-level (:any policies/consistency-levels))
 ```
 
-You __have to__ build the statement manually for that (usually it's done under the hood), 
+You __have to__ build the statement manually for that (usually it's done under the hood),
 or use prepared statements (advised).
 
 ### clojurewerkz.cassanforte.cql/copy-table
@@ -456,8 +583,8 @@ The value of this key is a Seq of Strings (e.g. a vector) where each item specif
   (:require [clojurewerkz.cassaforte.client :as cc]))
 
 (cc/build-cluster {:ssl {:keystore-path "path/to/keystore"
-                         :keystore-password "password"}})]
-                         :cipher-suites ["TLS_RSA_WITH_AES_128_CBC_SHA"]}}
+:keystore-password "password"}})
+:cipher-suites] ["TLS_RSA_WITH_AES_128_CBC_SHA"]}}
 ```
 
 The `:cipher-suites` key is optional and may be omitted, in which case Datastax Java driver's
@@ -541,7 +668,7 @@ Contributed by Sam Neubardt.
 
 ### Alternative `where` syntax
 
-Now it is possible to specify hash in where clause, which makes queries 
+Now it is possible to specify hash in where clause, which makes queries
 more composable:
 
 ```clj

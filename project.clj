@@ -59,6 +59,4 @@
                                                   clojurewerkz.cassaforte.bytes]
                       :output-dir                "doc/api"}
 
-  :jvm-opts ["-noverify"
-             "-javaagent:/Users/ifesdjeen/hackage/introspect/target/introspect-1.0.0-SNAPSHOT-standalone.jar=clojurewerkz.cassaforte.query"]
   )
