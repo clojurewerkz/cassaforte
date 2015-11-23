@@ -48,10 +48,11 @@
 
   Example:
 
-  (create-keyspace conn :new_cql_keyspace
-  (with {:replication
-  {:class \"SimpleStrategy\"
-  :replication_factor 1}}))"
+      (create-keyspace session \"new_cql_keyspace\"
+                       (with {:replication
+                              {\"class\"              \"SimpleStrategy\"
+                               \"replication_factor\" 1 }}))
+  "
   [^Session session keyspace & query-params]
   (cc/execute session
               (apply query/create-keyspace (cons keyspace query-params))))
@@ -62,11 +63,13 @@
   of this statement. After the index is created, new data for the column is indexed automatically at
   insertion time.
 
-  Example, creates an index on `users` table, `city` column:
+  Example, creates an index named `users_city_idx' on `users` table, `city` column:
 
-  (create-index conn :users :city
-  (index-name :users_city)
-  (if-not-exists))"
+  (create-index *session* :users_city_idx
+                (on-table :users
+                (and-column :city)
+                (if-not-exists)
+  "
   [^Session session & query-params]
   (cc/execute session
               (apply query/create-index query-params)))
@@ -91,11 +94,11 @@
 
   Example:
 
-  (create-table :users
-  (column-definitions {:name :varchar
-  :age  :int
-  :city :varchar
-  :primary-key [:name]}))"
+  (create-table *session* :userstmp
+                (column-definitions {:name        :varchar
+                                     :title       :varchar
+                                     :primary-key [:name]}))
+  "
   [^Session session & query-params]
   (cc/execute session
               (apply query/create-table query-params)))
@@ -119,14 +122,30 @@
 
 (defn alter-table
   "Alters a table definition. Use it to add new
-  columns, drop existing ones, change the type of existing columns, or update the table options."
+   columns, drop existing ones, change the type of existing columns, or update the table options.
+
+   Example:
+
+   (alter-table *session* :people
+                (rename-column :naome :name)
+                (add-column :age :int))
+  "
   [^Session session & query-params]
   (cc/execute session
               (apply query/alter-table query-params)))
 
 (defn alter-keyspace
   "Alters properties of an existing keyspace. The
-  supported properties are the same that for `create-keyspace`"
+  supported properties are the same that for `create-keyspace`
+
+   Example:
+
+  (alter-keyspace *session* \"new_cql_keyspace\"
+                  (with {:durable-writes false
+                         :replication    {\"class\" \"NetworkTopologyStrategy\"
+                                          \"dc1\"   1
+                                          \"dc2\"   2}}))
+  "
   [^Session session & query-params]
   (cc/execute session
               (apply query/alter-keyspace query-params)))
@@ -140,7 +159,14 @@
 
   Note that since a row is identified by its primary key, the columns that compose it must be
   specified. Also, since a row only exists when it contains one value for a column not part of
-  the primary key, one such value must be specified too."
+  the primary key, one such value must be specified too.
+
+   Example:
+
+   (insert *session* :users
+           {:name \"name1\"
+            :age  (int 19)})
+  "
   [^Session session & query-params]
   (cc/execute session
               (apply query/insert query-params)))
