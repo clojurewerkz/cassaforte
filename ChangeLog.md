@@ -19,7 +19,7 @@ and lots of Reflection lookups, as it was using Clojure Protocols.
 Right now we're using more lightweight constructs which reduce GC
 pressure and amount of lookups, replacing them by the direct calls.
 
-### Using is now accepting a `hash-map``
+### Using is now accepting a `hash-map`
 
 Right now, you have to wrap statements withing using within `{}`, for
 example:
@@ -29,7 +29,7 @@ example:
                          (using {:ttl (int 2)}))
 ```
 
-## Aggregate/Column Specifiers aren't nested within columns
+### Aggregate/Column Specifiers aren't nested within columns
 
 You can now perform `count(*)` queries as follows
 
@@ -71,7 +71,7 @@ You can also specify columns separately now:
 
 All the mentioned operations can be also used in combination.
 
-## Options are now string-only
+### Options are now string-only
 
 In order to avoid unnecessary conversion, options keys are now string-only (note `class` and
 `replication_factor here`):
@@ -85,7 +85,7 @@ In order to avoid unnecessary conversion, options keys are now string-only (note
                  (if-not-exists))
 ```
 
-## `allow-filtering` doesn't require any arguments now
+### `allow-filtering` doesn't require any arguments now
 
 You can just use `allow-filtering` without passing `true` to it:
 
@@ -96,7 +96,7 @@ You can just use `allow-filtering` without passing `true` to it:
         (allow-filtering))
 ```
 
-## Create Index operations are now much more explicit.
+### Create Index operations are now much more explicit.
 
 New API is much more intuitive and explicit: you can specify if you'd like to create
 an index on `column` or `keys`:
@@ -113,7 +113,7 @@ an index on `column` or `keys`:
 
 You can find more inofrmation on creating indexes on `keys` (here)[http://docs.datastax.com/en/cql/3.1/cql/cql_reference/create_index_r.html?scroll=reference_ds_eqm_nmd_xj__CreatIdxCollKey].
 
-## Increments/decrements API changed
+### Increments/decrements API changed
 
 Now, in order to counters, you can use `increment`, `increment-by`, `decrement` and `decrement-by`:
 
