@@ -10,6 +10,7 @@
             [clj-time.core                       :refer [seconds ago before? date-time] :as tc]
 
             [clojurewerkz.cassaforte.cql         :refer :all]
+            [clojurewerkz.cassaforte.query       :as query]
             [clojure.test                        :refer :all]))
 
 
@@ -446,7 +447,7 @@
 (deftest test-insert-with-forced-prepared-statements
   (let [r        {:name "Alex" :city "Munich" :age (int 19)}
         prepared (client/prepare *session*
-                                 (insert :users
+                                 (query/insert :users
                                                {:name ?
                                                 :city ?
                                                 :age  ?}))]
@@ -486,11 +487,11 @@
 
 (deftest test-insert-with-atomic-batch-without-prepared-statements
   (client/execute *session*
-                  (unlogged-batch
-                   (queries
-                    (insert :users
+                  (query/unlogged-batch
+                   (query/queries
+                    (query/insert :users
                                   {:name "Alex" :city "Munich" :age (int 19)})
-                    (insert :users
+                    (query/insert :users
                                   {:name "Fritz" :city "Hamburg" :age (int 28)}))))
   (is (= [{:name "Alex" :city "Munich" :age (int 19)}
           {:name "Fritz" :city "Hamburg" :age (int 28)}]
