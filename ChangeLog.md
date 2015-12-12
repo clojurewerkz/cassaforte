@@ -1,5 +1,11 @@
 ## Changes between 2.1.0 and 3.0.0
 
+### Simplified Keyspace Inclusion
+
+You can now include `clojurewerkz.cassaforte.cql` keyspace to execute
+all the queries as statements without having to include the `query`
+namespace explicitly
+
 ### Major performance improvements
 
 Cassaforte has undergone a big change of moving out from `hayt` to use
