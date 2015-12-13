@@ -321,7 +321,9 @@
     (let [xs  (select *session* :events
                       (unix-timestamp-of :created_at)
                       (limit 5))
-          ts' (get (first xs) (keyword "unixTimestampOf(created_at)"))]
+          ts' (or
+                (get (first xs) (keyword "unixTimestampOf(created_at)"))
+                (get (first xs) (keyword "system.unixtimestampof(created_at)")))]
       (is (> ts' ts)))))
 
 (deftest test-timeuuid-dateof

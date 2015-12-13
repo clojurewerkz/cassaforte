@@ -2,8 +2,7 @@
   (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.test-helper :refer [*session* with-keyspace]]
             [clojurewerkz.cassaforte.cql         :refer :all]
-            [clojure.test                        :refer :all]
-            ))
+            [clojure.test                        :refer :all]))
 
 (defn changes-by
   [f f2 n]
