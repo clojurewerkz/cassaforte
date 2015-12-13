@@ -1,10 +1,9 @@
-CCM_DIR           := ./ccm
 CONFIG_DIR        := /tmp/cassaforte-data
 CLUSTER_NAME      := cassaforte_cluster
 CASSANDRA_VERSION := binary:2.1.3
 
 maybe_install_ccm:
-	test -s ccm || { git clone https://github.com/pcmanus/ccm.git $(CCM_DIR) ; cd $(CCM_DIR) ; sudo ./setup.py install ; }
+	which ccm || test -s ~/.local/bin/ccm || pip install --user ccm
 
 prepare_tmp_dir:
 	rm -fr $(CONFIG_DIR) ;\
@@ -26,4 +25,4 @@ stop_cluster:
 
 .PHONY: clean
 clean:
-	rm -fr $(CCM_DIR)
+	pip uninstall ccm
