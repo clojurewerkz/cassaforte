@@ -1,6 +1,6 @@
 language: clojure
 lein: lein2
-sudo: false
+sudo: required
 before_install:
   - "ulimit -u 4096"
 script: ./bin/ci.sh
