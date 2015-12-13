@@ -123,8 +123,7 @@
            ssl-options
            kerberos
            protocol-version
-           compression]
-    :or {protocol-version 2}}]
+           compression]}]
   (let [^Cluster$Builder builder        (Cluster/builder)
         ^PoolingOptions pooling-options (PoolingOptions.)]
     (when port
