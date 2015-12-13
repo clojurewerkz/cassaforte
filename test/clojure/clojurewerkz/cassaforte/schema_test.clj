@@ -42,13 +42,13 @@
 (deftest test-create-alter-keyspace
   (alter-keyspace *session* "new_cql_keyspace"
                   (with {:durable-writes false
-                         :replication    {"class" "NetworkTopologyStrategy"
-                                          "dc1"   1
-                                          "dc2"   2}}))
+                         :replication    (array-map "class" "NetworkTopologyStrategy"
+                                                    "dc1"   1)}))
   (let [res (describe-keyspace *session* "new_cql_keyspace")]
     (is (= "new_cql_keyspace" (:keyspace_name res)))
     (is (= false (:durable_writes res)))
-    (is (= "{\"dc2\":\"2\",\"dc1\":\"1\"}" (:strategy_options res)))))
+    (is (= "{\"dc1\":\"1\"}" (:strategy_options res)))
+    (is (= "{\"dc1\":\"1\"}" (:strategy_options res)))))
 
 (deftest test-create-table-with-indices
   (create-table *session* :people
