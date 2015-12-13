@@ -4,7 +4,7 @@ CLUSTER_NAME      := cassaforte_cluster
 CASSANDRA_VERSION := binary:2.1.3
 
 maybe_install_ccm:
-	test -s ccm || { git clone https://github.com/pcmanus/ccm.git $(CCM_DIR) ; cd $(CCM_DIR) ; sudo ./setup.py install ; }
+	test -s ccm || { git clone https://github.com/pcmanus/ccm.git $(CCM_DIR) ; cd $(CCM_DIR) ; git checkout ccm-2.0.3 ; sudo ./setup.py install ; }
 
 prepare_tmp_dir:
 	rm -fr $(CONFIG_DIR) ;\
