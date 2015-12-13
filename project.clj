@@ -30,8 +30,7 @@
                                                 ;; test/development
                                                 [org.clojure/tools.namespace "0.2.10"]
                                                 [org.clojure/test.check      "0.7.0"]
-                                                [com.gfredericks/test.chuck  "0.1.17"]
-                                                ]}}
+                                                [com.gfredericks/test.chuck  "0.1.17"]]}}
   :aliases           {"all" ["with-profile" "dev:dev,1.6:dev,master"]}
   :test-selectors    {:focus   :focus
                       :client  :client

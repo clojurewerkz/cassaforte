@@ -72,8 +72,7 @@
       (catch Exception e
         (throw e))
       (finally
-        (client/disconnect! session)))
-    ))
+        (client/disconnect! session)))))
 
 (defn with-keyspace
   [f]
