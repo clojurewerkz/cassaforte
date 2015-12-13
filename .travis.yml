@@ -20,4 +20,5 @@ matrix:
   exclude:
     - jdk: oraclejdk7
         env: CASSANDRA_VERSION=3.0.1
+    - jdk: oraclejdk7
         env: CASSANDRA_VERSION=2.2.4
