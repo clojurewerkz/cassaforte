@@ -7,6 +7,7 @@ script: ./bin/ci.sh
 env:
   - CASSANDRA_VERSION=2.0.13
   - CASSANDRA_VERSION=2.1.9
+  - CASSANDRA_VERSION=2.2.4
   - CASSANDRA_VERSION=3.0.1
 jdk:
   - oraclejdk7
@@ -15,3 +16,8 @@ branches:
   only:
     - master
     - 2.0.x-stable
+matrix:
+  exclude:
+    - jdk: oraclejdk7
+        env: CASSANDRA_VERSION=3.0.1
+        env: CASSANDRA_VERSION=2.2.4
