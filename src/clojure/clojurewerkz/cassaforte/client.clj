@@ -149,7 +149,7 @@
     (when load-balancing-policy
       (.withLoadBalancingPolicy builder load-balancing-policy))
     (when compression
-      (.withCompression (select-compression compression)))
+      (.withCompression builder (select-compression compression)))
     (when ssl
       (.withSSL builder (build-ssl-options ssl)))
     (when ssl-options
@@ -251,11 +251,10 @@
   ;; TODO: matching
   (if (map? values)
     (.bind statement (to-array (vals values)))
-    (.bind statement (to-array values))
-    ))
+    (.bind statement (to-array values))))
 
 (defn prepare
-  [session statement]
+  [^Session session  statement]
   (.prepare session statement))
 
 ;; (defn execute-async)
@@ -276,7 +275,7 @@
                                      default-timestamp]}]
    (let [^Statement built-statement (build-statement query)]
      (when default-timestamp
-       (.setDefaultTimestamp built-statement))
+       (.setDefaultTimestamp built-statement default-timestamp))
      (when enable-tracing
        (.enableTracing built-statement))
      (when fetch-size
