@@ -25,7 +25,7 @@
             [clojurewerkz.cassaforte.conversion :as conv])
   (:import [com.datastax.driver.core Statement ResultSet ResultSetFuture Host Session Cluster
             Cluster$Builder SimpleStatement PreparedStatement BoundStatement HostDistance PoolingOptions
-            SSLOptions ProtocolOptions$Compression ProtocolVersion]
+            JdkSSLOptions JdkSSLOptions$Builder ProtocolOptions$Compression ProtocolVersion]
            [com.datastax.driver.auth DseAuthProvider]
            [com.google.common.util.concurrent ListenableFuture Futures FutureCallback]
            [java.net URI]
@@ -158,7 +158,7 @@
       (.withAuthProvider builder (DseAuthProvider.)))
     (.build builder)))
 
-(defn- ^SSLOptions build-ssl-options
+(defn- ^JdkSSLOptions build-ssl-options
   [{:keys [keystore-path keystore-password cipher-suites]}]
   (let [keystore-stream   (io/input-stream keystore-path)
         keystore          (KeyStore/getInstance "JKS")
@@ -166,14 +166,14 @@
         keymanager        (KeyManagerFactory/getInstance (KeyManagerFactory/getDefaultAlgorithm))
         trustmanager      (TrustManagerFactory/getInstance (TrustManagerFactory/getDefaultAlgorithm))
         password          (char-array keystore-password)
-        ssl-cipher-suites (if cipher-suites
-                            (into-array String cipher-suites)
-                            SSLOptions/DEFAULT_SSL_CIPHER_SUITES)]
+        ssl-cipher-suites (when cipher-suites (into-array String cipher-suites))]
     (.load keystore keystore-stream password)
     (.init keymanager keystore password)
     (.init trustmanager keystore)
     (.init ssl-context (.getKeyManagers keymanager) (.getTrustManagers trustmanager) nil)
-    (SSLOptions. ssl-context ssl-cipher-suites)))
+    (if ssl-cipher-suites
+      (.. (JdkSSLOptions$Builder.) (withSSLContext ssl-context) (withCipherSuites ssl-cipher-suites) (build))
+      (.. (JdkSSLOptions$Builder.) (withSSLContext ssl-context) (build)))))
 
 (defn- ^ProtocolOptions$Compression select-compression
   [compression]
