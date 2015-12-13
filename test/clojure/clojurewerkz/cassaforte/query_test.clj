@@ -1,5 +1,6 @@
 (ns clojurewerkz.cassaforte.query-test
-  (:import [com.datastax.driver.core.utils Bytes])
+  (:import  [com.datastax.driver.core ProtocolVersion]
+            [com.datastax.driver.core.utils Bytes])
   (:require [clojure.test                  :refer :all]
             [clojurewerkz.cassaforte.query :refer :all]))
 
@@ -280,7 +281,7 @@
   (is (renders-to "INSERT INTO foo (k,x) VALUES (0,(1));";
                   (insert :foo
                           (array-map :k 0
-                                     :x (tuple-of [:int] [(int 1)]))))))
+                                     :x (tuple-of (ProtocolVersion/fromInt 3) [:int] [(int 1)]))))))
 
 (deftest update-test
   (is (renders-to "UPDATE foo USING TIMESTAMP 42 SET a=12,b=[3,2,1],c=c+3 WHERE k=2;"

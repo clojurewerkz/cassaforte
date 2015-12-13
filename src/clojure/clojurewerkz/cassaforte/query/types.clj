@@ -51,5 +51,5 @@
 ;; FIXME should be using cluster instance and cluster.metadata.newTupleType instead
 (defn tuple-of
   [^ProtocolVersion protocol-version types values]
-  (.newValue (TupleType/of protocol-version CodecRegistry/DEFAULT_INSTANCE ((into-array (map #(get primitive-types %) types))))
+  (.newValue (TupleType/of protocol-version CodecRegistry/DEFAULT_INSTANCE (into-array (map #(get primitive-types %) types)))
              (object-array values)))
