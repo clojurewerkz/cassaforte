@@ -164,7 +164,7 @@
                           (unix-timestamp-of :created_at)
                           (limit 5))))
 
-  (is (renders-to "INSERT INTO events(created_at,message) VALUES (now(),'Message 1');"
+  (is (renders-to "INSERT INTO events (created_at,message) VALUES (now(),'Message 1');"
                   (insert :events
                           {:created_at (now)
                            :message    "Message 1"})))
@@ -219,19 +219,19 @@
                        (limit 42)))))
 
 (deftest test-insert-query
-  (is (renders-to "INSERT INTO foo(asd) VALUES ('bsd');"
+  (is (renders-to "INSERT INTO foo (asd) VALUES ('bsd');"
                   (insert :foo
                           {"asd" "bsd"})))
-  (is (renders-to "INSERT INTO foo(asd) VALUES ('bsd');"
-                  (insert :foo
-                          {"asd" "bsd"})))
-
-  (is (renders-to "INSERT INTO foo(asd) VALUES ('bsd');"
+  (is (renders-to "INSERT INTO foo (asd) VALUES ('bsd');"
                   (insert :foo
                           {"asd" "bsd"})))
 
+  (is (renders-to "INSERT INTO foo (asd) VALUES ('bsd');"
+                  (insert :foo
+                          {"asd" "bsd"})))
 
-  (is (renders-to "INSERT INTO foo(a,b,\"C\",d) VALUES (123,'127.0.0.1','foo''bar',{'x':3,'y':2}) USING TIMESTAMP 42 AND TTL 24;"
+
+  (is (renders-to "INSERT INTO foo (a,b,\"C\",d) VALUES (123,'127.0.0.1','foo''bar',{'x':3,'y':2}) USING TIMESTAMP 42 AND TTL 24;"
                   (insert :foo
                           (array-map "a"          123
                                      "b"          (java.net.InetAddress/getByName "127.0.0.1")
@@ -240,7 +240,7 @@
                           (using (array-map :timestamp 42
                                             :ttl       24)))))
 
-  (is (renders-to "INSERT INTO foo(a,b,\"C\",d) VALUES (123,'127.0.0.1','foo''bar',{'x':3,'y':2}) USING TIMESTAMP 42 AND TTL 24;"
+  (is (renders-to "INSERT INTO foo (a,b,\"C\",d) VALUES (123,'127.0.0.1','foo''bar',{'x':3,'y':2}) USING TIMESTAMP 42 AND TTL 24;"
                   (insert :foo
                           (array-map "a"          123
                                      "b"          (java.net.InetAddress/getByName "127.0.0.1")
@@ -249,35 +249,35 @@
                           (using (array-map :timestamp 42
                                             :ttl       24)))))
 
-  (is (renders-to "INSERT INTO foo(a,b) VALUES ({2,3,4},3.4) USING TIMESTAMP 42 AND TTL 24;"
+  (is (renders-to "INSERT INTO foo (a,b) VALUES ({2,3,4},3.4) USING TIMESTAMP 42 AND TTL 24;"
                   (insert :foo
                           (array-map "a" (sorted-set 2 3 4)
                                      "b" 3.4)
                           (using (array-map :timestamp 42
                                             :ttl       24)))))
 
-  (is (renders-to "INSERT INTO foo(a,b) VALUES ({2,3,4},3.4) USING TTL ? AND TIMESTAMP ?;"
+  (is (renders-to "INSERT INTO foo (a,b) VALUES ({2,3,4},3.4) USING TTL ? AND TIMESTAMP ?;"
                   (insert :foo
                           (array-map :a (sorted-set 2 3 4)
                                      :b 3.4)
                           (using (array-map :ttl       ?
                                             :timestamp ?)))))
 
-  (is (renders-to "INSERT INTO foo(c,a,b) VALUES (123,{2,3,4},3.4) USING TIMESTAMP 42;"
+  (is (renders-to "INSERT INTO foo (c,a,b) VALUES (123,{2,3,4},3.4) USING TIMESTAMP 42;"
                   (insert :foo
                           (array-map :c 123
                                      :a (sorted-set 2 3 4)
                                      :b 3.4)
                           (using {:timestamp 42}))))
 
-  (is (renders-to "INSERT INTO foo(k,x) VALUES (0,1) IF NOT EXISTS;";
+  (is (renders-to "INSERT INTO foo (k,x) VALUES (0,1) IF NOT EXISTS;";
                   (insert :foo
                           (array-map :k 0
                                      :x 1)
                           (if-not-exists))))
 
 
-  (is (renders-to "INSERT INTO foo(k,x) VALUES (0,(1));";
+  (is (renders-to "INSERT INTO foo (k,x) VALUES (0,(1));";
                   (insert :foo
                           (array-map :k 0
                                      :x (tuple-of [:int] [(int 1)]))))))
@@ -415,9 +415,9 @@
                   (truncate :a :b))))
 
 (deftest test-batch
-  (is (renders-to (str "BEGIN BATCH INSERT INTO foo(asd) VALUES ('bsd');"
-                       "INSERT INTO foo(asd) VALUES ('bsd');"
-                       "INSERT INTO foo(asd) VALUES ('bsd');"
+  (is (renders-to (str "BEGIN BATCH INSERT INTO foo (asd) VALUES ('bsd');"
+                       "INSERT INTO foo (asd) VALUES ('bsd');"
+                       "INSERT INTO foo (asd) VALUES ('bsd');"
                        "APPLY BATCH;")
                   (batch
                    (queries
