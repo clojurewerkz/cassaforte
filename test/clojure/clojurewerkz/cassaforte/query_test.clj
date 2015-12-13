@@ -589,9 +589,9 @@
          (normalize-string
           (alter-keyspace "new_cql_keyspace"
                           (with {:durable-writes false
-                                 :replication    {"class" "NetworkTopologyStrategy"
-                                                  "dc1"   1
-                                                  "dc2"   2}})))))
+                                 :replication    (array-map "class" "NetworkTopologyStrategy"
+                                                            "dc1"   1
+                                                            "dc2"   2)})))))
 
 
   (is (= "ALTER KEYSPACE foo WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};"
