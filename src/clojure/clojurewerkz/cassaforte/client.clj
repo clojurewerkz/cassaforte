@@ -25,7 +25,7 @@
             [clojurewerkz.cassaforte.conversion :as conv])
   (:import [com.datastax.driver.core Statement ResultSet ResultSetFuture Host Session Cluster
             Cluster$Builder SimpleStatement PreparedStatement BoundStatement HostDistance PoolingOptions
-            SSLOptions ProtocolOptions$Compression]
+            SSLOptions ProtocolOptions$Compression ProtocolVersion]
            [com.datastax.driver.auth DseAuthProvider]
            [com.google.common.util.concurrent ListenableFuture Futures FutureCallback]
            [java.net URI]
@@ -130,7 +130,7 @@
     (when port
       (.withPort builder port))
     (when protocol-version
-      (.withProtocolVersion builder protocol-version))
+      (.withProtocolVersion builder (ProtocolVersion/fromInt protocol-version)))
     (when credentials
       (.withCredentials builder (:username credentials) (:password credentials)))
     (when connections-per-host
