@@ -68,8 +68,8 @@
   [:if-not-exists nil])
 
 (defn using
-  [m]
-  [:using m])
+  [& m]
+  [:using (apply array-map m)])
 
 ;;
 ;; Update Statement

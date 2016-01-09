@@ -111,7 +111,7 @@
   (let [r {:name "Alex" :city "Munich" :age (int 19)}]
     (insert *session* :users
             r
-            (using {:timestamp (.getTime (java.util.Date.))}))
+            (using :timestamp (.getTime (java.util.Date.))))
     (is (= r (first (select *session* :users))))))
 
 (deftest test-ttl
@@ -119,7 +119,7 @@
     (insert *session* :users {:name (str "name" i)
                               :city (str "city" i)
                               :age  (int i)}
-            (using {:ttl (int 2)})))
+            (using :ttl (int 2))))
   (is (= 3 (perform-count *session* :users)))
   (Thread/sleep 2100)
   (is (= 0 (perform-count *session* :users))))

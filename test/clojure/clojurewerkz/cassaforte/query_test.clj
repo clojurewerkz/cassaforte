@@ -237,8 +237,8 @@
                                      "b"          (java.net.InetAddress/getByName "127.0.0.1")
                                      (quote* "C") "foo'bar"
                                      "d"          (array-map "x" 3 "y" 2))
-                          (using (array-map :timestamp 42
-                                            :ttl       24)))))
+                          (using :timestamp 42
+                                 :ttl       24))))
 
   (is (renders-to "INSERT INTO foo(a,b,\"C\",d) VALUES (123,'127.0.0.1','foo''bar',{'x':3,'y':2}) USING TIMESTAMP 42 AND TTL 24;"
                   (insert :foo
@@ -246,29 +246,29 @@
                                      "b"          (java.net.InetAddress/getByName "127.0.0.1")
                                      (quote* "C") "foo'bar"
                                      "d"          {"x" 3 "y" 2})
-                          (using (array-map :timestamp 42
-                                            :ttl       24)))))
+                          (using :timestamp 42
+                                 :ttl       24))))
 
   (is (renders-to "INSERT INTO foo(a,b) VALUES ({2,3,4},3.4) USING TIMESTAMP 42 AND TTL 24;"
                   (insert :foo
                           (array-map "a" (sorted-set 2 3 4)
                                      "b" 3.4)
-                          (using (array-map :timestamp 42
-                                            :ttl       24)))))
+                          (using :timestamp 42
+                                 :ttl       24))))
 
   (is (renders-to "INSERT INTO foo(a,b) VALUES ({2,3,4},3.4) USING TTL ? AND TIMESTAMP ?;"
                   (insert :foo
                           (array-map :a (sorted-set 2 3 4)
                                      :b 3.4)
-                          (using (array-map :ttl       ?
-                                            :timestamp ?)))))
+                          (using :ttl       ?
+                                 :timestamp ?))))
 
   (is (renders-to "INSERT INTO foo(c,a,b) VALUES (123,{2,3,4},3.4) USING TIMESTAMP 42;"
                   (insert :foo
                           (array-map :c 123
                                      :a (sorted-set 2 3 4)
                                      :b 3.4)
-                          (using {:timestamp 42}))))
+                          (using :timestamp 42))))
 
   (is (renders-to "INSERT INTO foo(k,x) VALUES (0,1) IF NOT EXISTS;";
                   (insert :foo
@@ -289,7 +289,7 @@
                                      :b [3 2 1]
                                      :c (increment-by 3))
                           (where {:k 2})
-                          (using {:timestamp 42}))))
+                          (using :timestamp 42))))
 
 
   (is (renders-to "UPDATE foo SET b=null WHERE k=2;"
@@ -332,7 +332,7 @@
   (is (renders-to "UPDATE foo USING TTL 400;"
                   (update :foo
                           {}
-                          (using {:ttl 400}))))
+                          (using :ttl 400))))
 
 
   (is (renders-to (str "UPDATE foo SET a=" (BigDecimal. 3.2) ",b=42 WHERE k=2;")
@@ -346,12 +346,12 @@
                           (array-map :b (prepend-all [3 2 1]))
                           (where (array-map :k 2
                                             :l "foo"))
-                          (using {:timestamp 42}))))
+                          (using :timestamp 42))))
 
   (is (thrown? IllegalArgumentException
                (update :foo
                        {}
-                       (using {:ttl -400}))))
+                       (using :ttl -400))))
 
   (is (renders-to "UPDATE foo SET x=4 WHERE k=0 IF x=1;"
                   (update :foo
@@ -388,7 +388,7 @@
 
   (is (renders-to "DELETE FROM foo USING TIMESTAMP 1240003134 WHERE k='value';"
                   (delete :foo
-                          (using {:timestamp 1240003134})
+                          (using :timestamp 1240003134)
                           (where {:k "value"}))))
 
   (is (renders-to "DELETE FROM foo WHERE k1='foo' IF EXISTS;"
@@ -434,7 +434,7 @@
                        "UPDATE foo SET c=c+1;"
                        "APPLY BATCH;")
                   (batch
-                   (using {:timestamp 42})
+                   (using :timestamp 42)
                    (queries
                     (update :foo
                             (array-map :a (increment-by 1)))
