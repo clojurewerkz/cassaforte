@@ -580,8 +580,8 @@
           (create-keyspace "foo"
                            (with
                             {:replication
-                             {"class"              "SimpleStrategy"
-                              "replication_factor" 1}})
+                             {:class              "SimpleStrategy"
+                              :replication_factor 1}})
                            (if-not-exists))))))
 
 (deftest test-alter-keyspace

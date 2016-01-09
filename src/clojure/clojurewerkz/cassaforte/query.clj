@@ -554,7 +554,7 @@
                        statements)))
 
 (def ^:private create-keyspace-options
-  {:replication    (fn [opts replication] (.replication opts replication))
+  {:replication    (fn [opts replication] (.replication opts (clojure.walk/stringify-keys replication)))
    :durable-writes (fn [opts durable-writes] (.durableWrites opts durable-writes))})
 
 (defn resolve-create-keyspace-option
