@@ -46,8 +46,10 @@
   [:limit lim])
 
 (defn allow-filtering
-  []
-  [:filtering nil])
+  ([]
+   [:filtering nil])
+  ([filtering]
+   [:filtering nil]))
 
 (defn from
   ([table-name]

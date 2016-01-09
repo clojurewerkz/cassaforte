@@ -71,20 +71,6 @@ You can also specify columns separately now:
 
 All the mentioned operations can be also used in combination.
 
-### Options are now string-only
-
-In order to avoid unnecessary conversion, options keys are now string-only (note `class` and
-`replication_factor here`):
-
-```clj
-(create-keyspace "foo"
-                 (with
-                  {:replication
-                   {"class"              "SimpleStrategy"
-                    "replication_factor" 1}})
-                 (if-not-exists))
-```
-
 ### `allow-filtering` doesn't require any arguments now
 
 You can just use `allow-filtering` without passing `true` to it:
@@ -95,6 +81,8 @@ You can just use `allow-filtering` without passing `true` to it:
         (order-by (asc :foo))
         (allow-filtering))
 ```
+
+Previous syntax works where you could pass `true` just as well.
 
 ### Create Index operations are now much more explicit.
 

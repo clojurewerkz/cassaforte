@@ -86,6 +86,14 @@
                            (allow-filtering)
                            )))
 
+  (is (renders-to  "SELECT * FROM foo WHERE foo='bar' ORDER BY foo ASC LIMIT 10 ALLOW FILTERING;"
+                   (select :foo
+                           (where [[= :foo "bar"]])
+                           (order-by (asc :foo))
+                           (limit 10)
+                           (allow-filtering true)
+                           )))
+
   (is (renders-to  "SELECT * FROM foo WHERE k=4 AND c>'a' AND c<='z';";
                    (select :foo
                            (where [[= :k 4]
