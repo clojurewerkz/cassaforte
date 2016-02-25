@@ -24,8 +24,8 @@
             [clojurewerkz.cassaforte.policies   :as cp]
             [clojurewerkz.cassaforte.conversion :as conv])
   (:import [com.datastax.driver.core Statement ResultSet ResultSetFuture Host Session Cluster
-            Cluster$Builder SimpleStatement PreparedStatement BoundStatement HostDistance PoolingOptions
-            JdkSSLOptions JdkSSLOptions$Builder ProtocolOptions$Compression ProtocolVersion]
+            Cluster$Builder SimpleStatement PreparedStatement HostDistance PoolingOptions
+            SSLOptions JdkSSLOptions ProtocolOptions$Compression ProtocolVersion]
            [com.datastax.driver.auth DseAuthProvider]
            [com.google.common.util.concurrent ListenableFuture Futures FutureCallback]
            [java.net URI]
@@ -160,7 +160,7 @@
       (.withAuthProvider builder (DseAuthProvider.)))
     (.build builder)))
 
-(defn- ^JdkSSLOptions build-ssl-options
+(defn- ^SSLOptions build-ssl-options
   [{:keys [keystore-path keystore-password cipher-suites]}]
   (let [keystore-stream   (io/input-stream keystore-path)
         keystore          (KeyStore/getInstance "JKS")
@@ -173,9 +173,10 @@
     (.init keymanager keystore password)
     (.init trustmanager keystore)
     (.init ssl-context (.getKeyManagers keymanager) (.getTrustManagers trustmanager) nil)
-    (if ssl-cipher-suites
-      (.. (JdkSSLOptions$Builder.) (withSSLContext ssl-context) (withCipherSuites ssl-cipher-suites) (build))
-      (.. (JdkSSLOptions$Builder.) (withSSLContext ssl-context) (build)))))
+    (.. (JdkSSLOptions/builder)
+        (withSSLContext ssl-context)
+        (withCipherSuites ssl-cipher-suites)
+        (build))))
 
 (defn- ^ProtocolOptions$Compression select-compression
   [compression]
