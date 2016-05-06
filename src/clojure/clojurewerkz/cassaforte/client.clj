@@ -116,6 +116,7 @@
            connections-per-host
            max-connections-per-host
            consistency-level
+           cluster-name
            retry-policy
            reconnection-policy
            load-balancing-policy
@@ -132,6 +133,8 @@
       (.withProtocolVersion builder (ProtocolVersion/fromInt protocol-version)))
     (when credentials
       (.withCredentials builder (:username credentials) (:password credentials)))
+    (when cluster-name
+      (.withClusterName builder cluster-name)
     (when connections-per-host
       (.setCoreConnectionsPerHost pooling-options HostDistance/LOCAL
                                   connections-per-host))
