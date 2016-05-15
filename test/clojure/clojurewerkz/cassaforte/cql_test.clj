@@ -13,7 +13,6 @@
             [clojurewerkz.cassaforte.query       :as query]
             [clojure.test                        :refer :all]))
 
-
 (use-fixtures :each with-temporary-keyspace)
 
 (deftest test-insert
@@ -62,7 +61,6 @@
                     (where {:username "user1"
                             :post_id "post1"}))
             [0 :body])))))
-
 
 (deftest test-update-with-compound-key
   (let [t   :events_by_device_id_and_date
