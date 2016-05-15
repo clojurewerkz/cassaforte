@@ -13,7 +13,6 @@
             [clojurewerkz.cassaforte.query       :as query]
             [clojure.test                        :refer :all]))
 
-
 (use-fixtures :each with-temporary-keyspace)
 
 (deftest test-insert
@@ -62,7 +61,6 @@
                     (where {:username "user1"
                             :post_id "post1"}))
             [0 :body])))))
-
 
 (deftest test-update-with-compound-key
   (let [t   :events_by_device_id_and_date
@@ -321,7 +319,9 @@
     (let [xs  (select *session* :events
                       (unix-timestamp-of :created_at)
                       (limit 5))
-          ts' (get (first xs) (keyword "unixTimestampOf(created_at)"))]
+          ts' (or
+                (get (first xs) (keyword "unixTimestampOf(created_at)"))
+                (get (first xs) (keyword "system.unixtimestampof(created_at)")))]
       (is (> ts' ts)))))
 
 (deftest test-timeuuid-dateof

@@ -25,7 +25,7 @@
             [clojurewerkz.cassaforte.conversion :as conv])
   (:import [com.datastax.driver.core Statement ResultSet ResultSetFuture Host Session Cluster
             Cluster$Builder SimpleStatement PreparedStatement BoundStatement HostDistance PoolingOptions
-            SSLOptions ProtocolOptions$Compression]
+            JdkSSLOptions JdkSSLOptions$Builder ProtocolOptions$Compression ProtocolVersion]
            [com.datastax.driver.auth DseAuthProvider]
            [com.google.common.util.concurrent ListenableFuture Futures FutureCallback]
            [java.net URI]
@@ -116,6 +116,7 @@
            connections-per-host
            max-connections-per-host
            consistency-level
+           cluster-name
            retry-policy
            reconnection-policy
            load-balancing-policy
@@ -123,16 +124,17 @@
            ssl-options
            kerberos
            protocol-version
-           compression]
-    :or {protocol-version 2}}]
+           compression]}]
   (let [^Cluster$Builder builder        (Cluster/builder)
         ^PoolingOptions pooling-options (PoolingOptions.)]
     (when port
       (.withPort builder port))
     (when protocol-version
-      (.withProtocolVersion builder protocol-version))
+      (.withProtocolVersion builder (ProtocolVersion/fromInt protocol-version)))
     (when credentials
       (.withCredentials builder (:username credentials) (:password credentials)))
+    (when cluster-name
+      (.withClusterName builder cluster-name)
     (when connections-per-host
       (.setCoreConnectionsPerHost pooling-options HostDistance/LOCAL
                                   connections-per-host))
@@ -149,7 +151,7 @@
     (when load-balancing-policy
       (.withLoadBalancingPolicy builder load-balancing-policy))
     (when compression
-      (.withCompression (select-compression compression)))
+      (.withCompression builder (select-compression compression)))
     (when ssl
       (.withSSL builder (build-ssl-options ssl)))
     (when ssl-options
@@ -158,7 +160,7 @@
       (.withAuthProvider builder (DseAuthProvider.)))
     (.build builder)))
 
-(defn- ^SSLOptions build-ssl-options
+(defn- ^JdkSSLOptions build-ssl-options
   [{:keys [keystore-path keystore-password cipher-suites]}]
   (let [keystore-stream   (io/input-stream keystore-path)
         keystore          (KeyStore/getInstance "JKS")
@@ -166,14 +168,14 @@
         keymanager        (KeyManagerFactory/getInstance (KeyManagerFactory/getDefaultAlgorithm))
         trustmanager      (TrustManagerFactory/getInstance (TrustManagerFactory/getDefaultAlgorithm))
         password          (char-array keystore-password)
-        ssl-cipher-suites (if cipher-suites
-                            (into-array String cipher-suites)
-                            SSLOptions/DEFAULT_SSL_CIPHER_SUITES)]
+        ssl-cipher-suites (when cipher-suites (into-array String cipher-suites))]
     (.load keystore keystore-stream password)
     (.init keymanager keystore password)
     (.init trustmanager keystore)
     (.init ssl-context (.getKeyManagers keymanager) (.getTrustManagers trustmanager) nil)
-    (SSLOptions. ssl-context ssl-cipher-suites)))
+    (if ssl-cipher-suites
+      (.. (JdkSSLOptions$Builder.) (withSSLContext ssl-context) (withCipherSuites ssl-cipher-suites) (build))
+      (.. (JdkSSLOptions$Builder.) (withSSLContext ssl-context) (build)))))
 
 (defn- ^ProtocolOptions$Compression select-compression
   [compression]
@@ -251,11 +253,10 @@
   ;; TODO: matching
   (if (map? values)
     (.bind statement (to-array (vals values)))
-    (.bind statement (to-array values))
-    ))
+    (.bind statement (to-array values))))
 
 (defn prepare
-  [session statement]
+  [^Session session  statement]
   (.prepare session statement))
 
 ;; (defn execute-async)
@@ -276,7 +277,7 @@
                                      default-timestamp]}]
    (let [^Statement built-statement (build-statement query)]
      (when default-timestamp
-       (.setDefaultTimestamp built-statement))
+       (.setDefaultTimestamp built-statement default-timestamp))
      (when enable-tracing
        (.enableTracing built-statement))
      (when fetch-size

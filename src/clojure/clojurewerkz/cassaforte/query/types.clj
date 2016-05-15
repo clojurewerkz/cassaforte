@@ -1,5 +1,5 @@
 (ns clojurewerkz.cassaforte.query.types
-  (:import [com.datastax.driver.core TupleType DataType]))
+  (:import [com.datastax.driver.core TupleType DataType ProtocolVersion CodecRegistry]))
 
 ;;
 ;; Types
@@ -48,7 +48,8 @@
   (DataType/map (get primitive-types key-type)
                 (get primitive-types value-type)))
 
+;; FIXME should be using cluster instance and cluster.metadata.newTupleType instead
 (defn tuple-of
-  [types values]
-  (.newValue (TupleType/of (into-array (map #(get primitive-types %) types)))
+  [^ProtocolVersion protocol-version types values]
+  (.newValue (TupleType/of protocol-version CodecRegistry/DEFAULT_INSTANCE (into-array (map #(get primitive-types %) types)))
              (object-array values)))

@@ -13,34 +13,25 @@
 ;; limitations under the License.
 
 (ns clojurewerkz.cassaforte.conversion
-  (:import [com.datastax.driver.core ResultSet Host Row ColumnDefinitions ColumnDefinitions
-            ColumnDefinitions$Definition]
-           [com.datastax.driver.core DataType DataType$Name]
+  (:import [com.datastax.driver.core ResultSet Host Row ColumnDefinitions ColumnDefinitions]
+           [com.datastax.driver.core DataType DataType$Name CodecRegistry ProtocolVersion]
            [com.datastax.driver.core.exceptions DriverException]
            [java.nio ByteBuffer]
            [java.util Map List Set]))
-
-;; Protocol version 2, requires Cassandra 2.0+.
-(def ^:const protocol-version 2)
-
-(defn deserialize
-  [^DataType dt ^ByteBuffer bytes ^Integer protocol-version]
-  (.deserialize dt bytes protocol-version))
 
 (defn to-clj
   [java-val]
   (cond
     (instance? ResultSet java-val) (into [] ;; TODO: transient?
-                                         (for [^Row row java-val]
-                                           (into {}
-                                                 (for [^ColumnDefinitions$Definition cd (.getColumnDefinitions row)]
-                                                   (let [^String n                      (.getName cd)
-                                                         ^ByteBuffer bytes              (.getBytesUnsafe row n)]
-                                                     [(keyword n) (when bytes
-                                                                    (let [v (deserialize (.getType cd) bytes protocol-version)]
-                                                                      ;; TODO Split to-clj to two parts for performance reasions:
-                                                                      ;; The call dispatch "sources" aren't overlapping
-                                                                      (to-clj v)))])))))
+                                     (for [^Row row java-val]
+                                       (let [^ColumnDefinitions cd (.getColumnDefinitions row)]
+                                          (loop [row-data {} i (int 0)]
+                                            (let [^String name (.getName cd i)
+                                                  ^DataType data-type (.getType cd i)
+                                                  value (to-clj (.get row i (.codecFor CodecRegistry/DEFAULT_INSTANCE data-type)))]
+                                              (if (< (inc i) (.size cd))
+                                                (recur (assoc row-data (keyword name) value) (inc i))
+                                                (assoc row-data (keyword name) value)))))))
     (instance? Map java-val)       (let [t (transient {})]
                                      (doseq [[k v] java-val]
                                        (assoc! t k v))

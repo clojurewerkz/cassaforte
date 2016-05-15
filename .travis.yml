@@ -1,4 +1,3 @@
-language: clojure
 sudo: false
 before_install:
   - "ulimit -u 4096"
@@ -10,7 +9,3 @@ env:
   - CASSANDRA_VERSION=3.0.1
 jdk:
   - oraclejdk8
-branches:
-  only:
-    - master
-    - 2.0.x-stable

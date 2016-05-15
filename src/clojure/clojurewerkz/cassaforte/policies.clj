@@ -16,7 +16,7 @@
   "Consistency levels, retry policies, reconnection policies, etc"
   (:import [com.datastax.driver.core ConsistencyLevel]
            [com.datastax.driver.core.policies
-            LoadBalancingPolicy DCAwareRoundRobinPolicy RoundRobinPolicy TokenAwarePolicy
+            LoadBalancingPolicy DCAwareRoundRobinPolicy$Builder RoundRobinPolicy TokenAwarePolicy
             LoggingRetryPolicy DefaultRetryPolicy DowngradingConsistencyRetryPolicy FallthroughRetryPolicy
             RetryPolicy ConstantReconnectionPolicy ExponentialReconnectionPolicy]))
 
@@ -35,7 +35,7 @@
    Like round-robin but over the nodes located in the same datacenter.
    Nodes from other datacenters will be tried only if all requests to local nodes fail."
   [^String local-dc]
-  (DCAwareRoundRobinPolicy. local-dc))
+  (.. (DCAwareRoundRobinPolicy$Builder.) (withLocalDc local-dc) (build)))
 
 (defn token-aware-policy
   "Takes a load balancing policy and makes it token-aware"
