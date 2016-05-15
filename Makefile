@@ -1,6 +1,6 @@
 CONFIG_DIR        := /tmp/cassaforte-data
 CLUSTER_NAME      := cassaforte_cluster
-CASSANDRA_VERSION := binary:2.1.3
+CASSANDRA_VERSION := binary:3.4
 
 maybe_install_ccm:
 	which ccm || test -s ~/.local/bin/ccm || pip install --user ccm
