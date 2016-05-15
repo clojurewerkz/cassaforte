@@ -124,7 +124,8 @@
            ssl-options
            kerberos
            protocol-version
-           compression]}]
+           compression]
+    :or {protocol-version 4}}]
   (let [^Cluster$Builder builder        (Cluster/builder)
         ^PoolingOptions pooling-options (PoolingOptions.)]
     (when port
@@ -134,7 +135,7 @@
     (when credentials
       (.withCredentials builder (:username credentials) (:password credentials)))
     (when cluster-name
-      (.withClusterName builder cluster-name)
+      (.withClusterName builder cluster-name))
     (when connections-per-host
       (.setCoreConnectionsPerHost pooling-options HostDistance/LOCAL
                                   connections-per-host))
@@ -160,7 +161,7 @@
       (.withAuthProvider builder (DseAuthProvider.)))
     (.build builder)))
 
-(defn- ^SSLOptions build-ssl-options
+(defn- ^JdkSSLOptions build-ssl-options
   [{:keys [keystore-path keystore-password cipher-suites]}]
   (let [keystore-stream   (io/input-stream keystore-path)
         keystore          (KeyStore/getInstance "JKS")
@@ -168,7 +169,11 @@
         keymanager        (KeyManagerFactory/getInstance (KeyManagerFactory/getDefaultAlgorithm))
         trustmanager      (TrustManagerFactory/getInstance (TrustManagerFactory/getDefaultAlgorithm))
         password          (char-array keystore-password)
-        ssl-cipher-suites (when cipher-suites (into-array String cipher-suites))]
+        ssl-cipher-suites (if cipher-suites
+                            (into-array String cipher-suites)
+                            ;; v3.0 of the drivers dropped SSLOptions.DEFAULT_SSL_CIPHER_SUITES so we'll just re-use
+                            ;; the literal here.
+                            (into-array String ["TLS_RSA_WITH_AES_128_CBC_SHA" "TLS_RSA_WITH_AES_256_CBC_SHA"]))]
     (.load keystore keystore-stream password)
     (.init keymanager keystore password)
     (.init trustmanager keystore)
