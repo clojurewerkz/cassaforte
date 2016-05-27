@@ -1,12 +1,12 @@
-(defproject clojurewerkz/cassaforte "3.0.0-alpha2-SNAPSHOT"
+(defproject clojurewerkz/cassaforte "3.0.0-gorillalabs-alpha2-SNAPSHOT"
   :min-lein-version  "2.5.1"
   :description       "A Clojure client for Apache Cassandra"
   :url               "http://clojurecassandra.info"
   :license           {:name "Eclipse Public License"
                       :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies      [[org.clojure/clojure                          "1.7.0"]
-                      [com.datastax.cassandra/cassandra-driver-core "3.0.0"]
-                      [com.datastax.cassandra/cassandra-driver-dse  "3.0.0"]
+                      [com.datastax.cassandra/cassandra-driver-core "3.0.2"]
+                      [com.datastax.cassandra/cassandra-driver-dse "3.0.0-rc1"]
                       [org.clojure/core.match                       "0.3.0-alpha4"]]
   :aot [clojurewerkz.cassaforte.query]
   :source-paths      ["src/clojure"]
