@@ -4,9 +4,9 @@
   :url               "http://clojurecassandra.info"
   :license           {:name "Eclipse Public License"
                       :url  "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies      [[org.clojure/clojure                          "1.7.0"]
+  :dependencies      [[org.clojure/clojure                          "1.8.0"]
                       [com.datastax.cassandra/cassandra-driver-core "3.0.2"]
-                      [com.datastax.cassandra/cassandra-driver-dse "3.0.0-rc1"]
+                      [com.datastax.cassandra/cassandra-driver-dse  "3.0.0-rc1"]
                       [org.clojure/core.match                       "0.3.0-alpha4"]]
   :aot [clojurewerkz.cassaforte.query]
   :source-paths      ["src/clojure"]
@@ -14,7 +14,7 @@
   :java-source-paths ["test/java" "src/java"]
   :profiles          {:1.6    {:dependencies [[org.clojure/clojure "1.6.0"]]}
                       :1.7    {:dependencies [[org.clojure/clojure "1.7.0"]]}
-                      :master {:dependencies [[org.clojure/clojure "1.8.0-master-SNAPSHOT"]]}
+                      :master {:dependencies [[org.clojure/clojure "1.9.0-master-SNAPSHOT"]]}
                       :dev    {:jvm-opts       ["-Dlog4j.configuration=log4j.properties.unit"
                                                 "-Xmx2048m"
                                                 "-javaagent:lib/jamm-0.2.5.jar"]
