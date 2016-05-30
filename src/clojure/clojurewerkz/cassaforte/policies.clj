@@ -16,7 +16,7 @@
   "Consistency levels, retry policies, reconnection policies, etc"
   (:import [com.datastax.driver.core ConsistencyLevel]
            [com.datastax.driver.core.policies
-            LoadBalancingPolicy DCAwareRoundRobinPolicy$Builder RoundRobinPolicy TokenAwarePolicy
+            LoadBalancingPolicy DCAwareRoundRobinPolicy DCAwareRoundRobinPolicy$Builder RoundRobinPolicy TokenAwarePolicy
             LoggingRetryPolicy DefaultRetryPolicy DowngradingConsistencyRetryPolicy FallthroughRetryPolicy
             RetryPolicy ConstantReconnectionPolicy ExponentialReconnectionPolicy]))
 
