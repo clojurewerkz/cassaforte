@@ -49,7 +49,7 @@
                                             :snapshots true
                                             :releases  {:checksum :fail :update :always}}}
   :global-vars       {*warn-on-reflection* true}
-  :pedantic          :warn
+  :pedantic?         :warn
   :codox             {:src-dir-uri               "https://github.com/clojurewerkz/cassaforte/blob/master/"
                       :sources                   ["src/clojure/"]
                       :src-linenum-anchor-prefix "L"
