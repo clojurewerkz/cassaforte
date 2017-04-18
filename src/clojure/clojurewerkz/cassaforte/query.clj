@@ -3,15 +3,15 @@
   that `cql` namespace is too limiting for you."
   (:refer-clojure :exclude [update])
   (:import [com.datastax.driver.core.querybuilder QueryBuilder
-            Select$Selection Select Select$Where
-            BindMarker
-            Clause]
+                                                  Select$Selection Select Select$Where
+                                                  BindMarker
+                                                  Clause]
            [com.datastax.driver.core RegularStatement SimpleStatement]
            [com.datastax.driver.core.schemabuilder SchemaBuilder SchemaBuilder$Direction
-            CreateKeyspace AlterKeyspace DropKeyspace
-            SchemaBuilder$Caching SchemaBuilder$KeyCaching])
-  (:require [clojurewerkz.cassaforte.aliases :as alias]
-            [clojure.core.match              :refer [match]]))
+                                                   CreateKeyspace AlterKeyspace DropKeyspace
+                                                   SchemaBuilder$Caching SchemaBuilder$KeyCaching])
+  (:require [clojure.walk]
+            [clojurewerkz.cassaforte.aliases :as alias]))
 
 (set! *warn-on-reflection* true)
 
@@ -42,18 +42,18 @@
 ;; WHERE Statement
 ;;
 
-(let [eq                  (fn [^String column ^Object value]
-                            (QueryBuilder/eq column value))
-      in                  (fn [^String column ^java.util.List values]
-                            (QueryBuilder/in column values))
-      lt                  (fn [^String column ^Object value]
-                            (QueryBuilder/lt column value))
-      gt                  (fn [^String column ^Object value]
-                            (QueryBuilder/gt column value))
-      lte                 (fn [^String column ^Object value]
-                            (QueryBuilder/lte column value))
-      gte                 (fn [^String column ^Object value]
-                            (QueryBuilder/gte column value))
+(let [eq (fn [^String column ^Object value]
+           (QueryBuilder/eq column value))
+      in (fn [^String column ^java.util.List values]
+           (QueryBuilder/in column values))
+      lt (fn [^String column ^Object value]
+           (QueryBuilder/lt column value))
+      gt (fn [^String column ^Object value]
+           (QueryBuilder/gt column value))
+      lte (fn [^String column ^Object value]
+            (QueryBuilder/lte column value))
+      gte (fn [^String column ^Object value]
+            (QueryBuilder/gte column value))
 
       query-type-mappings {:in in
                            :=  eq
@@ -74,21 +74,24 @@
     clojure.lang.IPersistentVector
     (to-clauses [construct]
       (reduce
-       (fn [acc v]
-         (conj acc
-               (match v
-                      [column value]    (eq (name column) value)
-                      [op column value] ((get query-type-mappings op) (name column) value)
-                      :else             (throw (IllegalArgumentException. (str v " is not a valid Clause"))))))
-       []
-       construct))
+        (fn [acc v]
+          (conj acc
+                (cond (= 2 (count v))
+                      (let [[column value] v] (eq (name column) value))
+                      (= 3 (count v))
+                      (let [[op column value] v]
+                        ((get query-type-mappings op) (name column) value))
+                      :else
+                      (throw (IllegalArgumentException. (str v " is not a valid Clause"))))))
+        []
+        construct))
     clojure.lang.IPersistentMap
     (to-clauses [construct]
       (reduce
-       (fn [acc [column value]]
-         (conj acc (eq (name column) value)))
-       []
-       construct))))
+        (fn [acc [column value]]
+          (conj acc (eq (name column) value)))
+        []
+        construct))))
 
 ;;
 ;; Select Query
@@ -102,17 +105,17 @@
                      (reduce and-clause
                              (.where query-builder)
                              (to-clauses m)))
-      order        {:what-count   1
-                    :what-fcall   1
-                    :what-columns 1
-                    :what-column  1
-                    :from         2
-                    :filtering    3
-                    :paginate     4
-                    :where        4
-                    :order        5
-                    :limit        6
-                    }
+      order {:what-count   1
+             :what-fcall   1
+             :what-columns 1
+             :what-column  1
+             :from         2
+             :filtering    3
+             :paginate     4
+             :where        4
+             :order        5
+             :limit        6
+             }
       renderers
       {:what-count   (fn count-all-query [query-builder _]
                        (.countAll query-builder))
@@ -139,22 +142,22 @@
                                  (->> orderings
                                       (map #(if (or (string? %)
                                                     (instance? clojure.lang.Named %))
-                                              (QueryBuilder/asc (name %))
-                                              %))
+                                             (QueryBuilder/asc (name %))
+                                             %))
                                       into-array)))
 
        :paginate     (fn paginate-query [query-builder [limit m]]
                        (-> query-builder
-                           (where-clause  m)
+                           (where-clause m)
                            (.limit limit)))
        :limit        (fn limit-query [query-builder lim]
                        (.limit query-builder lim))
        :filtering    (fn filtering-query [query-builder _]
                        (.allowFiltering query-builder))
        :from         (fn from-query [query-builder t]
-                       (match t
-                              [keyspace table] (.from query-builder (name keyspace) (name table))
-                              table            (.from query-builder (name table))))}]
+                       (cond (and (vector? t) (= 2 (count t)))
+                             (let [[keyspace table] t] (.from query-builder (name keyspace) (name table)))
+                             :else (let [table t] (.from query-builder (name table)))))}]
   (defn select
     [& statements]
     (render-statements (QueryBuilder/select)
@@ -172,12 +175,12 @@
   {:timestamp #(QueryBuilder/timestamp %)
    :ttl       #(QueryBuilder/ttl %)})
 
-(let [order     {:values        1
-                 :value         1
-                 :values-map    1
-                 :values-seq    1
-                 :using         2
-                 :if-not-exists 3}
+(let [order {:values        1
+             :value         1
+             :values-map    1
+             :values-seq    1
+             :using         2
+             :if-not-exists 3}
 
       renderers {:if-not-exists (fn value-query [query-builder _]
                                   (.ifNotExists query-builder))
@@ -216,7 +219,7 @@
       renderers
       {:only-if      (fn only-if-query [query-builder m]
                        (let [[first & more] (to-clauses m)
-                             query-builder  (.onlyIf query-builder first)]
+                             query-builder (.onlyIf query-builder first)]
                          (doseq [current more]
                            (.and query-builder current))
                          query-builder))
@@ -227,8 +230,8 @@
        :empty-values (fn update-records-statement-inner [query-builder _]
                        query-builder)
        :values       (fn update-records-statement-inner [query-builder m]
-                       (let [first-pair    (first m)
-                             more-pairs    (rest m)
+                       (let [first-pair (first m)
+                             more-pairs (rest m)
                              query-builder (.with query-builder (make-assignment first-pair))]
                          (doseq [kvp more-pairs]
                            (.and query-builder (make-assignment kvp)))
@@ -274,7 +277,7 @@
       renderers
       {:where        (fn where-query [query-builder m]
                        (let [[first-clause & more-clauses] (to-clauses m)
-                             query-builder                  (.where query-builder first-clause)]
+                             query-builder (.where query-builder first-clause)]
                          (doseq [clause more-clauses]
                            (.and query-builder clause))
                          query-builder))
@@ -292,7 +295,7 @@
 
        :only-if      (fn only-if-query [query-builder m]
                        (let [[first & more] (to-clauses m)
-                             query-builder  (.onlyIf query-builder first)]
+                             query-builder (.onlyIf query-builder first)]
                          (doseq [current more]
                            (.and query-builder current))
                          query-builder))
@@ -350,13 +353,13 @@
   (defn batch
     [& statements]
     (generic-batch (QueryBuilder/batch
-                    (make-array RegularStatement 0))
+                     (make-array RegularStatement 0))
                    statements))
 
   (defn unlogged-batch
     [& statements]
     (generic-batch (QueryBuilder/unloggedBatch
-                    (make-array RegularStatement 0))
+                     (make-array RegularStatement 0))
                    statements)))
 
 ;;
@@ -395,39 +398,39 @@
       renderers
       {:with-options       (fn with-options-statement [query-builder options]
                              (reduce
-                              (fn [opts [option-name option-vals]]
-                                ((resolve-create-option option-name) opts option-vals))
-                              (.withOptions query-builder)
-                              options))
+                               (fn [opts [option-name option-vals]]
+                                 ((resolve-create-option option-name) opts option-vals))
+                               (.withOptions query-builder)
+                               options))
        :column-definitions (fn [query-builder column-defs]
                              (let [[primary-key & clustering-keys] (get column-defs :primary-key)]
 
                                (reduce
-                                (fn [builder [column-name column-type]]
-                                  (.addColumn builder
-                                              (name column-name)
-                                              (make-column-type column-name column-defs)))
-                                query-builder
-                                (apply dissoc column-defs (conj (flatten (get column-defs :primary-key))
-                                                                :primary-key)))
+                                 (fn [builder [column-name column-type]]
+                                   (.addColumn builder
+                                               (name column-name)
+                                               (make-column-type column-name column-defs)))
+                                 query-builder
+                                 (apply dissoc column-defs (conj (flatten (get column-defs :primary-key))
+                                                                 :primary-key)))
 
                                (reduce
-                                (fn [builder column-name]
-                                  (.addPartitionKey builder
-                                                    (name column-name)
-                                                    (make-column-type column-name column-defs)))
-                                query-builder
-                                (if (sequential? primary-key)
-                                  primary-key
-                                  (list primary-key)))
+                                 (fn [builder column-name]
+                                   (.addPartitionKey builder
+                                                     (name column-name)
+                                                     (make-column-type column-name column-defs)))
+                                 query-builder
+                                 (if (sequential? primary-key)
+                                   primary-key
+                                   (list primary-key)))
 
                                (reduce
-                                (fn [builder column-name]
-                                  (.addClusteringColumn builder
-                                                        (name column-name)
-                                                        (make-column-type column-name column-defs)))
-                                query-builder
-                                clustering-keys)))
+                                 (fn [builder column-name]
+                                   (.addClusteringColumn builder
+                                                         (name column-name)
+                                                         (make-column-type column-name column-defs)))
+                                 query-builder
+                                 clustering-keys)))
 
        :if-not-exists      (fn if-not-exists-query [query-builder _]
                              (.ifNotExists query-builder))}]
@@ -443,20 +446,20 @@
 ;;
 
 (def ^:private alter-options
-  {:default-ttl                 (fn [opts val] (.defaultTimeToLive            opts (int val)))
-   :bloom-filter-fp-chance      (fn [opts val] (.bloomFilterFPChance          opts val))
-   :caching                     (fn [opts val] (.caching                      opts val))
-   :gc-grace-seconds            (fn [opts val] (.gcGraceSeconds               opts val))
-   :min-index-interval          (fn [opts val] (.minIndexInterval             opts val))
-   :index-interval              (fn [opts val] (.indexInterval                opts val))
-   :max-index-interval          (fn [opts val] (.maxIndexInterval             opts val))
-   :comment                     (fn [opts val] (.comment                      opts val))
-   :read-repair-chance          (fn [opts val] (.readRepairChance             opts val))
-   :speculative-retry           (fn [opts val] (.speculativeRetry             opts val))
-   :dc-local-read-repair-chance (fn [opts val] (.dcLocalReadRepairChance      opts val))
-   :memtable-flush-period-in-ms (fn [opts val] (.memtableFlushPeriodInMillis  opts val))
-   :compaction-options          (fn [opts val] (.compactionOptions            opts val))
-   :compression-options         (fn [opts val] (.compressionOptions           opts val))})
+  {:default-ttl                 (fn [opts val] (.defaultTimeToLive opts (int val)))
+   :bloom-filter-fp-chance      (fn [opts val] (.bloomFilterFPChance opts val))
+   :caching                     (fn [opts val] (.caching opts val))
+   :gc-grace-seconds            (fn [opts val] (.gcGraceSeconds opts val))
+   :min-index-interval          (fn [opts val] (.minIndexInterval opts val))
+   :index-interval              (fn [opts val] (.indexInterval opts val))
+   :max-index-interval          (fn [opts val] (.maxIndexInterval opts val))
+   :comment                     (fn [opts val] (.comment opts val))
+   :read-repair-chance          (fn [opts val] (.readRepairChance opts val))
+   :speculative-retry           (fn [opts val] (.speculativeRetry opts val))
+   :dc-local-read-repair-chance (fn [opts val] (.dcLocalReadRepairChance opts val))
+   :memtable-flush-period-in-ms (fn [opts val] (.memtableFlushPeriodInMillis opts val))
+   :compaction-options          (fn [opts val] (.compactionOptions opts val))
+   :compression-options         (fn [opts val] (.compressionOptions opts val))})
 
 (defn resolve-alter-option
   [option-name]
@@ -475,10 +478,10 @@
       renderers
       {:with-options  (fn with-options-statement [query-builder options]
                         (reduce
-                         (fn [opts [option-name option-vals]]
-                           ((resolve-alter-option option-name) opts option-vals))
-                         (.withOptions query-builder)
-                         options)
+                          (fn [opts [option-name option-vals]]
+                            ((resolve-alter-option option-name) opts option-vals))
+                          (.withOptions query-builder)
+                          options)
                         query-builder)
 
 
@@ -573,10 +576,10 @@
       renderers
       {:with-options  (fn with-options-statement [query-builder options]
                         (reduce
-                         (fn [opts [option-name option-vals]]
-                           ((resolve-create-keyspace-option option-name) opts option-vals))
-                         (.withOptions query-builder)
-                         options))
+                          (fn [opts [option-name option-vals]]
+                            ((resolve-create-keyspace-option option-name) opts option-vals))
+                          (.withOptions query-builder)
+                          options))
        :if-not-exists (fn if-not-exists-query [query-builder _]
                         (.ifNotExists query-builder))}]
   (defn create-keyspace
@@ -590,8 +593,8 @@
 (let [order
       {:with-options 1}
       renderers
-      {:with-options  (fn with-options-statement [query-builder options]
-                        (reduce
+      {:with-options (fn with-options-statement [query-builder options]
+                       (reduce
                          (fn [opts [option-name option-vals]]
                            ((resolve-create-keyspace-option option-name) opts option-vals))
                          (.withOptions query-builder)
@@ -606,7 +609,7 @@
 (defn use-keyspace
   [keyspace-name]
   (SimpleStatement.
-   (str "USE " (name keyspace-name))))
+    (str "USE " (name keyspace-name))))
 
 ;; CreateType createType(String typeName)
 ;; CreateType createType(String keyspaceName, String typeName)
