@@ -49,3 +49,10 @@
                                       :address    (.getHostAddress (.getAddress host))
                                       :rack       (.getRack host)})
     :else                          java-val))
+
+(defn #^bytes to-bytes
+  [^ByteBuffer byte-buffer]
+  (let [bytes (byte-array (.remaining byte-buffer))]
+    (.get byte-buffer bytes 0 (count bytes))
+    bytes))
+
