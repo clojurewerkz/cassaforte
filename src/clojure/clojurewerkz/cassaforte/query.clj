@@ -11,7 +11,7 @@
             CreateKeyspace AlterKeyspace DropKeyspace
             SchemaBuilder$Caching SchemaBuilder$KeyCaching])
   (:require [clojurewerkz.cassaforte.aliases :as alias]
-            [clojure.core.match              :refer [match]]))
+            [clojure.walk]))
 
 (set! *warn-on-reflection* true)
 
@@ -74,13 +74,16 @@
     clojure.lang.IPersistentVector
     (to-clauses [construct]
       (reduce
-       (fn [acc v]
-         (conj acc
-               (match v
-                      [column value]    (eq (name column) value)
-                      [op column value] ((get query-type-mappings op) (name column) value)
-                      :else             (throw (IllegalArgumentException. (str v " is not a valid Clause"))))))
-       []
+        (fn [acc v]
+          (conj acc
+                (cond (= 2 (count v))
+                      (let [[column value] v] (eq (name column) value))
+                      (= 3 (count v))
+                      (let [[op column value] v]
+                        ((get query-type-mappings op) (name column) value))
+                      :else
+                      (throw (IllegalArgumentException. (str v " is not a valid Clause"))))))
+        []
        construct))
     clojure.lang.IPersistentMap
     (to-clauses [construct]
@@ -152,9 +155,9 @@
        :filtering    (fn filtering-query [query-builder _]
                        (.allowFiltering query-builder))
        :from         (fn from-query [query-builder t]
-                       (match t
-                              [keyspace table] (.from query-builder (name keyspace) (name table))
-                              table            (.from query-builder (name table))))}]
+                       (cond (and (vector? t) (= 2 (count t)))
+                             (let [[keyspace table] t] (.from query-builder (name keyspace) (name table)))
+                             :else (let [table t] (.from query-builder (name table)))))}]
   (defn select
     [& statements]
     (render-statements (QueryBuilder/select)
