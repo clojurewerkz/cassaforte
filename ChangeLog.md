@@ -1,3 +1,10 @@
+## Changes between 2.0.2 and 2.0.3
+
+### Clojure 1.9 Compatibility
+
+Contributed by Peter Taoussanis.
+
+
 ## Changes between 2.0.1 and 2.0.2
 
 ### DataStax Java Driver Update
