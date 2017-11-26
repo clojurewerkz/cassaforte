@@ -357,8 +357,15 @@
   (when-let [hosts (.getAllHosts cluster-meta)]
     (non-nil-coll #(get-host-info % detailed?) hosts)))
 
+(defn hosts
+  "Returns information about hosts in cluster associated with session.
+  Verbosity is regulated by :detailed? parameter that is equal to false by default"
+  [^Session session & {:keys [detailed?] :or {detailed? false}}]
+  (when-let [cluster-meta ^Metadata (get-cluster-meta session)]
+    (get-hosts-impl cluster-meta detailed?)))
+
 (defn cluster
-  "Describes cluster.
+  "Describes cluster associated with session.
   Verbosity is regulated by :detailed? parameter that is equal to false by default"
   [^Session session & {:keys [detailed?] :or {detailed? false}}]
   (when-let [cluster-meta ^Metadata (get-cluster-meta session)]
