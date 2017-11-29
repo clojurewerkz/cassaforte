@@ -305,21 +305,4 @@
       .getMetadata
       .exportSchemaAsString))
 
-(defn get-hosts
-  "Returns all nodes in the cluster"
-  [^Session session]
-  (map (fn [^Host host]
-         {:datacenter (.getDatacenter host)
-          :address    (.getHostAddress (.getAddress host))
-          :rack       (.getRack host)
-          :is-up      (.isUp host)})
-       (-> session
-           .getCluster
-           .getMetadata
-           .getAllHosts)))
-
-;; defn get-replicas
-;; defn get-cluster-name
-;; defn get-keyspace
-;; defn get-keyspaces
 ;; defn rebuild-schema

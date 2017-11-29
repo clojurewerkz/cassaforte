@@ -22,6 +22,10 @@
             AbstractTableMetadata DataType$Name]
            [java.util Collection Map]))
 
+
+;; http://docs.datastax.com/en/drivers/java/3.3/com/datastax/driver/core/KeyspaceMetadata.html
+;; http://docs.datastax.com/en/drivers/java/3.3/com/datastax/driver/core/TableMetadata.html
+
 ;; Auxiliary functions, maybe need to be re-implemented
 (def ^:private not-nil? (comp not nil?))
 
@@ -183,7 +187,6 @@
     (assoc (convert-abstract-table-meta mv-meta)
            :base-table (keyword (.. mv-meta getBaseTable getName)))))
 
-;; http://docs.datastax.com/en/drivers/java/3.3/com/datastax/driver/core/TableMetadata.html
 (defn- convert-table-meta [^TableMetadata table-meta]
   (when table-meta
     (let [indexes (process-into-map convert-index-meta :name (.getIndexes table-meta))
@@ -192,7 +195,6 @@
           (cond-> (seq indexes) (assoc :indexes indexes))
           (cond-> (seq mvs) (assoc :materialized-views mvs))))))
 
-;; http://docs.datastax.com/en/drivers/java/3.3/com/datastax/driver/core/KeyspaceMetadata.html
 (defn- convert-keyspace-meta
   "Converts KeyspaceMetadata into Clojure map"
   [^KeyspaceMetadata ks-meta detailed?]
@@ -246,13 +248,13 @@
 
 (defn keyspace
   "Describes a keyspace.
-   Verbosity is regulated by :detailed? parameter that is equal to false by default"
+   Verbosity is regulated by :detailed? parameter that is equal to false by default."
   [^Session session ks & {:keys [detailed?] :or {detailed? false}}]
   (convert-keyspace-meta (get-keyspace-meta session ks) detailed?))
 
 (defn keyspaces
   "Describes all available keyspaces.
-  Verbosity is regulated by :detailed? parameter that is equal to false by default"
+  Verbosity is regulated by :detailed? parameter that is equal to false by default."
   [^Session session & {:keys [detailed?] :or {detailed? false}}]
   (when-let [cluster-meta ^Metadata (get-cluster-meta session)]
     (process-into-map #(convert-keyspace-meta % detailed?)
@@ -359,28 +361,30 @@
 
 (defn hosts
   "Returns information about hosts in cluster associated with session.
-  Verbosity is regulated by :detailed? parameter that is equal to false by default"
+  Verbosity is regulated by :detailed? parameter that is equal to false by default."
   [^Session session & {:keys [detailed?] :or {detailed? false}}]
   (when-let [cluster-meta ^Metadata (get-cluster-meta session)]
     (get-hosts-impl cluster-meta detailed?)))
 
 (defn cluster
   "Describes cluster associated with session.
-  Verbosity is regulated by :detailed? parameter that is equal to false by default"
+  Verbosity is regulated by :detailed? parameter that is equal to false by default."
   [^Session session & {:keys [detailed?] :or {detailed? false}}]
   (when-let [cluster-meta ^Metadata (get-cluster-meta session)]
-    {
-     :name        (keyword (.getClusterName cluster-meta))
-     :hosts       (get-hosts-impl cluster-meta detailed?)
-     :partitioner (.getPartitioner cluster-meta)
-     :keyspaces   (process-into-map #(convert-keyspace-meta % detailed?)
-                                    :name (.getKeyspaces cluster-meta))
-     }
-    ))
+    (-> {
+         :name        (keyword (.getClusterName cluster-meta))
+         :hosts       (get-hosts-impl cluster-meta detailed?)
+         :partitioner (.getPartitioner cluster-meta)
+         :keyspaces   (process-into-map #(convert-keyspace-meta % detailed?)
+                                        :name (.getKeyspaces cluster-meta))
+         :schema-agreed? (.checkSchemaAgreement cluster-meta)
+         }
+        ;; TODO: do we need it?
+        (cond-> detailed? (assoc :schema (.exportSchemaAsString cluster-meta))))))
 
+(defn cluster-schema
+  "Returns full schema for cluster associated with session."
+  [^Session session]
+  (when-let [cluster-meta ^Metadata (get-cluster-meta session)]
+    (.exportSchemaAsString cluster-meta)))
 
-(comment
-  (def conn (cc/connect ["127.0.0.1"] {:protocol-version 3}))
-
-  (def conn (cc/connect ["192.168.0.10"] {:protocol-version 3}))
-  )
