@@ -3,9 +3,9 @@ before_install:
   - "ulimit -u 4096"
 script: ./bin/ci.sh
 env:
-  - CASSANDRA_VERSION=2.0.13
-  - CASSANDRA_VERSION=2.1.9
-  - CASSANDRA_VERSION=2.2.4
-  - CASSANDRA_VERSION=3.0.1
+  - CASSANDRA_VERSION=2.1.19
+  - CASSANDRA_VERSION=2.2.11
+  - CASSANDRA_VERSION=3.0.15
+  - CASSANDRA_VERSION=3.1.1
 jdk:
   - oraclejdk8
