@@ -11,9 +11,14 @@
                :episode_title :text
                :primary-key [:series_title :episode_id]}})
 
+(defn get-cass-proto-version []
+  (if-let [env-value (System/getenv "CASSANDRA_PROTOCOL_VERSION")]
+    (Integer/parseInt env-value)
+    4))
+
 (defn with-temporary-keyspace
   [f]
-  (let [session (client/connect ["127.0.0.1"])]
+  (let [session (client/connect ["127.0.0.1"] {:protocol-version (get-cass-proto-version)})]
     (try
       (drop-keyspace session :new_cql_keyspace (if-exists))
 
@@ -76,7 +81,7 @@
 
 (defn with-keyspace
   [f]
-  (let [session (client/connect ["127.0.0.1"])]
+  (let [session (client/connect ["127.0.0.1"] {:protocol-version (get-cass-proto-version)})]
     (try
       (drop-keyspace session "new_cql_keyspace"
                      (if-exists))

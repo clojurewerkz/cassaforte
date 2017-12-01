@@ -26,7 +26,7 @@
   (:import [com.datastax.driver.core Statement ResultSet ResultSetFuture Host Session Cluster
             Cluster$Builder SimpleStatement PreparedStatement HostDistance PoolingOptions
             SSLOptions JdkSSLOptions ProtocolOptions$Compression ProtocolVersion]
-           [com.datastax.driver.auth DseAuthProvider]
+           [com.datastax.driver.dse.auth DseAuthProvider]
            [com.google.common.util.concurrent ListenableFuture Futures FutureCallback]
            [java.net URI]
            [javax.net.ssl TrustManagerFactory KeyManagerFactory SSLContext]
@@ -305,21 +305,4 @@
       .getMetadata
       .exportSchemaAsString))
 
-(defn get-hosts
-  "Returns all nodes in the cluster"
-  [^Session session]
-  (map (fn [^Host host]
-         {:datacenter (.getDatacenter host)
-          :address    (.getHostAddress (.getAddress host))
-          :rack       (.getRack host)
-          :is-up      (.isUp host)})
-       (-> session
-           .getCluster
-           .getMetadata
-           .getAllHosts)))
-
-;; defn get-replicas
-;; defn get-cluster-name
-;; defn get-keyspace
-;; defn get-keyspaces
 ;; defn rebuild-schema

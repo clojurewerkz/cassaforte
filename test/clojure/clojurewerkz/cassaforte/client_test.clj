@@ -2,12 +2,13 @@
   (:refer-clojure :exclude [update])
   (:require [clojurewerkz.cassaforte.client :as client]
             [clojurewerkz.cassaforte.cql    :refer :all]
-            [clojure.test                   :refer :all])
+            [clojure.test                   :refer :all]
+            [clojurewerkz.cassaforte.test-helper :refer [get-cass-proto-version]])
   (:import [com.datastax.driver.core.policies TokenAwarePolicy RoundRobinPolicy]))
 
 
 (deftest ^:client test-disconnect
-  (let [s (client/connect ["127.0.0.1"])
+  (let [s (client/connect ["127.0.0.1"] {:protocol-version (get-cass-proto-version)})
         cluster (.getCluster s)]
     (is (= (.isClosed s) false))
     (client/disconnect s)
@@ -18,7 +19,7 @@
 
 
 (deftest ^:client test-disconnect!
-  (let [s (client/connect ["127.0.0.1"])
+  (let [s (client/connect ["127.0.0.1"] {:protocol-version (get-cass-proto-version)})
         cluster (.getCluster s)]
     (is (= (.isClosed s) false))
     (is (= (.isClosed cluster) false))
@@ -28,7 +29,7 @@
 
 
 (deftest ^:client test-connect-via-uri
-  (let [s (client/connect ["127.0.0.1"])]
+  (let [s (client/connect ["127.0.0.1"] {:protocol-version (get-cass-proto-version)})]
         (try
           (drop-keyspace s :new_cql_keyspace)
           (catch Exception _ nil))
@@ -36,7 +37,7 @@
                          (with {:replication
                                 {"class"              "SimpleStrategy"
                                  "replication_factor" 1 }}))
-        (let [s2 (client/connect-with-uri "cql://127.0.0.1:9042/new_cql_keyspace")]
+        (let [s2 (client/connect-with-uri "cql://127.0.0.1:9042/new_cql_keyspace" {:protocol-version (get-cass-proto-version)})]
           (is (= (.isClosed s2) false))
           (client/disconnect s2)
           (is (= (.isClosed s2) true)))
@@ -45,7 +46,7 @@
 
 (deftest ^:client test-connect
   (testing "Connect without options or keyspace"
-    (let [session (client/connect ["127.0.0.1"])
+    (let [session (client/connect ["127.0.0.1"] {:protocol-version (get-cass-proto-version)})
           cluster (.getCluster session)]
       (is (= false (.isClosed session)))
       (is (= false (.isClosed cluster)))
@@ -54,7 +55,7 @@
       (client/disconnect session)))
 
   (testing "Connect with keyspace, without options"
-    (let [session (client/connect ["127.0.0.1"] "system")
+    (let [session (client/connect ["127.0.0.1"] "system" {:protocol-version (get-cass-proto-version)})
           cluster (.getCluster session)]
       (is (= false (.isClosed session)))
       (is (= false (.isClosed cluster)))
@@ -63,7 +64,7 @@
       (client/disconnect session)))
 
   (testing "Connect with keyspace in options"
-    (let [session (client/connect ["127.0.0.1"] {:keyspace "system"})
+    (let [session (client/connect ["127.0.0.1"] {:keyspace "system" :protocol-version (get-cass-proto-version)})
           cluster (.getCluster session)]
       (is (= false (.isClosed session)))
       (is (= false (.isClosed cluster)))
@@ -72,7 +73,7 @@
       (client/disconnect session)))
 
   (testing "Connect with options"
-    (let [session (client/connect ["127.0.0.1"] {:load-balancing-policy (RoundRobinPolicy.)})
+    (let [session (client/connect ["127.0.0.1"] {:load-balancing-policy (RoundRobinPolicy.) :protocol-version (get-cass-proto-version)})
           cluster (.getCluster session)]
       (is (= false (.isClosed session)))
       (is (= false (.isClosed cluster)))
@@ -81,7 +82,8 @@
       (client/disconnect session)))
 
   (testing "Connect with options and keyspace (in options)"
-    (let [session (client/connect ["127.0.0.1"] {:load-balancing-policy (RoundRobinPolicy.) :keyspace "system"})
+    (let [session (client/connect ["127.0.0.1"] {:load-balancing-policy (RoundRobinPolicy.) :keyspace "system"
+                                                 :protocol-version (get-cass-proto-version)})
           cluster (.getCluster session)]
       (is (= false (.isClosed session)))
       (is (= false (.isClosed cluster)))
@@ -90,7 +92,8 @@
       (client/disconnect session)))
 
   (testing "Connect with options and keyspace (separate args)"
-    (let [session (client/connect ["127.0.0.1"] "system" {:load-balancing-policy (RoundRobinPolicy.)})
+    (let [session (client/connect ["127.0.0.1"] "system" {:load-balancing-policy (RoundRobinPolicy.)
+                                                          :protocol-version (get-cass-proto-version)})
           cluster (.getCluster session)]
       (is (= false (.isClosed session)))
       (is (= false (.isClosed cluster)))

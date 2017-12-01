@@ -268,40 +268,6 @@
     (apply select session table (query/count-all) query-params))))
 
 ;;
-;; Higher-level helper functions for schema
-;;
-
-(defn describe-keyspace
-  "Describes a keyspace"
-  [^Session session ks]
-  (first (select session
-                 (query/from :system_schema :keyspaces)
-                 (query/where {:keyspace_name (name ks)}))))
-
-(defn describe-table
-  "Describes a table"
-  [^Session session ks table]
-  (first (select session
-                 (query/from :system_schema :tables)
-                 (query/where {:table_name    (name table)
-                               :keyspace_name (name ks)}))))
-
-
-(defn describe-tables
-  "Returns all the tables description, taken from system_schema.tables"
-  [^Session session ks]
-  (select session
-          (query/from :system_schema :tables)
-          (query/where {:keyspace_name (name ks)})))
-
-(defn describe-columns
-  "Describes a table"
-  [^Session session ks table]
-  (select session
-          (query/from :system_schema :columns)
-          (query/where {:table_name    (name table)
-                        :keyspace_name (name ks)})))
-;;
 ;; Higher-level collection manipulation
 ;;
 
